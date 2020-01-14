@@ -1,0 +1,25 @@
+{
+    "name": "ingenico-epayments/connect-extension-orocommerce",
+    "description": "OroCommerce Extension for connecting to the Ingenico ePayments Connect platform",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Oro, Inc",
+            "homepage": "http://www.orocommerce.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {"Ingenico\\Connect\\OroCommerce\\": ""}
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "oro/commerce": "4.1.*"
+    },
+    "prefer-stable": true,
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    }
+}
