@@ -14,7 +14,8 @@
     },
     "minimum-stability": "dev",
     "require": {
-        "oro/commerce": "4.1.*"
+        "oro/commerce": "4.1.*",
+        "ingenico-epayments/connect-sdk-php": "^6.5"
     },
     "prefer-stable": true,
     "extra": {
