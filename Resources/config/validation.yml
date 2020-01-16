@@ -1,0 +1,14 @@
+Ingenico\Connect\OroCommerce\Entity\IngenicoSettings:
+    properties:
+        apiKeyId:
+            - NotBlank: ~
+        apiSecret:
+            - NotBlank: ~
+        apiEndpoint:
+            - NotBlank: ~
+        merchantId:
+            - NotBlank: ~
+        enabledProducts:
+            - NotBlank: ~
+        paymentAction:
+            - NotBlank: ~

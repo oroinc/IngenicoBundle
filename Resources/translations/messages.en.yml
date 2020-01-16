@@ -1,0 +1,17 @@
+ingenico:
+    channel_type.label: 'Ingenico ePayments Connect platform'
+    settings:
+        label: 'Ingenico Transport Settings'
+        apiKeyId.label: 'Api Key ID'
+        apiSecret.label: 'Api Secret'
+        apiEndpoint.label: 'Api Endpoint'
+        merchantId.label: 'Merchant ID'
+        enabledProducts:
+            label: 'Enabled Products'
+            choice:
+                credit_cards: 'Credit cards'
+        paymentAction:
+            label: 'Payment Action'
+            choice:
+                sale: 'Sale'
+                pre_authorization: 'Pre-Authorization'

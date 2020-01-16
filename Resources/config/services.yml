@@ -1,0 +1,25 @@
+services:
+    ingenico.form.type.settings:
+        class: Ingenico\Connect\OroCommerce\Form\Type\IngenicoSettingsType
+        arguments:
+            - '@translator.default'
+            - '@ingenico.settings.data_provider.payment_actions'
+            - '@ingenico.settings.data_provider.enabled_products'
+        tags:
+            - { name: form.type }
+
+    ingenico.integration.channel:
+        class: Ingenico\Connect\OroCommerce\Integration\IngenicoChannel
+        tags:
+            - { name: oro_integration.channel, type: ingenico }
+
+    ingenico.integration.transport:
+        class: Ingenico\Connect\OroCommerce\Integration\IngenicoTransport
+        tags:
+            - { name: oro_integration.transport, type: ingenico, channel_type: ingenico }
+
+    ingenico.settings.data_provider.payment_actions:
+        class: Ingenico\Connect\OroCommerce\Settings\DataProvider\PaymentActionDataProvider
+
+    ingenico.settings.data_provider.enabled_products:
+        class: Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider
