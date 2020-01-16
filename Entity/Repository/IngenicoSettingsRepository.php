@@ -4,6 +4,7 @@ namespace Ingenico\Connect\OroCommerce\Entity\Repository;
 
 use Doctrine\ORM\EntityRepository;
 use Ingenico\Connect\OroCommerce\Entity\IngenicoSettings;
+use Oro\Bundle\SecurityBundle\ORM\Walker\AclHelper;
 
 /**
  * Repository for IngenicoSetting entity.
@@ -11,18 +12,31 @@ use Ingenico\Connect\OroCommerce\Entity\IngenicoSettings;
 class IngenicoSettingsRepository extends EntityRepository
 {
     /**
+     * @var AclHelper
+     */
+    private $aclHelper;
+
+    /**
+     * @param AclHelper $aclHelper
+     */
+    public function setAclHelper(AclHelper $aclHelper)
+    {
+        $this->aclHelper = $aclHelper;
+    }
+
+    /**
      * @param string $type
      *
      * @return IngenicoSettings[]
      */
     public function getEnabledSettingsByType($type)
     {
-        return $this->createQueryBuilder('settings')
+        $qb = $this->createQueryBuilder('settings')
             ->innerJoin('settings.channel', 'channel')
             ->andWhere('channel.enabled = true')
             ->andWhere('channel.type = :type')
-            ->setParameter('type', $type)
-            ->getQuery()
-            ->getResult();
+            ->setParameter('type', $type);
+
+        return $this->aclHelper->apply($qb)->getResult();
     }
 }

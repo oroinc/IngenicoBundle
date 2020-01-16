@@ -2,9 +2,9 @@ ingenico:
     channel_type.label: 'Ingenico ePayments Connect platform'
     settings:
         label: 'Ingenico Transport Settings'
-        apiKeyId.label: 'Api Key ID'
-        apiSecret.label: 'Api Secret'
-        apiEndpoint.label: 'Api Endpoint'
+        apiKeyId.label: 'API Key ID'
+        apiSecret.label: 'Secret API Key'
+        apiEndpoint.label: 'API Endpoint'
         merchantId.label: 'Merchant ID'
         enabledProducts:
             label: 'Enabled Products'

@@ -23,3 +23,11 @@ services:
 
     ingenico.settings.data_provider.enabled_products:
         class: Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider
+
+    ingenico.repository.settings_repository:
+        class: Ingenico\Connect\OroCommerce\Entity\Repository\IngenicoSettingsRepository
+        parent: oro_entity.abstract_repository
+        arguments:
+            - 'Ingenico\Connect\OroCommerce\Entity\IngenicoSettings'
+        calls:
+            - [setAclHelper, ['@oro_security.acl_helper']]
