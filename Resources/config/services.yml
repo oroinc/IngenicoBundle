@@ -1,3 +1,6 @@
+parameters:
+    ingenico.method.identifier_prefix.ingenico: 'ingenico'
+
 services:
     ingenico.form.type.settings:
         class: Ingenico\Connect\OroCommerce\Form\Type\IngenicoSettingsType
@@ -31,3 +34,36 @@ services:
             - 'Ingenico\Connect\OroCommerce\Entity\IngenicoSettings'
         calls:
             - [setAclHelper, ['@oro_security.acl_helper']]
+
+    ingenico.method.generator.identifier.ingenico:
+        parent: oro_integration.generator.prefixed_identifier_generator
+        public: true
+        arguments:
+            - '%ingenico.method.identifier_prefix.ingenico%'
+
+    ingenico.method.config.factory.ingenico:
+        class: 'Ingenico\Connect\OroCommerce\Method\Config\Factory\IngenicoConfigFactory'
+        public: false
+        arguments:
+            - '@ingenico.method.generator.identifier.ingenico'
+
+    ingenico.method.config.provider.ingenico:
+        class: 'Ingenico\Connect\OroCommerce\Method\Config\Provider\IngenicoConfigProvider'
+        public: false
+        arguments:
+            - '@doctrine'
+            - '@logger'
+            - '@ingenico.method.config.factory.ingenico'
+
+    ingenico.factory.method.ingenico:
+        class: 'Ingenico\Connect\OroCommerce\Method\Factory\IngenicoPaymentMethodFactory'
+        public: false
+
+    ingenico.payment_method_provider.ingenico:
+        class: 'Ingenico\Connect\OroCommerce\Method\Provider\IngenicoPaymentMethodProvider'
+        public: false
+        arguments:
+            - '@ingenico.method.config.provider.ingenico'
+            - '@ingenico.factory.method.ingenico'
+        tags:
+            - { name: oro_payment.payment_method_provider }
