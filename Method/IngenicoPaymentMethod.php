@@ -43,7 +43,9 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
      */
     public function purchase(PaymentTransaction $paymentTransaction): array
     {
-        return ['successful' => true];
+        $paymentTransaction->setSuccessful(true);
+
+        return [];
     }
 
     /**
@@ -52,7 +54,9 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
      */
     public function capture(PaymentTransaction $paymentTransaction): array
     {
-        return ['successful' => true];
+        $paymentTransaction->setSuccessful(true);
+
+        return [];
     }
 
     /**

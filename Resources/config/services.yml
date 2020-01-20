@@ -67,3 +67,16 @@ services:
             - '@ingenico.factory.method.ingenico'
         tags:
             - { name: oro_payment.payment_method_provider }
+
+    ingenico.factory.method_view.ingenico:
+        class: Ingenico\Connect\OroCommerce\Method\View\Factory\IngenicoViewFactory
+        public: false
+
+    ingenico.payment_method_view_provider.ingenico:
+        class: Ingenico\Connect\OroCommerce\Method\View\Provider\IngenicoViewProvider
+        public: false
+        arguments:
+            - '@ingenico.method.config.provider.ingenico'
+            - '@ingenico.factory.method_view.ingenico'
+        tags:
+            - { name: oro_payment.payment_method_view_provider }
