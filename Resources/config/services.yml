@@ -55,9 +55,25 @@ services:
             - '@logger'
             - '@ingenico.method.config.factory.ingenico'
 
+    ingenico.payment_product_group.handler.credit_card:
+        class: Ingenico\Connect\OroCommerce\Method\Handler\CreditCardPaymentProductGroupHandler
+        public: false
+        arguments:
+            - 'gateway_instanse_stub'
+        tags:
+          { name: ingenico.payment_product_group.handler}
+
+    ingenico.payment_product_group.handlers_registry:
+        class: Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductGroupHandlerRegistry
+        public: false
+        arguments:
+            - !tagged_iterator ingenico.payment_product_group.handler
+
     ingenico.factory.method.ingenico:
         class: 'Ingenico\Connect\OroCommerce\Method\Factory\IngenicoPaymentMethodFactory'
         public: false
+        arguments:
+            - '@ingenico.payment_product_group.handlers_registry'
 
     ingenico.payment_method_provider.ingenico:
         class: 'Ingenico\Connect\OroCommerce\Method\Provider\IngenicoPaymentMethodProvider'
