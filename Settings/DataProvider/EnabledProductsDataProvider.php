@@ -7,7 +7,7 @@ namespace Ingenico\Connect\OroCommerce\Settings\DataProvider;
  */
 class EnabledProductsDataProvider
 {
-    public const CREDIT_CARDS = 'credit_cards';
+    public const CREDIT_CARDS = 'cards';
 
     /**
      * @return array

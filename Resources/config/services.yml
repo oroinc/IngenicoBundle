@@ -14,12 +14,12 @@ services:
     ingenico.integration.channel:
         class: Ingenico\Connect\OroCommerce\Integration\IngenicoChannel
         tags:
-            - { name: oro_integration.channel, type: ingenico }
+            - { name: oro_integration.channel, type: '%ingenico.method.identifier_prefix.ingenico%' }
 
     ingenico.integration.transport:
         class: Ingenico\Connect\OroCommerce\Integration\IngenicoTransport
         tags:
-            - { name: oro_integration.transport, type: ingenico, channel_type: ingenico }
+            - { name: oro_integration.transport, type: '%ingenico.method.identifier_prefix.ingenico%', channel_type: ingenico }
 
     ingenico.settings.data_provider.payment_actions:
         class: Ingenico\Connect\OroCommerce\Settings\DataProvider\PaymentActionDataProvider
@@ -61,7 +61,7 @@ services:
         arguments:
             - 'gateway_instanse_stub'
         tags:
-          { name: ingenico.payment_product_group.handler}
+            - { name: ingenico.payment_product_group.handler}
 
     ingenico.payment_product_group.handlers_registry:
         class: Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductGroupHandlerRegistry
@@ -74,6 +74,7 @@ services:
         public: false
         arguments:
             - '@ingenico.payment_product_group.handlers_registry'
+            - '@ingenico.ingenico.gateway'
 
     ingenico.payment_method_provider.ingenico:
         class: 'Ingenico\Connect\OroCommerce\Method\Provider\IngenicoPaymentMethodProvider'
@@ -96,3 +97,54 @@ services:
             - '@ingenico.factory.method_view.ingenico'
         tags:
             - { name: oro_payment.payment_method_view_provider }
+
+    ingenico.ingenico.gateway:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Gateway\Gateway
+        public: false
+        arguments:
+            - '@ingenico.ingenico.client'
+            - '@ingenico.ingenico.request.registry'
+            - '@ingenico.ingenico.converter.request'
+
+    ingenico.ingenico.request.registry:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Request\RequestRegistry
+        public: false
+        arguments:
+            - !tagged_iterator ingenico.ingenico.request
+
+    ingenico.ingenico.request.create_session:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Request\CreateSessionRequest
+        public: false
+        tags:
+            - { name: ingenico.ingenico.request }
+
+    ingenico.ingenico.request.create_payment:
+         class: Ingenico\Connect\OroCommerce\Ingenico\Request\CreatePaymentRequest
+         public: false
+         tags:
+             - { name: ingenico.ingenico.request }
+
+    ingenico.ingenico.converter.request:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Converter\RequestBodyConverter
+        public: false
+
+    ingenico.ingenico.client:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Client\Client
+        public: false
+        arguments:
+            - '@ingenico.ingenico.factory.client'
+
+    ingenico.ingenico.factory.client:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Factory\ClientFactory
+        public: false
+
+    Ingenico\Connect\OroCommerce\Method\Provider\IngenicoPaymentMethodProvider:
+        alias: ingenico.payment_method_provider.ingenico
+        public: true
+
+    Ingenico\Connect\OroCommerce\Controller\Frontend\IngenicoController:
+        public: true
+        calls:
+            - [setContainer, ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }

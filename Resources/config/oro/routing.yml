@@ -1,0 +1,6 @@
+ingenico:
+    resource:     "@IngenicoBundle/Controller/Frontend"
+    type:         annotation
+    prefix:       /ingenico
+    options:
+        frontend: true

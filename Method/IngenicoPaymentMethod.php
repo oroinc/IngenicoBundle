@@ -1,6 +1,10 @@
 <?php
 namespace Ingenico\Connect\OroCommerce\Method;
 
+use Ingenico\Connect\OroCommerce\Ingenico\Gateway\Gateway;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Session\PaymentProductFilter\Restrict\Groups;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Session\PaymentProductFilter\Restrict\Products;
+use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductGroupHandlerRegistry;
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
@@ -14,33 +18,40 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
  */
 class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInterface, PurchaseActionInterface
 {
-    /**
-     * @var PaymentConfigInterface
-     */
+    /** @var PaymentConfigInterface */
     private $config;
 
-    /**
-     * @var PaymentProductGroupHandlerRegistry
-     */
+    /** @var PaymentProductGroupHandlerRegistry */
     private $paymentProductGroupHandlersRegistry;
+
+    /** @var Gateway */
+    private $gateway;
 
     /**
      * @param PaymentConfigInterface $config
      * @param PaymentProductGroupHandlerRegistry $paymentProductHandlersRegistry
+     * @param Gateway $gateway
      */
     public function __construct(
         PaymentConfigInterface $config,
-        PaymentProductGroupHandlerRegistry $paymentProductHandlersRegistry
+        PaymentProductGroupHandlerRegistry $paymentProductHandlersRegistry,
+        Gateway $gateway
     ) {
         $this->config = $config;
         $this->paymentProductGroupHandlersRegistry = $paymentProductHandlersRegistry;
+        $this->gateway = $gateway;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function execute($action, PaymentTransaction $paymentTransaction): array
+    public function execute($action, PaymentTransaction $paymentTransaction)
     {
+        // should be reviewed in scope of INGA-25
+        if ('createSession' === $action) {
+            return $this->createSession();
+        }
+
         $paymentProductGroupHandler =
             $this->paymentProductGroupHandlersRegistry->getPaymentProductGroupHandler($paymentTransaction);
 
@@ -94,7 +105,7 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getSourceAction(): string
     {
@@ -102,10 +113,29 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function useSourcePaymentTransaction(): bool
     {
         return true;
+    }
+
+    /**
+     * Just basic method for creating session, should be reviewed in scope of INGA-25
+     *
+     * @return array
+     */
+    public function createSession(): array
+    {
+        $response = $this->gateway->request(
+            $this->config,
+            Transaction::CREATE_SESSION,
+            [
+                Groups::NAME => ['cards'],
+                Products::NAME => [730, 770]
+            ]
+        );
+
+        return $response->toArray();
     }
 }

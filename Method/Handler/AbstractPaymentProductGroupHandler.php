@@ -4,7 +4,6 @@ namespace Ingenico\Connect\OroCommerce\Method\Handler;
 
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
-use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
 /**
  * Abstract class for Ingenico payment product group handler
