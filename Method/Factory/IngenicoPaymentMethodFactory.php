@@ -3,7 +3,7 @@
 namespace Ingenico\Connect\OroCommerce\Method\Factory;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Gateway\Gateway;
-use Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductGroupHandlerRegistry;
+use Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductHandlerRegistry;
 use Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod;
 use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
@@ -13,17 +13,17 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
  */
 class IngenicoPaymentMethodFactory
 {
-    /** @var PaymentProductGroupHandlerRegistry */
+    /** @var PaymentProductHandlerRegistry */
     private $paymentProductHandlersRegistry;
 
     /** @var Gateway */
     private $gateway;
 
     /**
-     * @param PaymentProductGroupHandlerRegistry $paymentProductHandlersRegistry
+     * @param PaymentProductHandlerRegistry $paymentProductHandlersRegistry
      * @param Gateway $gateway
      */
-    public function __construct(PaymentProductGroupHandlerRegistry $paymentProductHandlersRegistry, Gateway $gateway)
+    public function __construct(PaymentProductHandlerRegistry $paymentProductHandlersRegistry, Gateway $gateway)
     {
         $this->paymentProductHandlersRegistry = $paymentProductHandlersRegistry;
         $this->gateway = $gateway;

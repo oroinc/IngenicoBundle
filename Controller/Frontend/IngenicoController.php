@@ -2,30 +2,50 @@
 
 namespace Ingenico\Connect\OroCommerce\Controller\Frontend;
 
+use Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod;
 use Ingenico\Connect\OroCommerce\Method\Provider\IngenicoPaymentMethodProvider;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * Basic controller for getting session, should be reviewed in scope of INGA-25
+ * Ingenico payment method's controller to process Client API data during checkout
  */
 class IngenicoController extends AbstractController
 {
     /**
-     * @Route("/create-session", name="ingenico.create-session")
+     * @Route(
+     *     "/create-session/{paymentIdentifier}",
+     *     name="ingenico.create-session",
+     *     requirements={"paymentIdentifier"="[\w\:-]+"}
+     * )
      *
-     * @return string
+     * @return JsonResponse
      */
-    public function actionCreateSession()
+    public function actionCreateSession($paymentIdentifier): JsonResponse
     {
-        $payment = $this->get(IngenicoPaymentMethodProvider::class)->getPaymentMethod('ingenico_1');
-        $response = $payment->execute('createSession', new PaymentTransaction());
+        $responseData = ['success' => true, 'errorMessage' => ''];
+        $payment = $this->get(IngenicoPaymentMethodProvider::class)->getPaymentMethod($paymentIdentifier);
 
-        return $this->json($response);
+        try {
+            if ($payment) {
+                $responseData['sessionInfo'] = $payment->execute(
+                    IngenicoPaymentMethod::CREATE_SESSION_ACTION,
+                    new PaymentTransaction()
+                );
+            } else {
+                throw new \Exception('Wrong payment identifier is given');
+            }
+        } catch (\Exception $e) {
+            $responseData['success'] = false;
+            $responseData['errorMessage'] = $e->getMessage();
+        }
+
+        return new JsonResponse($responseData);
     }
 
-    public static function getSubscribedServices()
+    public static function getSubscribedServices(): array
     {
         return array_merge(
             parent::getSubscribedServices(),

@@ -2,15 +2,16 @@
 
 namespace Ingenico\Connect\OroCommerce\Method\Handler;
 
+use Ingenico\Connect\OroCommerce\Ingenico\Gateway\Gateway;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 
 /**
  * Abstract class for Ingenico payment product group handler
  */
-abstract class AbstractPaymentProductGroupHandler implements PaymentProductGroupHandlerInterface
+abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInterface
 {
-    const PAYMENT_PRODUCT_GROUP_OPTION_KEY = 'ingenicoProductGroup';
+    const PAYMENT_PRODUCT_OPTION_KEY = 'ingenicoPaymentProduct';
     const CUSTOMER_ENC_DETAILS_OPTION_KEY = 'ingenicoCustomerEncDetails';
 
     protected $gateway;
@@ -21,9 +22,9 @@ abstract class AbstractPaymentProductGroupHandler implements PaymentProductGroup
     protected $paymentProductGroupType;
 
     /**
-     * @param string $gateway
+     * @param Gateway $gateway
      */
-    public function __construct(string $gateway)
+    public function __construct(Gateway $gateway)
     {
         $this->gateway = $gateway;
     }
@@ -33,12 +34,12 @@ abstract class AbstractPaymentProductGroupHandler implements PaymentProductGroup
      */
     public function supports(PaymentTransaction $paymentTransaction): bool
     {
-        $paymentProductGroup = (string)$this->getTransactionOption(
+        $paymentProduct = (string)$this->getTransactionOption(
             $paymentTransaction,
-            static::PAYMENT_PRODUCT_GROUP_OPTION_KEY
+            static::PAYMENT_PRODUCT_OPTION_KEY
         );
 
-        return $this->getType() === $paymentProductGroup;
+        return $this->getType() === $paymentProduct;
     }
 
     /**

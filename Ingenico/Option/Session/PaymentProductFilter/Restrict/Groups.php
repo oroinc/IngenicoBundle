@@ -10,7 +10,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
  */
 class Groups implements OptionInterface
 {
-    public const NAME = '[paymentProductFilter][restrictTo][groups]';
+    public const NAME = '[paymentProductFilters][restrictTo][groups]';
 
     /**
      * {@inheritdoc}

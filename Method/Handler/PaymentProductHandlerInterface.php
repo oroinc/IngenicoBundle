@@ -9,7 +9,7 @@ use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 /**
  * Ingenico payment product group handler interface
  */
-interface PaymentProductGroupHandlerInterface
+interface PaymentProductHandlerInterface
 {
     /**
      * @param string $action

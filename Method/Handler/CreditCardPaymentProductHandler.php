@@ -10,7 +10,7 @@ use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 /**
  * 'Credit card' payment product group handler
  */
-class CreditCardPaymentProductGroupHandler extends AbstractPaymentProductGroupHandler
+class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
 {
     /**
      * @param PaymentTransaction $paymentTransaction

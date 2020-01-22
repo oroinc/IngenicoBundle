@@ -8,6 +8,12 @@ namespace Ingenico\Connect\OroCommerce\Settings\DataProvider;
 class EnabledProductsDataProvider
 {
     public const CREDIT_CARDS = 'cards';
+    public const SEPA = 'sepa';
+    public const ACH = 'ach';
+
+    // Ingenico's hardcoded payment product IDs values
+    public const SEPA_ID = 770;
+    public const ACH_ID = 730;
 
     /**
      * @return array
@@ -16,6 +22,8 @@ class EnabledProductsDataProvider
     {
         return [
             self::CREDIT_CARDS,
+            self::SEPA,
+            self::ACH,
         ];
     }
 }

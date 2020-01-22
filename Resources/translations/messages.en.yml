@@ -9,7 +9,10 @@ ingenico:
         enabledProducts:
             label: 'Enabled Products'
             choice:
-                credit_cards: 'Credit cards'
+                cards: 'Credit cards'
+                sepa: 'SEPA Direct Debit'
+                ach: 'ACH Paymentss'
+
         paymentAction:
             label: 'Payment Action'
             choice:

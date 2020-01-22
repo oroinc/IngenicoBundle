@@ -7,10 +7,10 @@ use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 /**
  * Handlers registry of Ingenico payment product groups
  */
-class PaymentProductGroupHandlerRegistry
+class PaymentProductHandlerRegistry
 {
     /**
-     * @var iterable|PaymentProductGroupHandlerInterface[]
+     * @var iterable|PaymentProductHandlerInterface[]
      */
     private $paymentProductsHandlers;
 
@@ -24,11 +24,11 @@ class PaymentProductGroupHandlerRegistry
 
     /**
      * @param PaymentTransaction $paymentTransaction
-     * @return PaymentProductGroupHandlerInterface|null
+     * @return PaymentProductHandlerInterface|null
      */
-    public function getPaymentProductGroupHandler(
+    public function getPaymentProductHandler(
         PaymentTransaction $paymentTransaction
-    ): ?PaymentProductGroupHandlerInterface {
+    ): ?PaymentProductHandlerInterface {
         foreach ($this->paymentProductsHandlers as $productTypeHandler) {
             if ($productTypeHandler->supports($paymentTransaction)) {
                 return $productTypeHandler;
