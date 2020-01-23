@@ -18,6 +18,7 @@ class IngenicoController extends AbstractController
      * @Route(
      *     "/create-session/{paymentIdentifier}",
      *     name="ingenico.create-session",
+     *     options={"expose"=true},
      *     requirements={"paymentIdentifier"="[\w\:-]+"}
      * )
      *

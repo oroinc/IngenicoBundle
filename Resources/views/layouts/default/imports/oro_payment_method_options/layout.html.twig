@@ -1,4 +1,10 @@
 {% block _payment_methods_ingenico_widget %}
-    <div class="{{ class_prefix }}-form__payment-methods">
+    {% set componentOptions = {
+        paymentMethod: name
+    } %}
+    <div class="{{ class_prefix }}-form__payment-methods"
+         data-page-component-module="ingenico/js/app/components/ingenico-credit-card-component"
+         data-page-component-options="{{ componentOptions|json_encode }}"
+    >
     </div>
 {% endblock %}

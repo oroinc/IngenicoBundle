@@ -21,6 +21,10 @@
     "extra": {
         "branch-alias": {
             "dev-master": "1.0-dev"
+        },
+        "npm": {
+            "connect-sdk-client-js": "3.13.*",
+            "node-forge": "0.9.*"
         }
     }
 }
