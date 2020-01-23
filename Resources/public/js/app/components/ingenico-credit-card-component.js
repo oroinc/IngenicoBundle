@@ -20,6 +20,11 @@ define(function(require) {
         paymentProductsBaseInfo: null,
 
         /**
+         * @property {jQuery}
+         */
+        $el: null,
+
+        /**
          * @inheritDoc
          */
         constructor: function IngenicoCreditCardComponent(options) {
@@ -31,6 +36,21 @@ define(function(require) {
          */
         initialize: function(options) {
             this.options = _.extend({}, this.options, options);
+
+            this.$el = this.options._sourceElement;
+
+            var fieldName = 'bankCode';
+            var rendererFieldName = 'ingenico::' + fieldName;
+            this.$el.html(_.macros(rendererFieldName)({
+                paymentMethod: this.options.paymentMethod,
+                field: {
+                    id: 'bankCode',
+                    displayHints: {
+                        label: 'Simple field',
+                        placeholderLabel: 'Placeholder text'
+                    }
+                }
+            }));
 
             mediator.on('checkout:payment:method:changed', this.onPaymentMethodChange, this);
             mediator.on('checkout-content:initialized', this.refreshPaymentMethod, this);
@@ -95,12 +115,13 @@ define(function(require) {
         },
 
         dispose: function() {
-            if (this.disposed || !this.disposable) {
+            if (this.disposed) {
                 return;
             }
 
             mediator.off('checkout:payment:method:changed', this.onPaymentMethodChange, this);
             mediator.off('checkout-content:initialized', this.refreshPaymentMethod, this);
+
             IngenicoCreditCardComponent.__super__.dispose.call(this);
         }
     });

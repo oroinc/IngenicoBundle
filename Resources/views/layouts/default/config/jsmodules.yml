@@ -1,3 +1,10 @@
+map:
+    "*":
+        underscore: ingenico/js/extend/underscore
+    ingenico/js/extend/underscore:
+        underscore: underscore
+app-modules:
+    - ingenico/js/app/modules/template-macros-module
 aliases:
     connect-sdk-client-js$: npmassets/connect-sdk-client-js/dist/connectsdk.noEncrypt
 dynamic-imports:
