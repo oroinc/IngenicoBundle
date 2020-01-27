@@ -1,12 +1,14 @@
 <?php
 
-namespace Ingenico\Connect\OroCommerce\Ingenico\Request;
+namespace Ingenico\Connect\OroCommerce\Ingenico\Request\Payments;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address\CountryCode;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\Locale;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\EncryptedCustomerInput;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\AmountOfMoney;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\References\MerchantReference;
+use Ingenico\Connect\OroCommerce\Ingenico\Request\RequestInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\Sdk\DataObject;
 
@@ -25,7 +27,8 @@ class CreatePaymentRequest implements RequestInterface
             ->addOption(new AmountOfMoney\CurrencyCode())
             ->addOption(new Locale())
             ->addOption(new CountryCode())
-            ->addOption(new EncryptedCustomerInput());
+            ->addOption(new EncryptedCustomerInput())
+            ->addOption(new MerchantReference());
     }
 
     /**

@@ -111,7 +111,7 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
      */
     public function getSourceAction(): string
     {
-        return self::PENDING;
+        return self::AUTHORIZE;
     }
 
     /**
@@ -119,7 +119,7 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
      */
     public function useSourcePaymentTransaction(): bool
     {
-        return true;
+        return false;
     }
 
     /**

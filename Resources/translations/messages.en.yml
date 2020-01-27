@@ -16,5 +16,5 @@ ingenico:
         paymentAction:
             label: 'Payment Action'
             choice:
-                sale: 'Sale'
-                pre_authorization: 'Pre-Authorization'
+                SALE: 'Sale'
+                PRE_AUTHORIZATION: 'Pre-Authorization'

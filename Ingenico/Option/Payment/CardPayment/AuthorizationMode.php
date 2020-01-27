@@ -1,16 +1,16 @@
 <?php
 
-namespace Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address;
+namespace Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 
 /**
- * Option for handling order customer billingAddress countryCode.
+ * Option for handle card's payment authorization mode.
  */
-class CountryCode implements OptionInterface
+class AuthorizationMode implements OptionInterface
 {
-    public const NAME = '[order][customer][billingAddress][countryCode]';
+    public const NAME = '[cardPaymentMethodSpecificInput][authorizationMode]';
 
     /**
      * {@inheritdoc}
@@ -18,7 +18,7 @@ class CountryCode implements OptionInterface
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setDefault(self::NAME, 'US')
+            ->setRequired(self::NAME)
             ->setAllowedTypes(self::NAME, 'string');
     }
 }

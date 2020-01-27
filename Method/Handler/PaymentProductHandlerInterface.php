@@ -7,7 +7,7 @@ use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 
 /**
- * Ingenico payment product group handler interface
+ * Ingenico payment product handler interface
  */
 interface PaymentProductHandlerInterface
 {

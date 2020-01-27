@@ -18,7 +18,7 @@ class Locale implements OptionInterface
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setDefault(self::NAME, 'en')
-            ->setAllowedValues(self::NAME, 'string');
+            ->setDefault(self::NAME, 'en_US')
+            ->setAllowedTypes(self::NAME, 'string');
     }
 }

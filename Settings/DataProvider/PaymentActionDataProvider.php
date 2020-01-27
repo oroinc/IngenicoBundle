@@ -7,8 +7,8 @@ namespace Ingenico\Connect\OroCommerce\Settings\DataProvider;
  */
 class PaymentActionDataProvider
 {
-    public const SALE = 'sale';
-    public const PRE_AUTHORIZATION = 'pre_authorization';
+    public const SALE = 'SALE';
+    public const PRE_AUTHORIZATION = 'PRE_AUTHORIZATION';
 
     /**
      * @return array

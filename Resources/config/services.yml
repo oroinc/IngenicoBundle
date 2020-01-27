@@ -119,10 +119,22 @@ services:
             - { name: ingenico.ingenico.request }
 
     ingenico.ingenico.request.create_payment:
-         class: Ingenico\Connect\OroCommerce\Ingenico\Request\CreatePaymentRequest
+         class: Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\CreatePaymentRequest
          public: false
          tags:
              - { name: ingenico.ingenico.request }
+
+    ingenico.ingenico.request.create_cards_payment:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\CreateCardsPaymentRequest
+        public: false
+        tags:
+            - { name: ingenico.ingenico.request }
+
+    ingenico.ingenico.request.approve_payment:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\ApprovePaymentRequest
+        public: false
+        tags:
+            - { name: ingenico.ingenico.request }
 
     ingenico.ingenico.converter.request:
         class: Ingenico\Connect\OroCommerce\Ingenico\Converter\RequestBodyConverter

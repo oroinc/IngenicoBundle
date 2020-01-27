@@ -1,16 +1,16 @@
 <?php
 
-namespace Ingenico\Connect\OroCommerce\Ingenico\Option\Payment;
+namespace Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Capture;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 
 /**
- * Option for handling encryptedCustomerInput.
+ * Option for handling authorized trancation's amount of money to be captured.
  */
-class EncryptedCustomerInput implements OptionInterface
+class Amount implements OptionInterface
 {
-    public const NAME = '[encryptedCustomerInput]';
+    public const NAME = '[amount]';
 
     /**
      * {@inheritdoc}
@@ -19,6 +19,6 @@ class EncryptedCustomerInput implements OptionInterface
     {
         $resolver
             ->setRequired(self::NAME)
-            ->setAllowedTypes(self::NAME, 'string');
+            ->setAllowedTypes(self::NAME, 'int');
     }
 }

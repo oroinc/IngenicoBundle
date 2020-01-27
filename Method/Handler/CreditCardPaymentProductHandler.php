@@ -2,42 +2,57 @@
 
 namespace Ingenico\Connect\OroCommerce\Method\Handler;
 
-use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\AuthorizationMode;
+use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
+use Ingenico\Connect\OroCommerce\Settings\DataProvider\PaymentActionDataProvider;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
+use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
 /**
- * 'Credit card' payment product group handler
+ * 'Credit card' payment products handler
  */
 class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
 {
     /**
      * @param PaymentTransaction $paymentTransaction
-     * @param IngenicoConfig $config
-     * @return array
+     * @param PaymentConfigInterface $config
+     * @throws \JsonException
      */
     public function purchase(
         PaymentTransaction $paymentTransaction,
         PaymentConfigInterface $config
     ) {
-        $paymentTransaction->setSuccessful(true);
+        $paymentTransaction->setSuccessful(false);
+        $response = $this->requestCreatePayment($paymentTransaction, $config);
 
-        return [];
+        $paymentAction = $config->getPaymentAction() == PaymentActionDataProvider::PRE_AUTHORIZATION ?
+            PaymentMethodInterface::AUTHORIZE : $paymentTransaction->getAction();
+        $paymentTransaction
+            ->setSuccessful($response->isSuccessful())
+            ->setActive($response->isSuccessful())
+            ->setReference($response->getReference())
+            ->setAction($paymentAction)
+            ->setResponse($response->toArray());
     }
 
     /**
-     * @param PaymentTransaction $paymentTransaction
-     * @param IngenicoConfig $config
-     * @return array
+     * {@inheritdoc}
      */
-    public function capture(
+    protected function getCreatePaymentOptions(
         PaymentTransaction $paymentTransaction,
         PaymentConfigInterface $config
-    ) {
-        $paymentTransaction->setSuccessful(true);
+    ): array {
+        return [AuthorizationMode::NAME => $config->getPaymentAction()];
+    }
 
-        return [];
+    /**
+     * @return string
+     */
+    protected function getCreatePaymentTransactionType(): string
+    {
+        return Transaction::CREATE_CARDS_PAYMENT;
     }
 
     /**
