@@ -13,7 +13,7 @@ class IngenicoBundleInstaller implements Installation
      */
     public function getMigrationVersion()
     {
-        return 'v1_0';
+        return 'v1_1';
     }
 
     /**
@@ -23,6 +23,7 @@ class IngenicoBundleInstaller implements Installation
     {
         /** update integration transport table */
         $this->updateOroIntegrationTransportTable($schema);
+        $this->addTokenizationEnabledField($schema);
     }
 
     /**
@@ -48,5 +49,19 @@ class IngenicoBundleInstaller implements Installation
         $table->addColumn('ingenico_merchant_id', 'string', ['notnull' => false, 'length' => 255]);
         $table->addColumn('ingenico_enabled_products', 'array', ['notnull' => false, 'comment' => '(DC2Type:array)']);
         $table->addColumn('ingenico_payment_action', 'string', ['notnull' => false, 'length' => 255]);
+    }
+
+    protected function addTokenizationEnabledField(Schema $schema)
+    {
+        $table = $schema->getTable('oro_integration_transport');
+
+        $table->addColumn(
+            'ingenico_tokenization_enabled',
+            'boolean',
+            [
+                'notnull' => false,
+                'default' => '0',
+            ]
+        );
     }
 }

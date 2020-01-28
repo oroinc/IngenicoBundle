@@ -5,6 +5,7 @@ namespace Ingenico\Connect\OroCommerce\Form\Type;
 use Ingenico\Connect\OroCommerce\Entity\IngenicoSettings;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\PaymentActionDataProvider;
+use Oro\Bundle\FormBundle\Form\Type\CheckboxType;
 use Oro\Bundle\FormBundle\Form\Type\OroPlaceholderPasswordType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -68,6 +69,9 @@ class IngenicoSettingsType extends AbstractType
                         sprintf('ingenico.settings.paymentAction.choice.%s', $action)
                     );
                 }
+            ])
+            ->add('tokenizationEnabled', CheckboxType::class, [
+                'tooltip' => 'ingenico.settings.tokenizationEnabled.tooltip'
             ]);
     }
 

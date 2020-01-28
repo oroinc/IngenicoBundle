@@ -42,6 +42,7 @@ class IngenicoConfigFactory
         $params[IngenicoConfig::FIELD_ENABLED_PRODUCTS_KEY] = is_array($settings->getEnabledProducts()) ?
             $settings->getEnabledProducts() : [];
         $params[IngenicoConfig::FIELD_PAYMENT_ACTION_KEY] = (string)$settings->getPaymentAction();
+        $params[IngenicoConfig::FIELD_TOKENIZAION_ENABLED_KEY] = $settings->isTokenizationEnabled();
         $params[IngenicoConfig::FIELD_PAYMENT_METHOD_IDENTIFIER] =
             $this->identifierGenerator->generateIdentifier($channel);
 

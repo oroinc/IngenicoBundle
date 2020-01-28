@@ -16,7 +16,7 @@ class IngenicoConfig extends AbstractParameterBagPaymentConfig
     const FIELD_MERCHANT_ID_KEY = 'merchant_id';
     const FIELD_ENABLED_PRODUCTS_KEY = 'enabled_products';
     const FIELD_PAYMENT_ACTION_KEY = 'payment_action';
-
+    const FIELD_TOKENIZAION_ENABLED_KEY = 'tokenization_enabled';
 
     /**
      * {@inheritDoc}
@@ -72,5 +72,13 @@ class IngenicoConfig extends AbstractParameterBagPaymentConfig
     public function getPaymentAction(): ?string
     {
         return $this->get(self::FIELD_PAYMENT_ACTION_KEY);
+    }
+
+    /**
+     * @return bool|null
+     */
+    public function isTokenizationEnabled(): ?bool
+    {
+        return $this->get(self::FIELD_TOKENIZAION_ENABLED_KEY);
     }
 }

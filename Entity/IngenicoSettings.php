@@ -18,6 +18,7 @@ class IngenicoSettings extends Transport
     public const MERCHANT_ID = 'merchant_id';
     public const ENABLED_PRODUCTS = 'enabled_products';
     public const PAYMENT_ACTION = 'payment_action';
+    public const TOKENIZATION_ENABLED = 'tokenization_enabled';
 
     /**
      * @var ParameterBag
@@ -67,6 +68,13 @@ class IngenicoSettings extends Transport
     protected $paymentAction;
 
     /**
+     * @var bool
+     *
+     * @ORM\Column(name="ingenico_tokenization_enabled", type="boolean", nullable=true, options={"default"=false})
+     */
+    protected $tokenizationEnabled = false;
+
+    /**
      * {@inheritdoc}
      */
     public function getSettingsBag()
@@ -79,6 +87,7 @@ class IngenicoSettings extends Transport
                 self::MERCHANT_ID => $this->getMerchantId(),
                 self::ENABLED_PRODUCTS => $this->getEnabledProducts(),
                 self::PAYMENT_ACTION => $this->getPaymentAction(),
+                self::TOKENIZATION_ENABLED => $this->isTokenizationEnabled(),
             ]);
         }
 
@@ -200,6 +209,26 @@ class IngenicoSettings extends Transport
     public function setPaymentAction($paymentAction): IngenicoSettings
     {
         $this->paymentAction = $paymentAction;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTokenizationEnabled(): bool
+    {
+        return $this->tokenizationEnabled;
+    }
+
+    /**
+     * @param bool $tokenizationEnabled
+     *
+     * @return IngenicoSettings
+     */
+    public function setTokenizationEnabled(bool $tokenizationEnabled): IngenicoSettings
+    {
+        $this->tokenizationEnabled = $tokenizationEnabled;
 
         return $this;
     }
