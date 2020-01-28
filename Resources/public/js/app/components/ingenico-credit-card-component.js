@@ -16,6 +16,7 @@ define(function(require) {
         options: {
             paymentMethod: null,
             paymentDetails: {},
+            paymentProductAliasesInfo: {},
             createSessionRoute: 'ingenico.create-session'
         },
 
@@ -23,6 +24,7 @@ define(function(require) {
         paymentProductItems: [],
         currentPaymentProduct: null,
         paymentProductListTemplate: paymentProductListTemplate,
+        bankCodeFieldId: 'bankCode', // bank code field ID in payment product object received via Ingenico's SDK
 
         /**
          * @property {jQuery}
@@ -132,6 +134,9 @@ define(function(require) {
                     .getPaymentProduct(paymentProductId, this.options.paymentDetails)
                     .then(
                         function(paymentProduct) {
+                            // workaround to solve payment product's fields validation issues
+                            // caused by improper fields setup received from Ingenico's SDK
+                            this.fixFieldsRestrictions(paymentProduct);
                             this.currentPaymentProduct = paymentProduct;
                             mediator.execute('hideLoading');
                             deffer.resolve();
@@ -151,6 +156,33 @@ define(function(require) {
             }
 
             return deffer.promise();
+        },
+
+        /**
+         * Workaround to solve payment product's fields validation issues
+         * caused by improper fields setup received from Ingenico's SDK
+         */
+        fixFieldsRestrictions: function(paymentProduct) {
+            if (paymentProduct.paymentProductFieldById[this.bankCodeFieldId]) {
+                this.fixBankCodeFieldRestrictions(paymentProduct.paymentProductFieldById[this.bankCodeFieldId]);
+            }
+        },
+
+        /**
+         * Fixes bank code field's issued validation setup
+         */
+        fixBankCodeFieldRestrictions: function(bankCodeField) {
+            const validationRuleByType = bankCodeField.dataRestrictions.validationRuleByType;
+
+            if (validationRuleByType['length']) {
+                // original maxLength is 8. Proper bank code for test proposes is '121000248'
+                validationRuleByType.length.maxLength = 9;
+            }
+
+            if (validationRuleByType['regularExpression']) {
+                // original regularExpression is '^[0-9]{1,9}$'
+                validationRuleByType.regularExpression.regularExpression = '^[0-9]{1,9}$';
+            }
         },
 
         renderPaymentProductsList: function() {
@@ -223,11 +255,6 @@ define(function(require) {
                 if ($(fieldName).length) {
                     let value = $(fieldName).val();
 
-                    // workaround for showing validation message
-                    // because empty value does not treat as error by sdk validation
-                    if (!value) {
-                        value = '#';
-                    }
                     fields.push({
                         field: field.id,
                         value: value
@@ -256,8 +283,10 @@ define(function(require) {
             if (!paymentRequest.isValid()) {
                 _.each(paymentRequest.getPaymentProduct().paymentProductFields, function(field) {
                     const fieldName = this.buildFieldIdentifier(field.id, 'error');
+                    const fieldValue = paymentRequest.getValue(field.id);
+
                     if ($(fieldName).length) {
-                        if (field.getErrorCodes().length) {
+                        if (field.getErrorCodes().length || (field.dataRestrictions.isRequired && !fieldValue)) {
                             $(fieldName).removeClass('hidden');
                         } else {
                             $(fieldName).addClass('hidden');
@@ -271,7 +300,6 @@ define(function(require) {
             return true;
         },
 
-
         /**
          * Crypts selected payment product's form values and storing it to DOM storage. INGA-29 basic implementation
          */
@@ -283,7 +311,7 @@ define(function(require) {
             encryptor.encrypt(paymentRequest).then(
                 function(encryptedString) {
                     this.addPaymentAdditionalData({
-                        ingenicoPaymentProduct: paymentRequest.getPaymentProduct().paymentProductGroup,
+                        ingenicoPaymentProduct: this.getPaymentProductAlias(paymentRequest.getPaymentProduct()),
                         ingenicoCustomerEncDetails: encryptedString
                     });
                     deffer.resolve();
@@ -295,6 +323,18 @@ define(function(require) {
             );
 
             return deffer.promise();
+        },
+
+        getPaymentProductAlias: function(paymentProduct) {
+            const paymentProductAliasesInfo = this.options.paymentProductAliasesInfo;
+
+            if (paymentProduct.id === paymentProductAliasesInfo.achProductId) {
+                return paymentProductAliasesInfo.achProductAlias;
+            } else if (paymentProduct.id === paymentProductAliasesInfo.sepaProductId) {
+                return paymentProductAliasesInfo.sepaProductAlias;
+            }
+
+            return paymentProduct.paymentProductGroup ? paymentProduct.paymentProductGroup : '';
         },
 
         addPaymentAdditionalData: function(updateData) {
@@ -309,7 +349,9 @@ define(function(require) {
             }
 
             for (const key in updateData) {
-                additionalData[key] = updateData[key];
+                if ({}.hasOwnProperty.call(updateData, key)) {
+                    additionalData[key] = updateData[key];
+                }
             }
 
             mediator.trigger('checkout:payment:additional-data:set', JSON.stringify(additionalData));

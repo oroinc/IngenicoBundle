@@ -10,8 +10,9 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\AmountOfMoney;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\References\MerchantReference;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\PaymentResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
+use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
+use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
 /**
  * Abstract(generic) class for Ingenico payment products handler
@@ -58,7 +59,7 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
     public function execute(
         string $action,
         PaymentTransaction $paymentTransaction,
-        PaymentConfigInterface $config
+        IngenicoConfig $config
     ): array {
         if (!method_exists($this, $action)) {
             throw new \InvalidArgumentException(
@@ -75,13 +76,13 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
 
     /**
      * @param PaymentTransaction $paymentTransaction
-     * @param PaymentConfigInterface $config
+     * @param IngenicoConfig $config
      * @return array
      * @throws \JsonException
      */
     public function capture(
         PaymentTransaction $paymentTransaction,
-        PaymentConfigInterface $config
+        IngenicoConfig $config
     ) {
         $sourcePaymentTransaction = $paymentTransaction->getSourcePaymentTransaction();
         if (!$sourcePaymentTransaction) {
@@ -122,13 +123,13 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
 
     /**
      * @param PaymentTransaction $paymentTransaction
-     * @param PaymentConfigInterface $config
+     * @param IngenicoConfig $config
      * @return PaymentResponse
      * @throws \JsonException
      */
     protected function requestCreatePayment(
         PaymentTransaction $paymentTransaction,
-        PaymentConfigInterface $config
+        IngenicoConfig $config
     ): PaymentResponse {
         $requestOptions = [
             EncryptedCustomerInput::NAME => $this->getTransactionOption(
@@ -137,7 +138,11 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
             ),
             AmountOfMoney\Amount::NAME => (int)($paymentTransaction->getAmount() * 100),
             AmountOfMoney\CurrencyCode::NAME => $paymentTransaction->getCurrency(),
-            MerchantReference::NAME => sprintf('oroCommerceOrder:%d', $paymentTransaction->getEntityIdentifier())
+            MerchantReference::NAME => sprintf(
+                'o:%d:n:%s',
+                $paymentTransaction->getEntityIdentifier(),
+                uniqid()
+            )
         ];
 
         $response = $this->gateway->request(
@@ -151,12 +156,12 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
 
     /**
      * @param PaymentTransaction $paymentTransaction
-     * @param PaymentConfigInterface $config
+     * @param IngenicoConfig $config
      * @return array
      */
     protected function getCreatePaymentOptions(
         PaymentTransaction $paymentTransaction,
-        PaymentConfigInterface $config
+        IngenicoConfig $config
     ): array {
         return [];
     }
@@ -171,13 +176,13 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
 
     /**
      * @param PaymentTransaction $paymentTransaction
-     * @param PaymentConfigInterface $config
+     * @param IngenicoConfig $config
      * @return PaymentResponse
      * @throws \JsonException
      */
     protected function requestApprovePayment(
         PaymentTransaction $paymentTransaction,
-        PaymentConfigInterface $config
+        IngenicoConfig $config
     ): PaymentResponse {
         $requestOptions = [
             Capture\Amount::NAME => (int)($paymentTransaction->getAmount() * 100)
@@ -203,14 +208,23 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
 
     /**
      * @param PaymentTransaction $paymentTransaction
-     * @param PaymentConfigInterface $config
+     * @param IngenicoConfig $config
      * @return array
      */
     protected function getApprovePaymentOptions(
         PaymentTransaction $paymentTransaction,
-        PaymentConfigInterface $config
+        IngenicoConfig $config
     ): array {
         return [];
+    }
+
+    /**
+     * @param PaymentResponse $response
+     * @return string
+     */
+    protected function getPurchaseActionByPaymentResponse(PaymentResponse $response)
+    {
+        return PaymentMethodInterface::PURCHASE;
     }
 
     /**

@@ -5,13 +5,13 @@ use Ingenico\Connect\OroCommerce\Ingenico\Gateway\Gateway;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Session\PaymentProductFilter\Restrict\Groups;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Session\PaymentProductFilter\Restrict\Products;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
+use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductHandlerRegistry;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\Action\CaptureActionInterface;
 use Oro\Bundle\PaymentBundle\Method\Action\PurchaseActionInterface;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
 /**
@@ -21,27 +21,27 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
 {
     public const CREATE_SESSION_ACTION = 'createSession';
 
-    /** @var PaymentConfigInterface */
+    /** @var IngenicoConfig */
     private $config;
 
     /** @var PaymentProductHandlerRegistry */
-    private $paymentProductGroupHandlersRegistry;
+    private $paymentProductHandlersRegistry;
 
     /** @var Gateway */
     private $gateway;
 
     /**
-     * @param PaymentConfigInterface $config
+     * @param IngenicoConfig $config
      * @param PaymentProductHandlerRegistry $paymentProductHandlersRegistry
      * @param Gateway $gateway
      */
     public function __construct(
-        PaymentConfigInterface $config,
+        IngenicoConfig $config,
         PaymentProductHandlerRegistry $paymentProductHandlersRegistry,
         Gateway $gateway
     ) {
         $this->config = $config;
-        $this->paymentProductGroupHandlersRegistry = $paymentProductHandlersRegistry;
+        $this->paymentProductHandlersRegistry = $paymentProductHandlersRegistry;
         $this->gateway = $gateway;
     }
 
@@ -54,16 +54,16 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
             return $this->createSession();
         }
 
-        $paymentProductGroupHandler =
-            $this->paymentProductGroupHandlersRegistry->getPaymentProductHandler($paymentTransaction);
+        $paymentProductHandler =
+            $this->paymentProductHandlersRegistry->getPaymentProductHandler($paymentTransaction);
 
-        if (null === $paymentProductGroupHandler || !$this->supports($action)) {
+        if (null === $paymentProductHandler || !$this->supports($action)) {
             throw new \InvalidArgumentException(
                 sprintf('"%s" payment method "%s" action is not supported', $this->getIdentifier(), $action)
             );
         }
 
-        return $paymentProductGroupHandler->execute($action, $paymentTransaction, $this->config);
+        return $paymentProductHandler->execute($action, $paymentTransaction, $this->config);
     }
 
     /**

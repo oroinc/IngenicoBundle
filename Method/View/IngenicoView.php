@@ -3,6 +3,7 @@
 namespace Ingenico\Connect\OroCommerce\Method\View;
 
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
+use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
 use Oro\Bundle\CurrencyBundle\Rounding\RoundingServiceInterface;
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Method\View\PaymentMethodViewInterface;
@@ -48,6 +49,12 @@ class IngenicoView implements PaymentMethodViewInterface
                 'countryCode' => $context->getBillingAddress()->getCountryIso2(),
                 'isRecurring' => false,
                 'locale' => $this->currentLocalizationCode
+            ],
+            'paymentProductAliasesInfo' => [
+                'achProductId' => EnabledProductsDataProvider::ACH_ID,
+                'achProductAlias' => EnabledProductsDataProvider::ACH,
+                'sepaProductId' => EnabledProductsDataProvider::SEPA_ID,
+                'sepaProductAlias' => EnabledProductsDataProvider::SEPA
             ]
         ];
     }
@@ -84,7 +91,9 @@ class IngenicoView implements PaymentMethodViewInterface
         return $this->config->getAdminLabel();
     }
 
-    /** {@inheritdoc} */
+    /**
+     * {@inheritdoc}
+     */
     public function getPaymentMethodIdentifier()
     {
         return $this->config->getPaymentMethodIdentifier();

@@ -3,13 +3,13 @@
 namespace Ingenico\Connect\OroCommerce\Ingenico\Request\Payments;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
-use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\AuthorizationMode;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\DirectDebitPayment\DirectDebitText;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 
 /**
- * Handle create payment request specifically for credit card payment products.
+ * Handle create payment request specifically for direct debit payment products(ACH, SEPA).
  */
-class CreateCardsPaymentRequest extends CreatePaymentRequest
+class DirectDebitPaymentRequest extends CreatePaymentRequest
 {
     /**
      * {@inheritdoc}
@@ -17,7 +17,7 @@ class CreateCardsPaymentRequest extends CreatePaymentRequest
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
-        $resolver->addOption(new AuthorizationMode());
+        $resolver->addOption(new DirectDebitText());
     }
 
     /**
@@ -25,6 +25,6 @@ class CreateCardsPaymentRequest extends CreatePaymentRequest
      */
     public function getTransactionType(): string
     {
-        return Transaction::CREATE_CARDS_PAYMENT;
+        return Transaction::CREATE_DIRECT_DEBIT_PAYMENT;
     }
 }

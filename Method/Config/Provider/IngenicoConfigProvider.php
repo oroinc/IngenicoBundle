@@ -53,9 +53,9 @@ class IngenicoConfigProvider
     }
 
     /**
-     * {@inheritDoc}
+     * @return PaymentConfigInterface[]
      */
-    public function getPaymentConfigs()
+    public function getPaymentConfigs(): array
     {
         $configs = [];
 
@@ -70,7 +70,8 @@ class IngenicoConfigProvider
     }
 
     /**
-     * {@inheritDoc}
+     * @param $identifier
+     * @return PaymentConfigInterface
      */
     public function getPaymentConfig($identifier): PaymentConfigInterface
     {
@@ -84,7 +85,8 @@ class IngenicoConfigProvider
     }
 
     /**
-     * {@inheritDoc}
+     * @param $identifier
+     * @return bool
      */
     public function hasPaymentConfig($identifier): bool
     {

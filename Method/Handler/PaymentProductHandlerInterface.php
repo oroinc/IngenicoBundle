@@ -4,7 +4,6 @@ namespace Ingenico\Connect\OroCommerce\Method\Handler;
 
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 
 /**
  * Ingenico payment product handler interface
@@ -20,7 +19,7 @@ interface PaymentProductHandlerInterface
     public function execute(
         string $action,
         PaymentTransaction $paymentTransaction,
-        PaymentConfigInterface $config
+        IngenicoConfig $config
     ): array;
 
     /**

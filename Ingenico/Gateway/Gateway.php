@@ -8,6 +8,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 use Ingenico\Connect\OroCommerce\Ingenico\Request\ActionParamsAwareInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Request\RequestRegistry;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\Response;
+use Ingenico\Connect\Sdk\ResponseException;
 use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 
 /**
@@ -75,7 +76,16 @@ class Gateway
             $requestBody = array_merge($resolverActionParams, $requestBody);
         }
 
-        $response = $this->client->send($paymentConfig, $request->getResource(), $request->getAction(), $requestBody);
+        try {
+            $response = $this->client->send(
+                $paymentConfig,
+                $request->getResource(),
+                $request->getAction(),
+                $requestBody
+            );
+        } catch (ResponseException $e) {
+            $response = json_decode($e->getResponse()->toJson(), true);
+        }
 
         return Response::create($response);
     }
