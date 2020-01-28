@@ -1,0 +1,8 @@
+<div class="payment-product">
+    <% _.each(productPayments, function(item) { %>
+    <a href="#" class="payment-product__item" data-product-id="<%= item.id %>">
+        <img src="<%= item.logo %>" alt="" class="payment-product__logo">
+        <span class="payment-product__label"><%= item.label %></span>
+    </a>
+    <% }) %>
+</div>

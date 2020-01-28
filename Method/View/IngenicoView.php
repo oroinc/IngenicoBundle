@@ -3,6 +3,7 @@
 namespace Ingenico\Connect\OroCommerce\Method\View;
 
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
+use Oro\Bundle\CurrencyBundle\Rounding\RoundingServiceInterface;
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Method\View\PaymentMethodViewInterface;
 
@@ -11,17 +12,28 @@ use Oro\Bundle\PaymentBundle\Method\View\PaymentMethodViewInterface;
  */
 class IngenicoView implements PaymentMethodViewInterface
 {
-    /**
-     * @var IngenicoConfig
-     */
+    /** @var IngenicoConfig */
     private $config;
+
+    /** @var string */
+    private $currentLocalizationCode;
+
+    /** @var RoundingServiceInterface */
+    private $rounding;
 
     /**
      * @param IngenicoConfig $config
+     * @param string $currentLocalizationCode
+     * @param RoundingServiceInterface $rounding
      */
-    public function __construct(IngenicoConfig $config)
-    {
+    public function __construct(
+        IngenicoConfig $config,
+        string $currentLocalizationCode,
+        RoundingServiceInterface $rounding
+    ) {
         $this->config = $config;
+        $this->currentLocalizationCode = $currentLocalizationCode;
+        $this->rounding = $rounding;
     }
 
     /**
@@ -29,7 +41,15 @@ class IngenicoView implements PaymentMethodViewInterface
      */
     public function getOptions(PaymentContextInterface $context): array
     {
-        return [];
+        return [
+            'paymentDetails' => [
+                'totalAmount' => (int) ($this->rounding->round($context->getTotal()) * 100),
+                'currency' => $context->getCurrency(),
+                'countryCode' => $context->getBillingAddress()->getCountryIso2(),
+                'isRecurring' => false,
+                'locale' => $this->currentLocalizationCode
+            ]
+        ];
     }
 
     /**

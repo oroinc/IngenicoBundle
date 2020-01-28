@@ -88,6 +88,10 @@ services:
     ingenico.factory.method_view.ingenico:
         class: Ingenico\Connect\OroCommerce\Method\View\Factory\IngenicoViewFactory
         public: false
+        arguments:
+            - '@oro_locale.helper.localization'
+            - '@oro_locale.manager.localization'
+            - '@oro_currency.rounding.price_rounding_service'
 
     ingenico.payment_method_view_provider.ingenico:
         class: Ingenico\Connect\OroCommerce\Method\View\Provider\IngenicoViewProvider

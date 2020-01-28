@@ -7,7 +7,7 @@ define(function(require) {
         // CreditCard fields
         cardNumber: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         expiryDate: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        cvv: require('tpl-loader!ingenico/templates/macros/input-default.html'),
+        cvv: require('tpl-loader!ingenico/templates/macros/input-password.html'),
 
         // DirectDebit fields
         city: require('tpl-loader!ingenico/templates/macros/input-default.html'),
