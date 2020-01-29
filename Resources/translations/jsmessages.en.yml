@@ -6,3 +6,4 @@ ingenico:
     no_choosen_payment_product: 'Need to choose payment product.'
     crypt_error: 'Failed to crypt payment form data.'
     general_error: 'Invalid value.'
+    saveForLaterUse.label: 'Save for later use'

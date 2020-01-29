@@ -7,7 +7,7 @@ define(function(require) {
     const __ = require('orotranslation/js/translator');
     const $ = require('jquery');
     const BaseComponent = require('oroui/js/app/components/base/component');
-    const connectsdk = require('connect-sdk-client-js');
+    const ConnectSdk = require('connect-sdk-client-js');
     const mediator = require('oroui/js/mediator');
     const routing = require('routing');
     const paymentProductListTemplate = require('tpl-loader!ingenico/templates/payment-products-list.html');
@@ -16,13 +16,15 @@ define(function(require) {
         options: {
             paymentMethod: null,
             paymentDetails: {},
-            createSessionRoute: 'ingenico.create-session'
+            createSessionRoute: 'ingenico.create-session',
+            saveForLaterUseEnabled: false
         },
 
         session: null,
         paymentProductItems: [],
         currentPaymentProduct: null,
         paymentProductListTemplate: paymentProductListTemplate,
+        saveForLaterUse: false,
 
         /**
          * @property {jQuery}
@@ -49,7 +51,9 @@ define(function(require) {
 
             this.$el = this.options._sourceElement;
 
-            this.$el.on('click.' + this.cid, 'a.payment-product__item', this.renderPaymentProductFields.bind(this));
+            this.$el
+                .on('click.' + this.cid, 'a.payment-product__item', this.renderPaymentProductFields.bind(this))
+                .on('change.' + this.cid, this.getSaveForLaterSelector(), this.onSaveForLaterChange.bind(this));
 
             mediator.on('checkout:payment:method:changed', this.onPaymentMethodChange, this);
             mediator.on('checkout-content:initialized', this.refreshPaymentMethod, this);
@@ -85,7 +89,7 @@ define(function(require) {
                     ),
                     function(data) {
                         if (data.success) {
-                            this.session = new connectsdk(data.sessionInfo);
+                            this.session = new ConnectSdk(data.sessionInfo);
                             deffer.resolve();
                         } else {
                             mediator.execute('showFlashMessage', 'error', data.errorMessage);
@@ -181,8 +185,32 @@ define(function(require) {
                         }));
                     }.bind(this));
 
+                    if (this.isSaveForLaterUseApplicable()) {
+                        fields.push(_.macros('ingenico::saveForLaterUse')({
+                            paymentMethod: this.options.paymentMethod,
+                            field: {
+                                id: 'saveForLaterUse',
+                                displayHints: {
+                                    label: __('ingenico.saveForLaterUse.label')
+                                }
+                            }
+                        }));
+                    }
+
                     this.$el.html(fields.join(''));
                 }.bind(this));
+        },
+
+        /**
+         * @param {Object} e
+         */
+        onSaveForLaterChange: function(e) {
+            const $el = $(e.target);
+            this.saveForLaterUse = $el.prop('checked');
+        },
+
+        getSaveForLaterSelector: function() {
+            return this.buildFieldIdentifier('saveForLaterUse', 'field');
         },
 
         isPaymentProductChanged: function(paymentProductId) {
@@ -195,6 +223,14 @@ define(function(require) {
             }
 
             return false;
+        },
+
+        isSaveForLaterUseApplicable: function() {
+            if (!this.currentPaymentProduct) {
+                return false;
+            }
+
+            return this.currentPaymentProduct.paymentProductGroup && this.options.saveForLaterUseEnabled;
         },
 
         /**
@@ -282,10 +318,18 @@ define(function(require) {
             const paymentRequest = this.session.getPaymentRequest();
             encryptor.encrypt(paymentRequest).then(
                 function(encryptedString) {
-                    this.addPaymentAdditionalData({
+                    let data = {
                         ingenicoPaymentProduct: paymentRequest.getPaymentProduct().paymentProductGroup,
                         ingenicoCustomerEncDetails: encryptedString
-                    });
+                    };
+
+                    if (this.isSaveForLaterUseApplicable()) {
+                        data = _.extend(data, {
+                            ingenicoSaveForLaterUse: this.saveForLaterUse
+                        });
+                    }
+
+                    this.addPaymentAdditionalData(data);
                     deffer.resolve();
                 }.bind(this),
                 function() {
@@ -345,7 +389,9 @@ define(function(require) {
             mediator.off('checkout:payment:before-hide-filled-form', this.beforeHideFilledForm, this);
             mediator.off('checkout:payment:remove-filled-form', this.removeFilledForm, this);
 
-            this.$el.off('click' + this.cid, '.payment-product__item');
+            this.$el
+                .off('click.' + this.cid, '.payment-product__item')
+                .off('change.' + this.cid, this.getSaveForLaterSelector());
 
             IngenicoCreditCardComponent.__super__.dispose.call(this);
         }

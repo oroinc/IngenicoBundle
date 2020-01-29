@@ -42,6 +42,7 @@ class IngenicoView implements PaymentMethodViewInterface
     public function getOptions(PaymentContextInterface $context): array
     {
         return [
+            'saveForLaterUseEnabled' => $this->config->isTokenizationEnabled(),
             'paymentDetails' => [
                 'totalAmount' => (int) ($this->rounding->round($context->getTotal()) * 100),
                 'currency' => $context->getCurrency(),

@@ -1,13 +1,14 @@
 define(function(require) {
     'use strict';
 
-    var _ = require('underscore');
+    const _ = require('underscore');
 
     _.macros('ingenico', {
         // CreditCard fields
         cardNumber: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         expiryDate: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         cvv: require('tpl-loader!ingenico/templates/macros/input-password.html'),
+        saveForLaterUse: require('tpl-loader!ingenico/templates/macros/input-checkbox.html'),
 
         // DirectDebit fields
         city: require('tpl-loader!ingenico/templates/macros/input-default.html'),
@@ -18,6 +19,6 @@ define(function(require) {
         surname: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         street: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         houseNumber: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        zip: require('tpl-loader!ingenico/templates/macros/input-default.html'),
+        zip: require('tpl-loader!ingenico/templates/macros/input-default.html')
     });
 });
