@@ -60,14 +60,20 @@ services:
         public: false
         arguments:
             - '@ingenico.ingenico.gateway'
+        calls:
+            - [setPaymentTransactionProvider, ['@ingenico.provider.payment_transaction']]
         tags:
-            - { name: ingenico.payment_product_group.handler}
+            - { name: ingenico.payment_product_group.handler }
 
     ingenico.payment_product_group.handlers_registry:
         class: Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductHandlerRegistry
         public: false
         arguments:
             - !tagged_iterator ingenico.payment_product_group.handler
+
+    ingenico.provider.payment_transaction:
+        class: Ingenico\Connect\OroCommerce\Provider\PaymentTransactionProvider
+        parent: oro_payment.provider.payment_transaction
 
     ingenico.factory.method.ingenico:
         class: 'Ingenico\Connect\OroCommerce\Method\Factory\IngenicoPaymentMethodFactory'
@@ -136,6 +142,12 @@ services:
 
     ingenico.ingenico.request.approve_payment:
         class: Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\ApprovePaymentRequest
+        public: false
+        tags:
+            - { name: ingenico.ingenico.request }
+
+    ingenico.ingenico.request.tokenize_payment_request:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\TokenizePaymentRequest
         public: false
         tags:
             - { name: ingenico.ingenico.request }

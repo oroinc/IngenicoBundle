@@ -20,3 +20,9 @@ ingenico:
         tokenizationEnabled:
             label: 'Allow tokenization'
             tooltip: 'Allow tokenization to store payment credentials for future payments'
+
+oro:
+    payment:
+        paymenttransaction:
+            types:
+                tokenize.label: 'Tokenize'

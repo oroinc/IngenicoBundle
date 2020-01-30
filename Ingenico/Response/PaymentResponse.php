@@ -7,8 +7,9 @@ namespace Ingenico\Connect\OroCommerce\Ingenico\Response;
  */
 class PaymentResponse extends Response
 {
-    public const PAYMENT_ID = 'payment.id';
-    public const PAYMENT_STATUS = 'payment.status';
+    public const PAYMENT_ID = '[payment][id]';
+    public const PAYMENT_STATUS = '[payment][status]';
+    public const CARD_NUMBER = '[payment][paymentOutput][cardPaymentMethodSpecificOutput][card][cardNumber]';
 
     /**
      * @return string
@@ -24,5 +25,13 @@ class PaymentResponse extends Response
     public function getPaymentStatus(): ?string
     {
         return $this->offsetGetByPath(self::PAYMENT_STATUS);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCardNumber(): ?string
+    {
+        return $this->offsetGetByPath(self::CARD_NUMBER);
     }
 }

@@ -20,6 +20,7 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInterface, PurchaseActionInterface
 {
     public const CREATE_SESSION_ACTION = 'createSession';
+    public const TOKENIZE = 'tokenize';
 
     /** @var PaymentConfigInterface */
     private $config;

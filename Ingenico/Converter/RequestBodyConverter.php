@@ -25,9 +25,13 @@ class RequestBodyConverter
      */
     public function convert(RequestInterface $request, array $body): DataObject
     {
-        $jsonBody = $this->prepareBodyJson($body);
+        $originalRequest = $request->createOriginalRequest();
+        if (!empty($body)) {
+            $jsonBody = $this->prepareBodyJson($body);
+            $originalRequest->fromJson($jsonBody);
+        }
 
-        return $request->createOriginalRequest()->fromJson($jsonBody);
+        return $originalRequest;
     }
 
     /**
