@@ -3,6 +3,7 @@
 namespace Ingenico\Connect\OroCommerce\Method\View;
 
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
+use Ingenico\Connect\OroCommerce\Provider\PaymentTransactionProvider;
 use Oro\Bundle\CurrencyBundle\Rounding\RoundingServiceInterface;
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Method\View\PaymentMethodViewInterface;
@@ -21,19 +22,25 @@ class IngenicoView implements PaymentMethodViewInterface
     /** @var RoundingServiceInterface */
     private $rounding;
 
+    /** @var PaymentTransactionProvider */
+    private $paymentTransactionProvider;
+
     /**
      * @param IngenicoConfig $config
      * @param string $currentLocalizationCode
      * @param RoundingServiceInterface $rounding
+     * @param PaymentTransactionProvider $paymentTransactionProvider
      */
     public function __construct(
         IngenicoConfig $config,
         string $currentLocalizationCode,
-        RoundingServiceInterface $rounding
+        RoundingServiceInterface $rounding,
+        PaymentTransactionProvider $paymentTransactionProvider
     ) {
         $this->config = $config;
         $this->currentLocalizationCode = $currentLocalizationCode;
         $this->rounding = $rounding;
+        $this->paymentTransactionProvider = $paymentTransactionProvider;
     }
 
     /**
@@ -43,6 +50,7 @@ class IngenicoView implements PaymentMethodViewInterface
     {
         return [
             'saveForLaterUseEnabled' => $this->config->isTokenizationEnabled(),
+            'savedCreditCardList' => $this->getSavedCardList(),
             'paymentDetails' => [
                 'totalAmount' => (int) ($this->rounding->round($context->getTotal()) * 100),
                 'currency' => $context->getCurrency(),
@@ -89,5 +97,32 @@ class IngenicoView implements PaymentMethodViewInterface
     public function getPaymentMethodIdentifier()
     {
         return $this->config->getPaymentMethodIdentifier();
+    }
+
+    /**
+     * @return array
+     */
+    protected function getSavedCardList(): array
+    {
+        if ($this->config->isTokenizationEnabled()) {
+            $cardList = [];
+            $tokens = [];
+            $paymentTransactions = $this->paymentTransactionProvider->getActiveTokenizePaymentTransactions(
+                $this->config->getPaymentMethodIdentifier()
+            );
+            foreach ($paymentTransactions as $paymentTransaction) {
+                $transactionOptions = $paymentTransaction->getTransactionOptions();
+                if (isset($transactionOptions['cardNumber'], $transactionOptions['token']) &&
+                    !in_array($transactionOptions['token'], $tokens, true)
+                ) {
+                    $cardList[$paymentTransaction->getId()] = $transactionOptions['cardNumber'];
+                    $tokens[] = $transactionOptions['token'];
+                }
+            }
+
+            return $cardList;
+        }
+
+        return [];
     }
 }

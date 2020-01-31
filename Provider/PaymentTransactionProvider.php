@@ -2,6 +2,8 @@
 
 namespace Ingenico\Connect\OroCommerce\Provider;
 
+use Doctrine\Common\Collections\Criteria;
+use Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider as BasePaymentTransactionProvider;
 
@@ -10,6 +12,9 @@ use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider as BasePaymentT
  */
 class PaymentTransactionProvider extends BasePaymentTransactionProvider
 {
+    private const LAST_TOKEN_LIMIT = 10;
+    private const TOKEN_KEY = 'token';
+
     /**
      * @param PaymentTransaction $paymentTransaction
      * @param string $type
@@ -22,19 +27,72 @@ class PaymentTransactionProvider extends BasePaymentTransactionProvider
         string $type,
         array $transactionOptions
     ): PaymentTransaction {
-        $tokenizePaymentTransaction = $this->createEmptyPaymentTransaction()
+        return $this->createEmptyPaymentTransaction()
             ->setPaymentMethod($paymentTransaction->getPaymentMethod())
             ->setAction($type)
             ->setEntityClass($paymentTransaction->getEntityClass())
             ->setEntityIdentifier($paymentTransaction->getEntityIdentifier())
             ->setFrontendOwner($this->customerUserProvider->getLoggedUser(true))
             ->setTransactionOptions($transactionOptions)
-            ->setActive(false)
+            ->setActive(true)
             ->setSuccessful(true)
             ->setAmount(0)
             ->setCurrency('');
+    }
 
-        return $tokenizePaymentTransaction;
+    /**
+     * @param string $paymentMethod
+     *
+     * @return PaymentTransaction[]|array
+     */
+    public function getActiveTokenizePaymentTransactions(string $paymentMethod): array
+    {
+        $customerUser = $this->customerUserProvider->getLoggedUser(true);
+        if (!$customerUser) {
+            return null;
+        }
+
+        return $this->doctrineHelper->getEntityRepository($this->paymentTransactionClass)->findBy(
+            [
+                'active' => true,
+                'successful' => true,
+                'action' => IngenicoPaymentMethod::TOKENIZE,
+                'paymentMethod' => $paymentMethod,
+                'frontendOwner' => $customerUser,
+            ],
+            ['id' => Criteria::DESC],
+            self::LAST_TOKEN_LIMIT
+        );
+    }
+
+    /**
+     * @param string $paymentMethod
+     * @param int $id
+     *
+     * @return string|null
+     */
+    public function getTokenFromTokenizePaymentTransactionById(string $paymentMethod, int $id): ?string
+    {
+        $customerUser = $this->customerUserProvider->getLoggedUser(true);
+        if (!$customerUser) {
+            return null;
+        }
+
+        /** @var PaymentTransaction $paymentTransaction */
+        $paymentTransaction = $this->doctrineHelper->getEntityRepository($this->paymentTransactionClass)->findOneBy(
+            [
+                'active' => true,
+                'successful' => true,
+                'action' => IngenicoPaymentMethod::TOKENIZE,
+                'paymentMethod' => $paymentMethod,
+                'frontendOwner' => $customerUser,
+                'id' => $id,
+            ]
+        );
+
+        $transactionOptions = $paymentTransaction->getTransactionOptions();
+
+        return $transactionOptions[self::TOKEN_KEY] ?? null;
     }
 
     /**

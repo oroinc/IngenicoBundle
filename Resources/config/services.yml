@@ -98,6 +98,7 @@ services:
             - '@oro_locale.helper.localization'
             - '@oro_locale.manager.localization'
             - '@oro_currency.rounding.price_rounding_service'
+            - '@ingenico.provider.payment_transaction'
 
     ingenico.payment_method_view_provider.ingenico:
         class: Ingenico\Connect\OroCommerce\Method\View\Provider\IngenicoViewProvider

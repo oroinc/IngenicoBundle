@@ -7,3 +7,6 @@ ingenico:
     crypt_error: 'Failed to crypt payment form data.'
     general_error: 'Invalid value.'
     saveForLaterUse.label: 'Save for later use'
+    token:
+        label: 'Saved card'
+        placeholder: 'Do not use saved card'

@@ -4,6 +4,7 @@ namespace Ingenico\Connect\OroCommerce\Method\Handler;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\ActionParams\PaymentId;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\AuthorizationMode;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\Token;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\Response;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
@@ -20,7 +21,8 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
  */
 class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
 {
-    private const TOKEN_KEY = 'token';
+    public const TOKEN_KEY = 'token';
+    public const CREDIT_CARD_KEY = 'cardNumber';
 
     /** @var PaymentTransactionProvider */
     protected $paymentTransactionProvider;
@@ -57,18 +59,19 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
             ->setResponse($response->toArray());
 
         // save token to another transaction for future use
-        $saveForLaterUse = $this->getTransactionOption($paymentTransaction, 'ingenicoSaveForLaterUse');
-        if ($saveForLaterUse && $response->isSuccessful() && $config->isTokenizationEnabled()) {
+        $saveForLaterUseApplicable = $this->isSaveForLaterUseApplicable($paymentTransaction);
+        if ($saveForLaterUseApplicable && $response->isSuccessful() && $config->isTokenizationEnabled()) {
             $tokenResponse = $this->requestTokenize($config, $response->getReference());
             if ($tokenResponse->isSuccessful()) {
-                $token = $tokenResponse->offsetGetOr(self::TOKEN_KEY);
-                $cardNumber = $response->getCardNumber();
-
                 $tokenizePaymentTransaction = $this->paymentTransactionProvider->createTokenizePaymentTransaction(
                     $paymentTransaction,
                     IngenicoPaymentMethod::TOKENIZE,
-                    compact('token', 'cardNumber')
+                    [
+                        self::TOKEN_KEY => $tokenResponse->offsetGetOr(self::TOKEN_KEY),
+                        self::CREDIT_CARD_KEY => $response->getCardNumber()
+                    ]
                 );
+                $tokenizePaymentTransaction->setResponse($tokenResponse->toArray());
 
                 $this->paymentTransactionProvider->savePaymentTransaction($tokenizePaymentTransaction);
             }
@@ -82,7 +85,18 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
         PaymentTransaction $paymentTransaction,
         PaymentConfigInterface $config
     ): array {
-        return [AuthorizationMode::NAME => $config->getPaymentAction()];
+        $options = [AuthorizationMode::NAME => $config->getPaymentAction()];
+
+        $tokenId = $this->getTransactionOption($paymentTransaction, self::TOKEN_KEY);
+        if ($tokenId && $config->isTokenizationEnabled()) {
+            $token = $this->paymentTransactionProvider->getTokenFromTokenizePaymentTransactionById(
+                $config->getPaymentMethodIdentifier(),
+                $tokenId
+            );
+            $options[Token::NAME] = $token;
+        }
+
+        return $options;
     }
 
     /**
@@ -99,6 +113,19 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     protected function getType(): string
     {
         return EnabledProductsDataProvider::CREDIT_CARDS;
+    }
+
+    /**
+     * @param PaymentTransaction $paymentTransaction
+     *
+     * @return bool
+     */
+    protected function isSaveForLaterUseApplicable(PaymentTransaction $paymentTransaction): bool
+    {
+        $saveForLaterUseChecked = $this->getTransactionOption($paymentTransaction, 'ingenicoSaveForLaterUse');
+        $tokenUsed = $this->getTransactionOption($paymentTransaction, 'ingenicoToken');
+
+        return $saveForLaterUseChecked && !$tokenUsed;
     }
 
     /**

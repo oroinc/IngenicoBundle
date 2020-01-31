@@ -2,7 +2,8 @@
     {% set componentOptions = {
         paymentMethod: name,
         paymentDetails: view.options.paymentDetails,
-        saveForLaterUseEnabled: view.options.saveForLaterUseEnabled
+        saveForLaterUseEnabled: view.options.saveForLaterUseEnabled,
+        savedCreditCardList: view.options.savedCreditCardList
     } %}
     <div class="{{ class_prefix }}-form__payment-methods"
          data-page-component-module="ingenico/js/app/components/ingenico-credit-card-component"

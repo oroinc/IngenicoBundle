@@ -9,6 +9,7 @@ define(function(require) {
         expiryDate: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         cvv: require('tpl-loader!ingenico/templates/macros/input-password.html'),
         saveForLaterUse: require('tpl-loader!ingenico/templates/macros/input-checkbox.html'),
+        token: require('tpl-loader!ingenico/templates/macros/input-select.html'),
 
         // DirectDebit fields
         city: require('tpl-loader!ingenico/templates/macros/input-default.html'),

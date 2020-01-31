@@ -2,6 +2,7 @@
 
 namespace Ingenico\Connect\OroCommerce\Ingenico\Request\Payments;
 
+use Gos\Bundle\PubSubRouterBundle\Tokenizer\Token;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\AuthorizationMode;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
@@ -17,7 +18,10 @@ class CreateCardsPaymentRequest extends CreatePaymentRequest
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
-        $resolver->addOption(new AuthorizationMode());
+
+        $resolver
+            ->addOption(new AuthorizationMode())
+            ->addOption(new Token());
     }
 
     /**

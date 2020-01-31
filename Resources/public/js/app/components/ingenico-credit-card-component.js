@@ -17,7 +17,13 @@ define(function(require) {
             paymentMethod: null,
             paymentDetails: {},
             createSessionRoute: 'ingenico.create-session',
-            saveForLaterUseEnabled: false
+            saveForLaterUseEnabled: false,
+            savedCreditCardList: [],
+            cardsGroupName: 'cards',
+            tokenRequiredFields: ['cvv'],
+            selectors: {
+                paymentProductItem: 'a.payment-product__item'
+            }
         },
 
         session: null,
@@ -52,8 +58,13 @@ define(function(require) {
             this.$el = this.options._sourceElement;
 
             this.$el
-                .on('click.' + this.cid, 'a.payment-product__item', this.renderPaymentProductFields.bind(this))
-                .on('change.' + this.cid, this.getSaveForLaterSelector(), this.onSaveForLaterChange.bind(this));
+                .on(
+                    'click.' + this.cid,
+                    this.options.selectors.paymentProductItem,
+                    this.onPaymentProductClick.bind(this)
+                )
+                .on('change.' + this.cid, this.getSaveForLaterSelector(), this.onSaveForLaterChange.bind(this))
+                .on('change.' + this.cid, this.getTokenFieldSelector(), this.onTokenChange.bind(this));
 
             mediator.on('checkout:payment:method:changed', this.onPaymentMethodChange, this);
             mediator.on('checkout-content:initialized', this.refreshPaymentMethod, this);
@@ -69,6 +80,10 @@ define(function(require) {
 
         onPaymentMethodChange: function(eventData) {
             if (eventData.paymentMethod === this.options.paymentMethod) {
+                // reset save for later use checkbox to default value
+                // because we support this feature for credit card payment group only
+                this.saveForLaterUse = false;
+
                 this.getSession()
                     .then(this.getPaymentProducts.bind(this))
                     .then(this.renderPaymentProductsList.bind(this));
@@ -169,10 +184,14 @@ define(function(require) {
             return this.$el.html(this.paymentProductListTemplate({productPayments: items}));
         },
 
-        renderPaymentProductFields: function(event) {
+        onPaymentProductClick: function(event) {
             event.preventDefault();
             const paymentProductId = $(event.currentTarget).data('product-id');
 
+            this.renderPaymentProductFields(paymentProductId);
+        },
+
+        renderPaymentProductFields: function(paymentProductId) {
             this.getSession()
                 .then(this.getPaymentProductDetails.bind(this, paymentProductId))
                 .then(function() {
@@ -185,19 +204,37 @@ define(function(require) {
                         }));
                     }.bind(this));
 
-                    if (this.isSaveForLaterUseApplicable()) {
+                    if (this.isTokenizationApplicable()) {
+                        fields.unshift(_.macros('ingenico::token')({
+                            paymentMethod: this.options.paymentMethod,
+                            field: {
+                                id: 'token',
+                                displayHints: {
+                                    label: __('ingenico.token.label'),
+                                    placeholderLabel: __('ingenico.token.placeholder')
+                                },
+                                dataRestrictions: {
+                                    isRequired: false
+                                }
+                            },
+                            values: this.options.savedCreditCardList
+                        }));
                         fields.push(_.macros('ingenico::saveForLaterUse')({
                             paymentMethod: this.options.paymentMethod,
                             field: {
                                 id: 'saveForLaterUse',
                                 displayHints: {
                                     label: __('ingenico.saveForLaterUse.label')
+                                },
+                                dataRestrictions: {
+                                    isRequired: false
                                 }
                             }
                         }));
                     }
 
                     this.$el.html(fields.join(''));
+                    this.$el.find('select').inputWidget('create', 'select2');
                 }.bind(this));
         },
 
@@ -213,24 +250,25 @@ define(function(require) {
             return this.buildFieldIdentifier('saveForLaterUse', 'field');
         },
 
+        getTokenFieldSelector: function() {
+            return this.buildFieldIdentifier('token', 'field');
+        },
+
         isPaymentProductChanged: function(paymentProductId) {
             if (!this.currentPaymentProduct) {
                 return true;
             }
 
-            if (this.currentPaymentProduct.id !== paymentProductId) {
-                return true;
-            }
-
-            return false;
+            return this.currentPaymentProduct.id !== paymentProductId;
         },
 
-        isSaveForLaterUseApplicable: function() {
+        isTokenizationApplicable: function() {
             if (!this.currentPaymentProduct) {
                 return false;
             }
 
-            return this.currentPaymentProduct.paymentProductGroup && this.options.saveForLaterUseEnabled;
+            return this.currentPaymentProduct.paymentProductGroup === this.options.cardsGroupName &&
+                this.options.saveForLaterUseEnabled;
         },
 
         /**
@@ -239,8 +277,7 @@ define(function(require) {
         beforeTransit: function(eventData) {
             if (eventData.data.paymentMethod === this.options.paymentMethod) {
                 eventData.stopped = true;
-                const fields = this.collectFormData();
-                if (this.validate(fields)) {
+                if (this.validate()) {
                     this.storeEcryptedCutomerDetailes().then(function() {
                         eventData.resume();
                     });
@@ -257,13 +294,7 @@ define(function(require) {
             _.each(this.currentPaymentProduct.paymentProductFields, function(field) {
                 const fieldName = this.buildFieldIdentifier(field.id, 'field');
                 if ($(fieldName).length) {
-                    let value = $(fieldName).val();
-
-                    // workaround for showing validation message
-                    // because empty value does not treat as error by sdk validation
-                    if (!value) {
-                        value = '#';
-                    }
+                    const value = $(fieldName).val();
                     fields.push({
                         field: field.id,
                         value: value
@@ -274,13 +305,28 @@ define(function(require) {
             return fields;
         },
 
-        validate: function(fields) {
+        onTokenChange: function() {
+            // here will be code for re-render payment product fields that needed for token
+            // will be implemented in INGA-39
+        },
+
+        getToken: function() {
+            if (this.isTokenizationApplicable()) {
+                const tokenFieldIdentifier = this.buildFieldIdentifier('token', 'field');
+                return $(tokenFieldIdentifier).val();
+            }
+
+            return null;
+        },
+
+        validate: function() {
             if (!this.currentPaymentProduct) {
                 mediator.execute('showFlashMessage', 'error', __('ingenico.no_choosen_payment_product'));
 
                 return false;
             }
 
+            const fields = this.collectFormData();
             const paymentRequest = this.session.getPaymentRequest();
             paymentRequest.setPaymentProduct(this.currentPaymentProduct);
 
@@ -290,13 +336,16 @@ define(function(require) {
             });
 
             if (!paymentRequest.isValid()) {
-                _.each(paymentRequest.getPaymentProduct().paymentProductFields, function(field) {
-                    const fieldName = this.buildFieldIdentifier(field.id, 'error');
-                    if ($(fieldName).length) {
-                        if (field.getErrorCodes().length) {
-                            $(fieldName).removeClass('hidden');
-                        } else {
-                            $(fieldName).addClass('hidden');
+                _.each(paymentRequest.getValues(), function(value, name) {
+                    const field = paymentRequest.getPaymentProduct().paymentProductFieldById[name];
+                    if (field) {
+                        const fieldName = this.buildFieldIdentifier(name, 'error');
+                        if ($(fieldName).length) {
+                            if (field.getErrorCodes().length || (field.dataRestrictions.isRequired && !value)) {
+                                $(fieldName).removeClass('hidden');
+                            } else {
+                                $(fieldName).addClass('hidden');
+                            }
                         }
                     }
                 }.bind(this));
@@ -323,9 +372,11 @@ define(function(require) {
                         ingenicoCustomerEncDetails: encryptedString
                     };
 
-                    if (this.isSaveForLaterUseApplicable()) {
+                    if (this.isTokenizationApplicable()) {
+                        const token = this.getToken();
                         data = _.extend(data, {
-                            ingenicoSaveForLaterUse: this.saveForLaterUse
+                            ingenicoSaveForLaterUse: this.saveForLaterUse,
+                            ingenicoToken: token
                         });
                     }
 
@@ -390,8 +441,9 @@ define(function(require) {
             mediator.off('checkout:payment:remove-filled-form', this.removeFilledForm, this);
 
             this.$el
-                .off('click.' + this.cid, '.payment-product__item')
-                .off('change.' + this.cid, this.getSaveForLaterSelector());
+                .off('click.' + this.cid, this.options.selectors.paymentProductItem)
+                .off('change.' + this.cid, this.getSaveForLaterSelector())
+                .off('change.' + this.cid, this.getTokenFieldSelector());
 
             IngenicoCreditCardComponent.__super__.dispose.call(this);
         }
