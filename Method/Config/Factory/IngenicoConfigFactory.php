@@ -5,7 +5,6 @@ namespace Ingenico\Connect\OroCommerce\Method\Config\Factory;
 use Ingenico\Connect\OroCommerce\Entity\IngenicoSettings;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Oro\Bundle\IntegrationBundle\Generator\IntegrationIdentifierGeneratorInterface;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 
 /**
  * Creates instances of configurations for Ingenico payment method
@@ -17,6 +16,9 @@ class IngenicoConfigFactory
      */
     protected $identifierGenerator;
 
+    /**
+     * @param IntegrationIdentifierGeneratorInterface $identifierGenerator
+     */
     public function __construct(
         IntegrationIdentifierGeneratorInterface $identifierGenerator
     ) {
@@ -25,9 +27,9 @@ class IngenicoConfigFactory
 
     /**
      * @param IngenicoSettings $settings
-     * @return PaymentConfigInterface
+     * @return IngenicoConfig
      */
-    public function createConfig(IngenicoSettings $settings): PaymentConfigInterface
+    public function createConfig(IngenicoSettings $settings): IngenicoConfig
     {
         $params = [];
         $channel = $settings->getChannel();

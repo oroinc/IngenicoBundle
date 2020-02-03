@@ -11,9 +11,7 @@ use Oro\Bundle\SecurityBundle\ORM\Walker\AclHelper;
  */
 class IngenicoSettingsRepository extends EntityRepository
 {
-    /**
-     * @var AclHelper
-     */
+    /** @var AclHelper */
     private $aclHelper;
 
     /**
@@ -26,10 +24,9 @@ class IngenicoSettingsRepository extends EntityRepository
 
     /**
      * @param string $type
-     *
      * @return IngenicoSettings[]
      */
-    public function getEnabledSettingsByType($type)
+    public function getEnabledSettingsByType(string $type)
     {
         $qb = $this->createQueryBuilder('settings')
             ->innerJoin('settings.channel', 'channel')

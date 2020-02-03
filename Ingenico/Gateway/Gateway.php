@@ -8,7 +8,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 use Ingenico\Connect\OroCommerce\Ingenico\Request\ActionParamsAwareInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Request\RequestRegistry;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\Response;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
+use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 
 /**
  * Responsible for converting own request object to Ingenico request,
@@ -41,18 +41,15 @@ class Gateway
     }
 
     /**
-     * @param PaymentConfigInterface $paymentConfig
+     * @param IngenicoConfig $paymentConfig
      * @param string $transactionType
      * @param array $options
      * @param array $actionParams
      *
      * @return Response
-     *
-     * @throws \JsonException
-     * @throws \InvalidArgumentException
      */
     public function request(
-        PaymentConfigInterface $paymentConfig,
+        IngenicoConfig $paymentConfig,
         string $transactionType,
         array $options = [],
         array $actionParams = []
