@@ -17,14 +17,18 @@ class AchPaymentProductHandler extends AbstractPaymentProductHandler
     /**
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
-     * @throws \JsonException
+     * @return array
      */
     public function purchase(
         PaymentTransaction $paymentTransaction,
         IngenicoConfig $config
-    ) {
+    ): array {
         $paymentTransaction->setSuccessful(false);
-        $response = $this->requestCreatePayment($paymentTransaction, $config);
+        $response = $this->requestCreatePayment(
+            $paymentTransaction,
+            $config,
+            $this->getCreatePaymentAdditionalOptions($config)
+        );
 
         $paymentTransaction
             ->setSuccessful($response->isSuccessful())
@@ -32,18 +36,23 @@ class AchPaymentProductHandler extends AbstractPaymentProductHandler
             ->setAction(PaymentMethodInterface::PENDING)
             ->setReference($response->getReference())
             ->setResponse($response->toArray());
+
+        return [
+            'purchaseSuccessful' => $response->isSuccessful(),
+        ];
     }
 
     /**
-     * {@inheritdoc}
+     * @param IngenicoConfig $config
+     * @return array
      */
-    protected function getCreatePaymentOptions(
-        PaymentTransaction $paymentTransaction,
-        IngenicoConfig $config
-    ): array {
+    private function getCreatePaymentAdditionalOptions(IngenicoConfig $config): array
+    {
         // hardcoded value to be replaced with a value from payment integration's settings
         // @INGA-40 related.
-        return [DirectDebitText::NAME => 'COMPANYNAME 123-123-1234 ZIP CODE UK'];
+        return [
+            DirectDebitText::NAME => 'COMPANYNAME 123-123-1234 ZIP CODE UK',
+        ];
     }
 
     /**
@@ -52,6 +61,14 @@ class AchPaymentProductHandler extends AbstractPaymentProductHandler
     protected function getCreatePaymentTransactionType(): string
     {
         return Transaction::CREATE_DIRECT_DEBIT_PAYMENT;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function isActionSupported(string $actionName): bool
+    {
+        return  $actionName === PaymentMethodInterface::PURCHASE;
     }
 
     /**

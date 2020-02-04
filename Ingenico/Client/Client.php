@@ -2,41 +2,39 @@
 
 namespace Ingenico\Connect\OroCommerce\Ingenico\Client;
 
-use Ingenico\Connect\OroCommerce\Ingenico\Factory\ClientFactory;
+use Ingenico\Connect\OroCommerce\Ingenico\Factory\SDKClientFactory;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\Sdk\DataObject;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 
 /**
  * Responsible for sending request to Ingenico server based on resource and action.
  */
 class Client
 {
-    /** @var ClientFactory */
-    private $clientFactory;
+    /** @var SDKClientFactory */
+    private $sdkClientFactory;
 
     /**
-     * @param ClientFactory $clientFactory
+     * @param SDKClientFactory $sdkClientFactory
      */
-    public function __construct(ClientFactory $clientFactory)
+    public function __construct(SDKClientFactory $sdkClientFactory)
     {
-        $this->clientFactory = $clientFactory;
+        $this->sdkClientFactory = $sdkClientFactory;
     }
 
     /**
-     * @param PaymentConfigInterface|IngenicoConfig $paymentConfig
+     * @param IngenicoConfig $paymentConfig
      * @param string $resource
      * @param string $action
      * @param array $body
      *
      * @return array
      *
-     * @throws \InvalidArgumentException
      */
-    public function send(PaymentConfigInterface $paymentConfig, string $resource, string $action, array $body = [])
+    public function send(IngenicoConfig $paymentConfig, string $resource, string $action, array $body = [])
     {
-        $client = $this->clientFactory->create($paymentConfig);
-        $merchant = $client->merchant($paymentConfig->getMerchantId());
+        $sdkClient = $this->sdkClientFactory->create($paymentConfig);
+        $merchant = $sdkClient->merchant($paymentConfig->getMerchantId());
 
         if (!method_exists($merchant, $resource)) {
             throw new \InvalidArgumentException(sprintf('Resource "%s" does not exists', $resource));

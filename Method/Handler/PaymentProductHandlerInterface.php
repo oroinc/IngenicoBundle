@@ -11,6 +11,8 @@ use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 interface PaymentProductHandlerInterface
 {
     /**
+     * Execute payment action under payment transaction
+     *
      * @param string $action
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
@@ -23,7 +25,10 @@ interface PaymentProductHandlerInterface
     ): array;
 
     /**
+     * Check that payment product handler is applicable on specific payment transaction
      *
+     * @param PaymentTransaction $paymentTransaction
+     * @return bool
      */
-    public function supports(PaymentTransaction $paymentTransaction): bool;
+    public function isApplicable(PaymentTransaction $paymentTransaction): bool;
 }

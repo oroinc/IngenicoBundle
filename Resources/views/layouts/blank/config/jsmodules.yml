@@ -10,4 +10,5 @@ aliases:
 dynamic-imports:
     ingenico:
         - ingenico/js/app/components/ingenico-credit-card-component
+        - ingenico/js/app/components/ingenico-payment-method-component
         - ingenico/js/validator/sepa-iban

@@ -7,21 +7,19 @@ use Ingenico\Connect\Sdk\Client;
 use Ingenico\Connect\Sdk\Communicator;
 use Ingenico\Connect\Sdk\CommunicatorConfiguration;
 use Ingenico\Connect\Sdk\DefaultConnection;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 
 /**
- * Factory for creating Ingenico client instance.
+ * Factory for creating Ingenico client instance from SDK.
  */
-class ClientFactory
+class SDKClientFactory
 {
     private const INTEGRATOR = 'Oro Inc';
 
     /**
-     * @param PaymentConfigInterface|IngenicoConfig $paymentConfig
-     *
+     * @param IngenicoConfig $paymentConfig
      * @return Client
      */
-    public function create(PaymentConfigInterface $paymentConfig): Client
+    public function create(IngenicoConfig $paymentConfig): Client
     {
         $communicatorConfiguration = new CommunicatorConfiguration(
             $paymentConfig->getApiKeyId(),

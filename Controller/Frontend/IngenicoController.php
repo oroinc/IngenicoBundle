@@ -3,8 +3,8 @@
 namespace Ingenico\Connect\OroCommerce\Controller\Frontend;
 
 use Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod;
-use Ingenico\Connect\OroCommerce\Method\Provider\IngenicoPaymentMethodProvider;
-use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
+use Ingenico\Connect\Sdk\ResponseException;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -16,42 +16,46 @@ class IngenicoController extends AbstractController
 {
     /**
      * @Route(
-     *     "/create-session/{paymentIdentifier}",
-     *     name="ingenico.create-session",
+     *     "/create-session/{paymentMethod}",
+     *     name="ingenico_create_session",
      *     options={"expose"=true},
-     *     requirements={"paymentIdentifier"="[\w\:-]+"}
+     *     requirements={"paymentMethod"="[\w\:-]+"}
      * )
      *
+     * @param IngenicoPaymentMethod $paymentMethod
      * @return JsonResponse
      */
-    public function actionCreateSession($paymentIdentifier): JsonResponse
+    public function actionCreateSession(IngenicoPaymentMethod $paymentMethod): JsonResponse
     {
-        $responseData = ['success' => true, 'errorMessage' => ''];
-        $payment = $this->get(IngenicoPaymentMethodProvider::class)->getPaymentMethod($paymentIdentifier);
+        $responseData = ['success' => true];
 
         try {
-            if ($payment) {
-                $responseData['sessionInfo'] = $payment->execute(
-                    IngenicoPaymentMethod::CREATE_SESSION_ACTION,
-                    new PaymentTransaction()
-                );
-            } else {
-                throw new \Exception('Wrong payment identifier is given');
+            $responseData['sessionInfo'] = $paymentMethod->createSession();
+        } catch (\Throwable $e) {
+            $context = ['paymentMethod' => $paymentMethod->getIdentifier(), 'exception' => $e];
+            if ($e instanceof ResponseException) {
+                $context['response'] = $e->getResponse();
             }
-        } catch (\Exception $e) {
+
+            $this->get(LoggerInterface::class)->error(
+                'Cannot create client session for "{paymentMethod}" Ingenico payment integration',
+                $context
+            );
             $responseData['success'] = false;
-            $responseData['errorMessage'] = $e->getMessage();
         }
 
         return new JsonResponse($responseData);
     }
 
-    public static function getSubscribedServices(): array
+    /**
+     * {@inheritdoc}
+     */
+    public static function getSubscribedServices()
     {
         return array_merge(
             parent::getSubscribedServices(),
             [
-                IngenicoPaymentMethodProvider::class,
+                LoggerInterface::class,
             ]
         );
     }

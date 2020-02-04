@@ -7,7 +7,7 @@ define(function(require) {
     const __ = require('orotranslation/js/translator');
     const $ = require('jquery');
     const BaseComponent = require('oroui/js/app/components/base/component');
-    const connectsdk = require('connect-sdk-client-js');
+    const ConnectSdk = require('connect-sdk-client-js');
     const mediator = require('oroui/js/mediator');
     const routing = require('routing');
     const paymentProductListTemplate = require('tpl-loader!ingenico/templates/payment-products-list.html');
@@ -18,7 +18,16 @@ define(function(require) {
             paymentMethod: null,
             paymentDetails: {},
             paymentProductAliasesInfo: {},
-            createSessionRoute: 'ingenico.create-session'
+            createSessionRoute: 'ingenico_create_session'
+        },
+
+        listen: {
+            'checkout:payment:method:changed mediator': 'onPaymentMethodChanged',
+            'checkout:payment:before-transit mediator': 'beforeTransit',
+            'checkout:payment:before-hide-filled-form mediator': 'beforeHideFilledForm',
+            'checkout:payment:before-restore-filled-form mediator': 'beforeRestoreFilledForm',
+            'checkout:payment:remove-filled-form mediator': 'removeFilledForm',
+            'checkout-content:initialized mediator': 'refreshPaymentMethod'
         },
 
         session: null,
@@ -49,6 +58,7 @@ define(function(require) {
          */
         initialize: function(options) {
             this.options = _.extend({}, this.options, options);
+
             this.$el = this.options._sourceElement;
 
             $.validator.loadMethod('ingenico/js/validator/sepa-iban');
@@ -57,20 +67,13 @@ define(function(require) {
                 'click.' + this.cid, '.payment-product__anchor-label',
                 this.showSelectedPaymentProductFields.bind(this)
             );
-
-            mediator.on('checkout:payment:method:changed', this.onPaymentMethodChange, this);
-            mediator.on('checkout-content:initialized', this.refreshPaymentMethod, this);
-            mediator.on('checkout:payment:before-transit', this.beforeTransit, this);
-            mediator.on('checkout:payment:before-restore-filled-form', this.beforeRestoreFilledForm, this);
-            mediator.on('checkout:payment:before-hide-filled-form', this.beforeHideFilledForm, this);
-            mediator.on('checkout:payment:remove-filled-form', this.removeFilledForm, this);
         },
 
         refreshPaymentMethod: function() {
             mediator.trigger('checkout:payment:method:changed', {paymentMethod: this.options.paymentMethod});
         },
 
-        onPaymentMethodChange: function(eventData) {
+        onPaymentMethodChanged: function(eventData) {
             if (eventData.paymentMethod === this.options.paymentMethod) {
                 this.getSession()
                     .then(this.getPaymentProducts.bind(this))
@@ -88,19 +91,19 @@ define(function(require) {
                 $.getJSON(
                     routing.generate(
                         this.options.createSessionRoute,
-                        {paymentIdentifier: this.options.paymentMethod}
+                        {paymentMethod: this.options.paymentMethod}
                     ),
-                    function(data) {
+                    data => {
                         if (data.success) {
-                            this.session = new connectsdk(data.sessionInfo);
+                            this.session = new ConnectSdk(data.sessionInfo);
+                            mediator.execute('hideLoading');
                             deffer.resolve();
                         } else {
-                            mediator.execute('showFlashMessage', 'error', data.errorMessage);
+                            this.$el.html(__('ingenico.payment_method_is_not_available'));
+                            mediator.execute('hideLoading');
                             deffer.reject();
                         }
-
-                        mediator.execute('hideLoading');
-                    }.bind(this)
+                    }
                 );
             }
 
@@ -115,14 +118,14 @@ define(function(require) {
             } else {
                 mediator.execute('showLoading');
                 this.session.getBasicPaymentItems(this.options.paymentDetails).then(
-                    function(_basicPaymentItems) {
+                    _basicPaymentItems => {
                         this.paymentProductItems = _basicPaymentItems.basicPaymentItems;
                         mediator.execute('hideLoading');
                         deffer.resolve();
-                    }.bind(this),
-                    function() {
+                    },
+                    () => {
                         mediator.execute('hideLoading');
-                        mediator.execute('showFlashMessage', 'error', __('ingenico.api.error.get_payment_products'));
+                        this.$el.html(__('ingenico.api.error.no_available_payment_products'));
                         deffer.reject();
                     }
                 );
@@ -138,11 +141,10 @@ define(function(require) {
             const deffer = $.Deferred();
 
             if (this.isPaymentProductChanged(paymentProductId)) {
-                mediator.execute('showLoading');
                 this.session
                     .getPaymentProduct(paymentProductId, this.options.paymentDetails)
                     .then(
-                        function(paymentProduct) {
+                        paymentProduct => {
                             // Workaround to solve payment product's fields validation issues
                             // caused by improper fields setup retrieved Ingenico SDK.
                             // @INGA-40 feature related.
@@ -150,8 +152,8 @@ define(function(require) {
                             this.currentPaymentProduct = paymentProduct;
                             mediator.execute('hideLoading');
                             deffer.resolve();
-                        }.bind(this),
-                        function() {
+                        },
+                        () => {
                             mediator.execute('hideLoading');
                             mediator.execute(
                                 'showFlashMessage',
@@ -227,12 +229,13 @@ define(function(require) {
             if (paymentProductFieldsHolder.data('paymentProduct')) {
                 this.currentPaymentProduct = paymentProductFieldsHolder.data('paymentProduct');
                 paymentProductFieldsHolder.removeClass('hidden');
+
                 return;
             }
 
             this.getSession()
-                .then(this.getPaymentProductDetails.bind(this, paymentProductId))
-                .then(function() {
+                .then(() => this.getPaymentProductDetails(paymentProductId))
+                .then(() => {
                     const fields = paymentProductId === paymentProductAliasesInfo.sepaProductId
                         ? this.getSepaFieldsInfo() : this.currentPaymentProduct.paymentProductFields;
                     const renderedFields = this.renderPaymentProductFields(fields, paymentProductId);
@@ -240,7 +243,7 @@ define(function(require) {
                     paymentProductFieldsHolder.html(renderedFields.join(''))
                         .data('paymentProduct', this.currentPaymentProduct)
                         .removeClass('hidden');
-                }.bind(this));
+                });
         },
 
         /**
@@ -248,14 +251,14 @@ define(function(require) {
          */
         renderPaymentProductFields: function(fields, paymentProductId) {
             const renderedFields = [];
-            _.each(fields, function(field) {
+            _.each(fields, field => {
                 const rendererFieldName = 'ingenico::' + field.id;
                 renderedFields.push(_.macros(rendererFieldName)({
                     paymentMethod: this.options.paymentMethod,
                     paymentProductId: paymentProductId,
                     field: field
                 }));
-            }.bind(this));
+            });
 
             return renderedFields;
         },
@@ -278,18 +281,27 @@ define(function(require) {
         beforeTransit: function(eventData) {
             if (eventData.data.paymentMethod === this.options.paymentMethod) {
                 eventData.stopped = true;
+                if (!this.currentPaymentProduct) {
+                    return;
+                }
+
                 const fields = this.collectFormData();
                 if (this.validate(fields)) {
+                    mediator.execute('showLoading');
                     this.addPaymentAdditionalData({
                         ingenicoPaymentProduct: this.getPaymentProductAlias(this.currentPaymentProduct)
                     });
 
                     if (this.currentPaymentProduct.id === this.options.paymentProductAliasesInfo.sepaProductId) {
                         this.storeCollectedFields(fields, 'ingenicoSepaDetails');
+                        this.addPaymentAdditionalData({ingenicoCustomerEncDetails: null});
+
                         eventData.resume();
                     } else {
                         this.storeEcryptedCutomerDetailes().then(function() {
                             eventData.resume();
+                        }).catch(function() {
+                            mediator.execute('hideLoading');
                         });
                     }
                 }
@@ -311,7 +323,7 @@ define(function(require) {
             const fields = this.currentPaymentProduct.id === this.options.paymentProductAliasesInfo.sepaProductId
                 ? this.getSepaFieldsInfo() : this.currentPaymentProduct.paymentProductFields;
 
-            _.each(fields, function(field) {
+            _.each(fields, field => {
                 const fieldName = this.buildFieldIdentifier(field.id, 'field');
                 if ($(fieldName).length) {
                     const value = $(fieldName).val();
@@ -321,7 +333,7 @@ define(function(require) {
                         value: value
                     });
                 }
-            }.bind(this));
+            });
 
             return collectedFields;
         },
@@ -351,7 +363,7 @@ define(function(require) {
             });
 
             if (!paymentRequest.isValid()) {
-                _.each(paymentRequest.getPaymentProduct().paymentProductFields, function(field) {
+                _.each(paymentRequest.getPaymentProduct().paymentProductFields, field => {
                     const fieldName = this.buildFieldIdentifier(field.id, 'error');
                     const fieldValue = paymentRequest.getValue(field.id);
 
@@ -362,7 +374,7 @@ define(function(require) {
                             $(fieldName).addClass('hidden');
                         }
                     }
-                }.bind(this));
+                });
 
                 return false;
             }
@@ -375,12 +387,12 @@ define(function(require) {
          * without encryption and with given values domain.
          */
         storeCollectedFields: function(fields, valuesDomain) {
-            _.each(fields, function(field) {
+            _.each(fields, field => {
                 const mappedField = {};
                 mappedField[valuesDomain + ':' + field.field] = field.value;
 
                 this.addPaymentAdditionalData(mappedField);
-            }.bind(this));
+            });
         },
 
         /**
@@ -392,14 +404,14 @@ define(function(require) {
             const encryptor = this.session.getEncryptor();
             const paymentRequest = this.session.getPaymentRequest();
             encryptor.encrypt(paymentRequest).then(
-                function(encryptedString) {
+                encryptedString => {
                     this.addPaymentAdditionalData({
                         ingenicoCustomerEncDetails: encryptedString
                     });
 
                     deffer.resolve();
-                }.bind(this),
-                function() {
+                },
+                () => {
                     deffer.reject();
                     mediator.execute('showFlashMessage', 'error', __('ingenico.crypt_error'));
                 }
@@ -461,7 +473,7 @@ define(function(require) {
                         placeholderLabel: __('ingenico.sepa.fields.accountHolderName.placeholder')
                     },
                     dataValidation: {
-                        'NotBlank': {
+                        NotBlank: {
                             payload: null,
                             allowNull: false,
                             normalizer: null
@@ -555,13 +567,6 @@ define(function(require) {
             if (this.disposed || !this.disposable) {
                 return;
             }
-
-            mediator.off('checkout:payment:method:changed', this.onPaymentMethodChange, this);
-            mediator.off('checkout-content:initialized', this.refreshPaymentMethod, this);
-            mediator.off('checkout:payment:before-transit', this.beforeTransit, this);
-            mediator.off('checkout:payment:before-restore-filled-form', this.beforeRestoreFilledForm, this);
-            mediator.off('checkout:payment:before-hide-filled-form', this.beforeHideFilledForm, this);
-            mediator.off('checkout:payment:remove-filled-form', this.removeFilledForm, this);
 
             this.$el.off('click' + this.cid, '.payment-product__anchor-label');
 

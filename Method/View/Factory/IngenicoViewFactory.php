@@ -4,7 +4,7 @@ namespace Ingenico\Connect\OroCommerce\Method\View\Factory;
 
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Method\View\IngenicoView;
-use Oro\Bundle\CurrencyBundle\Rounding\RoundingServiceInterface;
+use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Oro\Bundle\LocaleBundle\Helper\LocalizationHelper;
 use Oro\Bundle\LocaleBundle\Manager\LocalizationManager;
 
@@ -19,32 +19,31 @@ class IngenicoViewFactory
     /** @var LocalizationManager */
     private $localizationManager;
 
-    /** @var RoundingServiceInterface */
-    private $rounding;
+    /** @var AmountNormalizer */
+    private $amountNormalizer;
 
     /**
      * @param LocalizationHelper $localizationHelper
      * @param LocalizationManager $localizationManager
-     * @param RoundingServiceInterface $rounding
+     * @param AmountNormalizer $amountNormalizer
      */
     public function __construct(
         LocalizationHelper $localizationHelper,
         LocalizationManager $localizationManager,
-        RoundingServiceInterface $rounding
+        AmountNormalizer $amountNormalizer
     ) {
         $this->localizationHelper = $localizationHelper;
         $this->localizationManager = $localizationManager;
-        $this->rounding = $rounding;
+        $this->amountNormalizer = $amountNormalizer;
     }
 
     /**
      * @param IngenicoConfig $config
-     *
      * @return IngenicoView
      */
     public function create(IngenicoConfig $config): IngenicoView
     {
-        return new IngenicoView($config, $this->getLocalizationCode(), $this->rounding);
+        return new IngenicoView($config, $this->getLocalizationCode(), $this->amountNormalizer);
     }
 
     /**

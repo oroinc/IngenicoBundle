@@ -11,21 +11,18 @@ use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvid
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\Action\CaptureActionInterface;
-use Oro\Bundle\PaymentBundle\Method\Action\PurchaseActionInterface;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
 /**
  * Payment method class that describes top level business logic of Ingenico payment method
  */
-class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInterface, PurchaseActionInterface
+class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInterface
 {
-    public const CREATE_SESSION_ACTION = 'createSession';
-
     /** @var IngenicoConfig */
     private $config;
 
     /** @var PaymentProductHandlerRegistry */
-    private $paymentProductHandlersRegistry;
+    private $paymentProductHandlerRegistry;
 
     /** @var Gateway */
     private $gateway;
@@ -37,11 +34,11 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
      */
     public function __construct(
         IngenicoConfig $config,
-        PaymentProductHandlerRegistry $paymentProductHandlersRegistry,
+        PaymentProductHandlerRegistry $paymentProductHandlerRegistry,
         Gateway $gateway
     ) {
         $this->config = $config;
-        $this->paymentProductHandlersRegistry = $paymentProductHandlersRegistry;
+        $this->paymentProductHandlerRegistry = $paymentProductHandlerRegistry;
         $this->gateway = $gateway;
     }
 
@@ -50,12 +47,8 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
      */
     public function execute($action, PaymentTransaction $paymentTransaction)
     {
-        if (self::CREATE_SESSION_ACTION === $action) {
-            return $this->createSession();
-        }
-
         $paymentProductHandler =
-            $this->paymentProductHandlersRegistry->getPaymentProductHandler($paymentTransaction);
+            $this->paymentProductHandlerRegistry->getPaymentProductHandler($paymentTransaction);
 
         if (null === $paymentProductHandler || !$this->supports($action)) {
             throw new \InvalidArgumentException(
@@ -93,14 +86,6 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
     /**
      * {@inheritdoc}
      */
-    public function purchase(PaymentTransaction $paymentTransaction): array
-    {
-        return [];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function capture(PaymentTransaction $paymentTransaction): array
     {
         return [];
@@ -123,6 +108,8 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
     }
 
     /**
+     * Create client session to allow interacting from Client JS SDK
+     *
      * @return array
      * @throws \JsonException
      */
@@ -142,24 +129,20 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
      */
     private function prepareCreateSessionRequestBody(): array
     {
-        $allowedMethods = $this->config->getEnabledProducts();
-        $requestBody = [Products::NAME => []];
-        foreach ($allowedMethods as $method) {
-            switch ($method) {
-                case $method === EnabledProductsDataProvider::CREDIT_CARDS:
-                    $requestBody[Groups::NAME] = [EnabledProductsDataProvider::CREDIT_CARDS];
+        $enabledPaymentProducts = $this->config->getEnabledProducts();
+        $requestBody = [];
+        foreach ($enabledPaymentProducts as $paymentProduct) {
+            switch ($paymentProduct) {
+                case $paymentProduct === EnabledProductsDataProvider::CREDIT_CARDS:
+                    $requestBody[Groups::NAME] = [EnabledProductsDataProvider::CREDIT_CARDS_GROUP_ID];
                     break;
-                case $method === EnabledProductsDataProvider::SEPA:
+                case $paymentProduct === EnabledProductsDataProvider::SEPA:
                     $requestBody[Products::NAME][] = EnabledProductsDataProvider::SEPA_ID;
                     break;
-                case $method === EnabledProductsDataProvider::ACH:
+                case $paymentProduct === EnabledProductsDataProvider::ACH:
                     $requestBody[Products::NAME][] = EnabledProductsDataProvider::ACH_ID;
                     break;
             }
-        }
-
-        if (!count($requestBody[Products::NAME])) {
-            unset($requestBody[Products::NAME]);
         }
 
         return $requestBody;

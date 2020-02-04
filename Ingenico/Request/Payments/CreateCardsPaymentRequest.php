@@ -4,6 +4,7 @@ namespace Ingenico\Connect\OroCommerce\Ingenico\Request\Payments;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\AuthorizationMode;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\RequiresApproval;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 
 /**
@@ -18,6 +19,7 @@ class CreateCardsPaymentRequest extends CreatePaymentRequest
     {
         parent::configureOptions($resolver);
         $resolver->addOption(new AuthorizationMode());
+        $resolver->addOption(new RequiresApproval());
     }
 
     /**

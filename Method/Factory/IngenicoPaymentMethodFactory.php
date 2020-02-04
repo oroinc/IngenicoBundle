@@ -3,9 +3,9 @@
 namespace Ingenico\Connect\OroCommerce\Method\Factory;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Gateway\Gateway;
+use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductHandlerRegistry;
 use Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
 /**
@@ -30,11 +30,10 @@ class IngenicoPaymentMethodFactory
     }
 
     /**
-     * @param PaymentConfigInterface $config
-     *
+     * @param IngenicoConfig $config
      * @return PaymentMethodInterface
      */
-    public function create(PaymentConfigInterface $config): PaymentMethodInterface
+    public function create(IngenicoConfig $config): PaymentMethodInterface
     {
         return new IngenicoPaymentMethod($config, $this->paymentProductHandlersRegistry, $this->gateway);
     }

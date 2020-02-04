@@ -11,9 +11,11 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Manda
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\BankAccountIban\Iban;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\DebtorSurname;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\MandateApproval;
+use Ingenico\Connect\OroCommerce\Ingenico\Provider\CheckoutInformationProvider;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\TokenResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
+use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
 use Oro\Bundle\EntityBundle\ORM\DoctrineHelper;
 use Oro\Bundle\OrderBundle\Entity\Order;
@@ -41,27 +43,37 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
 
     /**
      * @param Gateway $gateway
+     * @param AmountNormalizer $amountNormalizer
+     * @param CheckoutInformationProvider $checkoutInformationProvider
+     * @param DoctrineHelper $doctrineHelper
      */
-    public function __construct(Gateway $gateway, DoctrineHelper $doctrineHelper)
-    {
-        parent::__construct($gateway);
+    public function __construct(
+        Gateway $gateway,
+        AmountNormalizer $amountNormalizer,
+        CheckoutInformationProvider $checkoutInformationProvider,
+        DoctrineHelper $doctrineHelper
+    ) {
+        parent::__construct($gateway, $amountNormalizer, $checkoutInformationProvider);
         $this->doctrineHelper = $doctrineHelper;
     }
 
     /**
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
-     * @throws \JsonException
      */
     public function purchase(
         PaymentTransaction $paymentTransaction,
         IngenicoConfig $config
-    ) {
+    ): array {
         $paymentTransaction->setSuccessful(false);
 
         $tokenResponse = $this->createToken($paymentTransaction, $config);
         if ($tokenResponse->isSuccessful()) {
-            $paymentResponse = $this->requestCreatePayment($paymentTransaction, $config);
+            $paymentResponse = $this->requestCreatePayment(
+                $paymentTransaction,
+                $config,
+                $this->getCreatePaymentAdditionalOptions($config)
+            );
 
             $paymentTransaction
                 ->setSuccessful($paymentResponse->isSuccessful())
@@ -73,15 +85,18 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
             $paymentTransaction->setActive(false)
                 ->setResponse($tokenResponse->toArray());
         }
+
+        return [
+            'purchaseSuccessful' => $paymentTransaction->isSuccessful(),
+        ];
     }
 
     /**
-     * {@inheritdoc}
+     * @param IngenicoConfig $config
+     * @return array
      */
-    protected function getCreatePaymentOptions(
-        PaymentTransaction $paymentTransaction,
-        IngenicoConfig $config
-    ): array {
+    private function getCreatePaymentAdditionalOptions(IngenicoConfig $config): array
+    {
         return [
             Token::NAME => $this->lastTokenResponse ? $this->lastTokenResponse->getToken() : null,
             // hardcoded value to be replaced with a value from payment integration's settings
@@ -110,7 +125,6 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
      * @return TokenResponse
-     * @throws \JsonException
      */
     private function createToken(
         PaymentTransaction $paymentTransaction,
@@ -136,17 +150,25 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
             [
                 CountryCode::NAME => $billingAddress->getCountryIso2(),
                 DebtorSurname::NAME => $billingAddress->getLastName(),
-                AccountHolderName::NAME => $this->getTransactionOption(
+                AccountHolderName::NAME => $this->getAdditionalDataFieldByKey(
                     $paymentTransaction,
                     self::ACCOUNT_HOLDER_NAME_OPTION_KEY
                 ),
                 MandateApproval\MandateSignaturePlace::NAME => substr($billingAddress->getCity(), 0, 51),
-                Iban::NAME => $this->getTransactionOption($paymentTransaction, self::IBAN_OPTION_KEY),
+                Iban::NAME => $this->getAdditionalDataFieldByKey($paymentTransaction, self::IBAN_OPTION_KEY),
                 PaymenProducttId::NAME => EnabledProductsDataProvider::SEPA_ID
             ],
         );
         $this->lastTokenResponse = TokenResponse::create($response->toArray());
 
         return $this->lastTokenResponse;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function isActionSupported(string $actionName): bool
+    {
+        return  $actionName === PaymentMethodInterface::PURCHASE;
     }
 }

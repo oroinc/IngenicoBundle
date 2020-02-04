@@ -16,6 +16,9 @@ class IngenicoConfigFactory
      */
     protected $identifierGenerator;
 
+    /**
+     * @param IntegrationIdentifierGeneratorInterface $identifierGenerator
+     */
     public function __construct(
         IntegrationIdentifierGeneratorInterface $identifierGenerator
     ) {

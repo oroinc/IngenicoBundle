@@ -3,8 +3,8 @@
 namespace Ingenico\Connect\OroCommerce\Method\View;
 
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
+use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
-use Oro\Bundle\CurrencyBundle\Rounding\RoundingServiceInterface;
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Method\View\PaymentMethodViewInterface;
 
@@ -19,22 +19,22 @@ class IngenicoView implements PaymentMethodViewInterface
     /** @var string */
     private $currentLocalizationCode;
 
-    /** @var RoundingServiceInterface */
-    private $rounding;
+    /** @var AmountNormalizer */
+    private $amountNormalizer;
 
     /**
      * @param IngenicoConfig $config
      * @param string $currentLocalizationCode
-     * @param RoundingServiceInterface $rounding
+     * @param AmountNormalizer $amountNormalizer
      */
     public function __construct(
         IngenicoConfig $config,
         string $currentLocalizationCode,
-        RoundingServiceInterface $rounding
+        AmountNormalizer $amountNormalizer
     ) {
         $this->config = $config;
         $this->currentLocalizationCode = $currentLocalizationCode;
-        $this->rounding = $rounding;
+        $this->amountNormalizer = $amountNormalizer;
     }
 
     /**
@@ -44,17 +44,17 @@ class IngenicoView implements PaymentMethodViewInterface
     {
         return [
             'paymentDetails' => [
-                'totalAmount' => (int) ($this->rounding->round($context->getTotal()) * 100),
+                'totalAmount' => $this->amountNormalizer->normalize($context->getTotal()),
                 'currency' => $context->getCurrency(),
                 'countryCode' => $context->getBillingAddress()->getCountryIso2(),
                 'isRecurring' => false,
-                'locale' => $this->currentLocalizationCode
+                'locale' => $this->currentLocalizationCode,
             ],
             'paymentProductAliasesInfo' => [
                 'achProductId' => EnabledProductsDataProvider::ACH_ID,
                 'achProductAlias' => EnabledProductsDataProvider::ACH,
                 'sepaProductId' => EnabledProductsDataProvider::SEPA_ID,
-                'sepaProductAlias' => EnabledProductsDataProvider::SEPA
+                'sepaProductAlias' => EnabledProductsDataProvider::SEPA,
             ]
         ];
     }
