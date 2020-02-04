@@ -1,8 +1,11 @@
-<div class="payment-product">
+<div class="payment-products">
     <% _.each(productPayments, function(item) { %>
-    <a href="#" class="payment-product__item" data-product-id="<%= item.id %>">
-        <img src="<%= item.logo %>" alt="" class="payment-product__logo">
-        <span class="payment-product__label"><%= item.label %></span>
-    </a>
+    <div class="payment-product">
+        <a href="javascript:void(0);" class="payment-product__anchor-label" data-product-id="<%= item.id %>">
+            <img src="<%= item.logo %>" alt="" class="payment-product__logo">
+            <span class="payment-product__label"><%= item.label %></span>
+        </a>
+        <div class="payment-product__form-fields hidden"></div>
+    </div>
     <% }) %>
 </div>

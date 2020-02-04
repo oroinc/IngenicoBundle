@@ -41,7 +41,8 @@ class AchPaymentProductHandler extends AbstractPaymentProductHandler
         PaymentTransaction $paymentTransaction,
         IngenicoConfig $config
     ): array {
-        // hardoded value to be replaced with a value from payment integration's settings
+        // hardcoded value to be replaced with a value from payment integration's settings
+        // @INGA-40 related.
         return [DirectDebitText::NAME => 'COMPANYNAME 123-123-1234 ZIP CODE UK'];
     }
 

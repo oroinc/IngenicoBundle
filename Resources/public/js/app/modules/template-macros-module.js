@@ -1,7 +1,7 @@
 define(function(require) {
     'use strict';
 
-    var _ = require('underscore');
+    const _ = require('underscore');
 
     _.macros('ingenico', {
         // CreditCard fields
@@ -19,5 +19,9 @@ define(function(require) {
         street: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         houseNumber: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         zip: require('tpl-loader!ingenico/templates/macros/input-default.html'),
+
+        // SEPA fields
+        iban: require('tpl-loader!ingenico/templates/macros/input-default.html'),
+        mandateDisclaimer: require('tpl-loader!ingenico/templates/macros/disclaimer-text.html')
     });
 });

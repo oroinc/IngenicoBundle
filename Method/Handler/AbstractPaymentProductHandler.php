@@ -19,8 +19,8 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
  */
 abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInterface
 {
-    const PAYMENT_PRODUCT_OPTION_KEY = 'ingenicoPaymentProduct';
-    const CUSTOMER_ENC_DETAILS_OPTION_KEY = 'ingenicoCustomerEncDetails';
+    protected const PAYMENT_PRODUCT_OPTION_KEY = 'ingenicoPaymentProduct';
+    protected const CUSTOMER_ENC_DETAILS_OPTION_KEY = 'ingenicoCustomerEncDetails';
 
     /**
      * @var Gateway

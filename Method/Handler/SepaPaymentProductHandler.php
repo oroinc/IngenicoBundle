@@ -10,6 +10,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Custo
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\BankAccountIban\AccountHolderName;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\BankAccountIban\Iban;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\DebtorSurname;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\MandateApproval;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\TokenResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
@@ -25,6 +26,9 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
  */
 class SepaPaymentProductHandler extends AbstractPaymentProductHandler
 {
+    private const IBAN_OPTION_KEY = 'ingenicoSepaDetails:iban';
+    private const ACCOUNT_HOLDER_NAME_OPTION_KEY = 'ingenicoSepaDetails:accountHolderName';
+
     /**
      * @var DoctrineHelper
      */
@@ -80,7 +84,8 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
     ): array {
         return [
             Token::NAME => $this->lastTokenResponse ? $this->lastTokenResponse->getToken() : null,
-            // hardoded value to be replaced with a value from payment integration's settings
+            // hardcoded value to be replaced with a value from payment integration's settings
+            // @INGA-45 related.
             DirectDebitText::NAME => 'COMPANYNAME 123-123-1234 ZIP CODE UK'
         ];
     }
@@ -131,8 +136,12 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
             [
                 CountryCode::NAME => $billingAddress->getCountryIso2(),
                 DebtorSurname::NAME => $billingAddress->getLastName(),
-                AccountHolderName::NAME => 'John Doe', // value to be changed with one from payment form
-                Iban::NAME => 'NL08INGB0000000555', // value to be changed with one from payment form
+                AccountHolderName::NAME => $this->getTransactionOption(
+                    $paymentTransaction,
+                    self::ACCOUNT_HOLDER_NAME_OPTION_KEY
+                ),
+                MandateApproval\MandateSignaturePlace::NAME => substr($billingAddress->getCity(), 0, 51),
+                Iban::NAME => $this->getTransactionOption($paymentTransaction, self::IBAN_OPTION_KEY),
                 PaymenProducttId::NAME => EnabledProductsDataProvider::SEPA_ID
             ],
         );

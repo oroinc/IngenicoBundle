@@ -8,8 +8,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Custo
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\BankAccountIban\AccountHolderName;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\BankAccountIban\Iban;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\DebtorSurname;
-use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\MandateApproval\MandateSignatureDate;
-use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\MandateApproval\MandateSigned;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\MandateApproval;
 use Ingenico\Connect\OroCommerce\Ingenico\Request\RequestInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\Sdk\DataObject;
@@ -29,8 +28,9 @@ class CreateSepaDirectDebitPaymentTokenRequest implements RequestInterface
             ->addOption(new CountryCode())
             ->addOption(new AccountHolderName())
             ->addOption(new Iban())
-            ->addOption(new MandateSignatureDate())
-            ->addOption(new MandateSigned())
+            ->addOption(new MandateApproval\MandateSignatureDate())
+            ->addOption(new MandateApproval\MandateSignaturePlace())
+            ->addOption(new MandateApproval\MandateSigned())
             ->addOption(new DebtorSurname())
             ->addOption(new PaymenProducttId());
     }
