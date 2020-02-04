@@ -97,7 +97,6 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
      * @return array
-
      */
     public function capture(
         PaymentTransaction $paymentTransaction,
