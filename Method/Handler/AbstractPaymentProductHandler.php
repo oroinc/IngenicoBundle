@@ -168,7 +168,11 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
             EncryptedCustomerInput::NAME => $customerEncryptedDetails,
             AmountOfMoney\Amount::NAME => $this->normalizeAmount($paymentTransaction),
             AmountOfMoney\CurrencyCode::NAME => $paymentTransaction->getCurrency(),
-            MerchantReference::NAME => sprintf('oroCommerceOrder:%d', $paymentTransaction->getEntityIdentifier()),
+            MerchantReference::NAME => sprintf(
+                'o:%d:n:%s',
+                $paymentTransaction->getEntityIdentifier(),
+                uniqid()
+            ),
         ];
 
         $checkoutOptions = $this->checkoutInformationProvider->getCheckoutOptions($paymentTransaction);
@@ -224,7 +228,7 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
      * @param PaymentTransaction $paymentTransaction
      * @return int
      */
-    protected function normalizeAmount(PaymentTransaction $paymentTransaction)
+    protected function normalizeAmount(PaymentTransaction $paymentTransaction): int
     {
         return $this->amountNormalizer->normalize($paymentTransaction->getAmount());
     }
@@ -233,7 +237,7 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
      * @param PaymentResponse $response
      * @return string
      */
-    protected function getPurchaseActionByPaymentResponse(PaymentResponse $response)
+    protected function getPurchaseActionByPaymentResponse(PaymentResponse $response): string
     {
         return PaymentMethodInterface::PURCHASE;
     }

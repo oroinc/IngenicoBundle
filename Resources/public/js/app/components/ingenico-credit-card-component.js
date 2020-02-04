@@ -17,7 +17,7 @@ define(function(require) {
             paymentMethod: null,
             paymentDetails: {},
             paymentProductAliasesInfo: {},
-            createSessionRoute: 'ingenico.create-session'
+            createSessionRoute: 'ingenico_create_session'
         },
 
         listen: {
@@ -33,6 +33,7 @@ define(function(require) {
         paymentProductItems: [],
         currentPaymentProduct: null,
         paymentProductListTemplate: paymentProductListTemplate,
+        bankCodeFieldId: 'bankCode', // bank code field ID in payment product object received via Ingenico's SDK
 
         /**
          * @property {jQuery}

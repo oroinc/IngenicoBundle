@@ -27,7 +27,7 @@ class PaymentMethodParamConverter implements ParamConverterInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function apply(Request $request, ParamConverter $configuration)
     {
@@ -49,7 +49,7 @@ class PaymentMethodParamConverter implements ParamConverterInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function supports(ParamConverter $configuration)
     {

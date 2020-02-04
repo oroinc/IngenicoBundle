@@ -11,14 +11,12 @@ use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvid
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\Action\CaptureActionInterface;
-use Oro\Bundle\PaymentBundle\Method\Action\PurchaseActionInterface;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
 /**
  * Payment method class that describes top level business logic of Ingenico payment method
  */
-class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInterface, PurchaseActionInterface
+class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInterface
 {
     /** @var IngenicoConfig */
     private $config;

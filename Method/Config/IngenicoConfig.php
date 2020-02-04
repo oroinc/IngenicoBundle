@@ -19,7 +19,7 @@ class IngenicoConfig extends AbstractParameterBagPaymentConfig
 
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function __construct(array $parameters)
     {

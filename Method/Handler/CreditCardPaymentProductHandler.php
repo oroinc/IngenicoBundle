@@ -3,11 +3,13 @@
 namespace Ingenico\Connect\OroCommerce\Method\Handler;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\AuthorizationMode;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\RequiresApproval;
+use Ingenico\Connect\OroCommerce\Ingenico\Response\PaymentResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
+use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\PaymentActionDataProvider;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
 /**
@@ -18,9 +20,6 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     private const PENDING_APPROVAL_STATUS = 'PENDING_APPROVAL';
     private const CAPTURE_REQUESTED_STATUS = 'CAPTURE_REQUESTED';
 
-    public const ACTION_PURCHASE = 'purchase';
-    public const ACTION_CAPTURE = 'capture';
-
     /**
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
@@ -29,7 +28,7 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     public function purchase(
         PaymentTransaction $paymentTransaction,
         IngenicoConfig $config
-    ) {
+    ): array {
         $paymentTransaction->setSuccessful(false);
 
         $response = $this->requestCreatePayment(
@@ -82,18 +81,18 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function isActionSupported(string $actionName): bool
     {
-        return in_array($actionName, [self::ACTION_CAPTURE, self::ACTION_PURCHASE], true);
+        return in_array($actionName, [PaymentMethodInterface::PURCHASE, PaymentMethodInterface::CAPTURE], true);
     }
 
     /**
      * @param PaymentResponse $response
      * @return string
      */
-    protected function getPurchaseActionByPaymentResponse(PaymentResponse $response)
+    protected function getPurchaseActionByPaymentResponse(PaymentResponse $response): string
     {
         $paymentStatus = $response->getPaymentStatus();
 
