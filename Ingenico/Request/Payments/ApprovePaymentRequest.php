@@ -12,7 +12,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\Sdk\DataObject;
 
 /**
- * Handle approve(capture) payment request.
+ * Handles approve(capture) payment request.
  */
 class ApprovePaymentRequest implements RequestInterface, ActionParamsAwareInterface
 {

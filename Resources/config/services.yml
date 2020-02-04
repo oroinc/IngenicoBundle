@@ -71,6 +71,15 @@ services:
         tags:
             - { name: ingenico.payment_product_group.handler}
 
+    ingenico.payment_product_group.handler.sepa:
+        class: Ingenico\Connect\OroCommerce\Method\Handler\SepaPaymentProductHandler
+        public: false
+        arguments:
+            - '@ingenico.ingenico.gateway'
+            - '@oro_entity.doctrine_helper'
+        tags:
+            - { name: ingenico.payment_product_group.handler}
+
     ingenico.payment_product_group.handlers_registry:
         class: Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductHandlerRegistry
         public: false
@@ -144,6 +153,18 @@ services:
 
     ingenico.ingenico.request.create_direct_debit_payment:
         class: Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\DirectDebitPaymentRequest
+        public: false
+        tags:
+            - { name: ingenico.ingenico.request }
+
+    ingenico.ingenico.request.create_sepa_direct_debit_payment:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\CreateSepaDirectDebitPaymentRequest
+        public: false
+        tags:
+            - { name: ingenico.ingenico.request }
+
+    ingenico.ingenico.request.create_sepa_direct_debit_payment_token:
+        class: Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\CreateSepaDirectDebitPaymentTokenRequest
         public: false
         tags:
             - { name: ingenico.ingenico.request }

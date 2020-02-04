@@ -6,11 +6,11 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 
 /**
- * Option for handling encryptedCustomerInput.
+ * Option for handling payment ID action param.
  */
-class EncryptedCustomerInput implements OptionInterface
+class PaymenProducttId implements OptionInterface
 {
-    public const NAME = '[encryptedCustomerInput]';
+    public const NAME = '[paymentProductId]';
 
     /**
      * {@inheritdoc}
@@ -18,7 +18,7 @@ class EncryptedCustomerInput implements OptionInterface
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setDefined(self::NAME)
-            ->setAllowedTypes(self::NAME, 'string');
+            ->setRequired(self::NAME)
+            ->setAllowedTypes(self::NAME, 'int');
     }
 }

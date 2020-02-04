@@ -132,10 +132,6 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
         IngenicoConfig $config
     ): PaymentResponse {
         $requestOptions = [
-            EncryptedCustomerInput::NAME => $this->getTransactionOption(
-                $paymentTransaction,
-                self::CUSTOMER_ENC_DETAILS_OPTION_KEY
-            ),
             AmountOfMoney\Amount::NAME => (int)($paymentTransaction->getAmount() * 100),
             AmountOfMoney\CurrencyCode::NAME => $paymentTransaction->getCurrency(),
             MerchantReference::NAME => sprintf(
@@ -144,6 +140,14 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
                 uniqid()
             )
         ];
+
+        $encryptedCustomerInput = $this->getTransactionOption(
+            $paymentTransaction,
+            self::CUSTOMER_ENC_DETAILS_OPTION_KEY
+        );
+        if ($encryptedCustomerInput) {
+            $requestOptions[EncryptedCustomerInput::NAME] = $encryptedCustomerInput;
+        }
 
         $response = $this->gateway->request(
             $config,

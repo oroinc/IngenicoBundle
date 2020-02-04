@@ -1,16 +1,16 @@
 <?php
 
-namespace Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer;
+namespace Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 
 /**
- * Option for handling order customer locale.
+ * Option for handle direct debit text in SEPA-related create payment request
  */
-class Locale implements OptionInterface
+class DirectDebitText implements OptionInterface
 {
-    public const NAME = '[order][customer][locale]';
+    public const NAME = '[sepaDirectDebitPaymentMethodSpecificInput][directDebitText]';
 
     /**
      * {@inheritdoc}
@@ -18,7 +18,7 @@ class Locale implements OptionInterface
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setDefault(self::NAME, 'en')
+            ->setRequired(self::NAME)
             ->setAllowedTypes(self::NAME, 'string');
     }
 }
