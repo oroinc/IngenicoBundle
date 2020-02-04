@@ -2,9 +2,9 @@
 
 namespace Ingenico\Connect\OroCommerce\Ingenico\Request\Payments;
 
-use Gos\Bundle\PubSubRouterBundle\Tokenizer\Token;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\AuthorizationMode;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\Token;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 
 /**

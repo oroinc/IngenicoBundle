@@ -111,12 +111,12 @@ class IngenicoView implements PaymentMethodViewInterface
                 $this->config->getPaymentMethodIdentifier()
             );
             foreach ($paymentTransactions as $paymentTransaction) {
-                $transactionOptions = $paymentTransaction->getTransactionOptions();
-                if (isset($transactionOptions['cardNumber'], $transactionOptions['token']) &&
-                    !in_array($transactionOptions['token'], $tokens, true)
+                $options = $paymentTransaction->getTransactionOptions();
+                if (isset($options['cardNumber'], $options['token'], $options['paymentProduct']) &&
+                    !in_array($options['token'], $tokens, true)
                 ) {
-                    $cardList[$paymentTransaction->getId()] = $transactionOptions['cardNumber'];
-                    $tokens[] = $transactionOptions['token'];
+                    $cardList[$options['paymentProduct']][$paymentTransaction->getId()] = $options['cardNumber'];
+                    $tokens[] = $options['token'];
                 }
             }
 

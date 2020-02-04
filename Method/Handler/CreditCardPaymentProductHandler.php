@@ -21,8 +21,10 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
  */
 class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
 {
+    public const ADDITIONAL_DATA_TOKE_KEY = 'ingenicoToken';
     public const TOKEN_KEY = 'token';
     public const CREDIT_CARD_KEY = 'cardNumber';
+    public const PAYMENT_PRODUCT_KEY = 'paymentProduct';
 
     /** @var PaymentTransactionProvider */
     protected $paymentTransactionProvider;
@@ -68,7 +70,8 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
                     IngenicoPaymentMethod::TOKENIZE,
                     [
                         self::TOKEN_KEY => $tokenResponse->offsetGetOr(self::TOKEN_KEY),
-                        self::CREDIT_CARD_KEY => $response->getCardNumber()
+                        self::CREDIT_CARD_KEY => $response->getCardNumber(),
+                        self::PAYMENT_PRODUCT_KEY => $response->getPaymentProduct(),
                     ]
                 );
                 $tokenizePaymentTransaction->setResponse($tokenResponse->toArray());
@@ -87,7 +90,7 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     ): array {
         $options = [AuthorizationMode::NAME => $config->getPaymentAction()];
 
-        $tokenId = $this->getTransactionOption($paymentTransaction, self::TOKEN_KEY);
+        $tokenId = $this->getTransactionOption($paymentTransaction, self::ADDITIONAL_DATA_TOKE_KEY);
         if ($tokenId && $config->isTokenizationEnabled()) {
             $token = $this->paymentTransactionProvider->getTokenFromTokenizePaymentTransactionById(
                 $config->getPaymentMethodIdentifier(),

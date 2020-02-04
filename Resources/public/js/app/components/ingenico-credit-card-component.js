@@ -22,7 +22,10 @@ define(function(require) {
             cardsGroupName: 'cards',
             tokenRequiredFields: ['cvv'],
             selectors: {
-                paymentProductItem: 'a.payment-product__item'
+                paymentProductItem: 'a.payment-product__item',
+                paymentProductList: '.ingenico__payment-product-list',
+                paymentGeneralFields: '.ingenico__payment-general-fields',
+                paymentProductFields: '.ingenico__payment-product-fields'
             }
         },
 
@@ -38,9 +41,26 @@ define(function(require) {
         $el: null,
 
         /**
+         * @property {jQuery}
+         */
+        $paymentProductList: null,
+
+        /**
+         * @property {jQuery}
+         */
+        $paymentProductFieldsElement: null,
+
+        /**
+         * @property {jQuery}
+         */
+        $paymentGeneralFieldsElement: null,
+
+        /**
          * @property {Boolean}
          */
         disposable: true,
+
+        _requiredFields: {},
 
         /**
          * @inheritDoc
@@ -56,6 +76,9 @@ define(function(require) {
             this.options = _.extend({}, this.options, options);
 
             this.$el = this.options._sourceElement;
+            this.$paymentProductList = $(this.options.selectors.paymentProductList);
+            this.$paymentGeneralFieldsElement = $(this.options.selectors.paymentGeneralFields);
+            this.$paymentProductFieldsElement = $(this.options.selectors.paymentProductFields);
 
             this.$el
                 .on(
@@ -181,7 +204,7 @@ define(function(require) {
                 };
             });
 
-            return this.$el.html(this.paymentProductListTemplate({productPayments: items}));
+            return this.$paymentProductList.html(this.paymentProductListTemplate({productPayments: items}));
         },
 
         onPaymentProductClick: function(event) {
@@ -195,17 +218,12 @@ define(function(require) {
             this.getSession()
                 .then(this.getPaymentProductDetails.bind(this, paymentProductId))
                 .then(function() {
-                    const fields = [];
-                    _.each(this.currentPaymentProduct.paymentProductFields, function(field) {
-                        const rendererFieldName = 'ingenico::' + field.id;
-                        fields.push(_.macros(rendererFieldName)({
-                            paymentMethod: this.options.paymentMethod,
-                            field: field
-                        }));
-                    }.bind(this));
+                    this._renderCurrentProductPaymentFields();
 
+                    const fields = [];
                     if (this.isTokenizationApplicable()) {
-                        fields.unshift(_.macros('ingenico::token')({
+                        const creditCardList = this.getSavedCardList();
+                        fields.push(_.macros('ingenico::token')({
                             paymentMethod: this.options.paymentMethod,
                             field: {
                                 id: 'token',
@@ -217,25 +235,58 @@ define(function(require) {
                                     isRequired: false
                                 }
                             },
-                            values: this.options.savedCreditCardList
-                        }));
-                        fields.push(_.macros('ingenico::saveForLaterUse')({
-                            paymentMethod: this.options.paymentMethod,
-                            field: {
-                                id: 'saveForLaterUse',
-                                displayHints: {
-                                    label: __('ingenico.saveForLaterUse.label')
-                                },
-                                dataRestrictions: {
-                                    isRequired: false
-                                }
-                            }
+                            values: creditCardList
                         }));
                     }
 
-                    this.$el.html(fields.join(''));
-                    this.$el.find('select').inputWidget('create', 'select2');
+                    this.$paymentGeneralFieldsElement.html(fields.join(''));
+                    this.$paymentGeneralFieldsElement.find('select').inputWidget('create', 'select2');
                 }.bind(this));
+        },
+
+        _renderCurrentProductPaymentFields: function() {
+            const fields = [];
+            const token = this.getToken();
+            _.each(this.currentPaymentProduct.paymentProductFields, field => {
+                if (token && _.indexOf(this.options.tokenRequiredFields, field.id) === -1) {
+                    return;
+                }
+                const rendererFieldName = 'ingenico::' + field.id;
+                fields.push(_.macros(rendererFieldName)({
+                    paymentMethod: this.options.paymentMethod,
+                    field: field
+                }));
+            });
+
+            if (this.isTokenizationApplicable() && !token) {
+                fields.push(_.macros('ingenico::saveForLaterUse')({
+                    paymentMethod: this.options.paymentMethod,
+                    field: {
+                        id: 'saveForLaterUse',
+                        displayHints: {
+                            label: __('ingenico.saveForLaterUse.label')
+                        },
+                        dataRestrictions: {
+                            isRequired: false
+                        }
+                    }
+                }));
+            }
+
+            this.$paymentProductFieldsElement.html(fields.join(''));
+            this.$paymentProductFieldsElement.find('select').inputWidget('create', 'select2');
+        },
+
+        getSavedCardList: function() {
+            if (!this.currentPaymentProduct) {
+                return [];
+            }
+
+            if (!_.has(this.options.savedCreditCardList, this.currentPaymentProduct.id)) {
+                return [];
+            }
+
+            return this.options.savedCreditCardList[this.currentPaymentProduct.id];
         },
 
         /**
@@ -305,9 +356,47 @@ define(function(require) {
             return fields;
         },
 
-        onTokenChange: function() {
-            // here will be code for re-render payment product fields that needed for token
-            // will be implemented in INGA-39
+        onTokenChange: function(event) {
+            if (event.target.value) {
+                this._saveRequiredFieldsList();
+            } else {
+                this._restoreRequiredFieldsList();
+            }
+
+            this._renderCurrentProductPaymentFields();
+        },
+
+        _saveRequiredFieldsList: function() {
+            if (!this.currentPaymentProduct) {
+                return;
+            }
+
+            const requiredFields = {};
+            _.each(this.currentPaymentProduct.paymentProductFields, field => {
+                if (field.dataRestrictions.isRequired &&
+                    _.indexOf(this.options.tokenRequiredFields, field.id) === -1) {
+                    requiredFields[field.id] = field.dataRestrictions.validationRules;
+                    field.dataRestrictions.isRequired = false;
+                    field.dataRestrictions.validationRules = [];
+                }
+            });
+
+            this._requiredFields = requiredFields;
+        },
+
+        _restoreRequiredFieldsList: function() {
+            if (!this.currentPaymentProduct) {
+                return;
+            }
+
+            _.each(this.currentPaymentProduct.paymentProductFields, field => {
+                if (_.has(this._requiredFields, field.id)) {
+                    field.dataRestrictions.isRequired = true;
+                    field.dataRestrictions.validationRules = this._requiredFields[field.id];
+                }
+            });
+
+            this._requiredFields = {};
         },
 
         getToken: function() {
@@ -336,19 +425,19 @@ define(function(require) {
             });
 
             if (!paymentRequest.isValid()) {
-                _.each(paymentRequest.getValues(), function(value, name) {
+                _.each(paymentRequest.getValues(), (value, name) => {
                     const field = paymentRequest.getPaymentProduct().paymentProductFieldById[name];
                     if (field) {
                         const fieldName = this.buildFieldIdentifier(name, 'error');
                         if ($(fieldName).length) {
-                            if (field.getErrorCodes().length || (field.dataRestrictions.isRequired && !value)) {
+                            if (!field.isValid(value)) {
                                 $(fieldName).removeClass('hidden');
                             } else {
                                 $(fieldName).addClass('hidden');
                             }
                         }
                     }
-                }.bind(this));
+                });
 
                 return false;
             }
@@ -383,7 +472,8 @@ define(function(require) {
                     this.addPaymentAdditionalData(data);
                     deffer.resolve();
                 }.bind(this),
-                function() {
+                function(errors) {
+                    console.log(errors);
                     deffer.reject();
                     mediator.execute('showFlashMessage', 'error', __('ingenico.crypt_error'));
                 }
