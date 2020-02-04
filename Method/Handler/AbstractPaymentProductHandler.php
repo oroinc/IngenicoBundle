@@ -97,7 +97,6 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
      * @return array
-     * @throws \JsonException
      */
     public function capture(
         PaymentTransaction $paymentTransaction,
@@ -152,7 +151,6 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
      * @param IngenicoConfig $config
      * @param array $additionalRequestOptions
      * @return PaymentResponse
-     * @throws \JsonException
      */
     protected function requestCreatePayment(
         PaymentTransaction $paymentTransaction,
