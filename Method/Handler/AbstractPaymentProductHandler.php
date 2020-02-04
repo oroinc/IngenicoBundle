@@ -165,7 +165,8 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
             EncryptedCustomerInput::NAME => $customerEncryptedDetails,
             AmountOfMoney\Amount::NAME => $this->normalizeAmount($paymentTransaction),
             AmountOfMoney\CurrencyCode::NAME => $paymentTransaction->getCurrency(),
-            MerchantReference::NAME => sprintf('oroCommerceOrder:%d', $paymentTransaction->getEntityIdentifier()),
+            // TODO: Remove this temporary fix with merchant reference
+            MerchantReference::NAME => sprintf('oroCommerceOrder:%d:', $paymentTransaction->getEntityIdentifier()).rand(1,100).rand(1,100),
         ];
 
         $checkoutOptions = $this->checkoutInformationProvider->getCheckoutOptions($paymentTransaction);
