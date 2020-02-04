@@ -1,8 +1,11 @@
 ingenico:
     api:
         error:
-            get_payment_products: 'Ingenico payment products retrieval failed.'
+            no_available_payment_products: 'No available payment products'
             get_payment_product_details: 'Ingenico payment product details retrieval failed'
     no_choosen_payment_product: 'Need to choose payment product.'
     crypt_error: 'Failed to crypt payment form data.'
     general_error: 'Invalid value.'
+    payment_method_is_not_available: |
+        The selected payment method is not available.
+        Please select a different one.

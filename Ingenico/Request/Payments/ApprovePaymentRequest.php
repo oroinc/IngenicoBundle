@@ -10,6 +10,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Request\ActionParamsAwareInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Request\RequestInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\Sdk\DataObject;
+use Ingenico\Connect\Sdk\Domain\Payment\ApprovePaymentRequest as SDKApprovePaymentRequest;
 
 /**
  * Handle approve(capture) payment request.
@@ -61,6 +62,6 @@ class ApprovePaymentRequest implements RequestInterface, ActionParamsAwareInterf
      */
     public function createOriginalRequest(): DataObject
     {
-        return new \Ingenico\Connect\Sdk\Domain\Payment\ApprovePaymentRequest();
+        return new SDKApprovePaymentRequest();
     }
 }

@@ -18,7 +18,7 @@ class CountryCode implements OptionInterface
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setDefault(self::NAME, 'US')
+            ->setRequired(self::NAME)
             ->setAllowedTypes(self::NAME, 'string');
     }
 }

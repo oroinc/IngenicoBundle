@@ -53,8 +53,8 @@ class IngenicoSettingsType extends AbstractType
             ->add('apiEndpoint', TextType::class)
             ->add('merchantId', TextType::class)
             ->add('enabledProducts', ChoiceType::class, [
-                'choices' => $this->enabledProductsDataProvider->getEnabledProducts(),
-                'choice_label' => function ($action) {
+                'choices' => $this->enabledProductsDataProvider->getAvailableProducts(),
+                'choice_label' => function (string $action) {
                     return $this->translator->trans(
                         sprintf('ingenico.settings.enabledProducts.choice.%s', $action)
                     );
@@ -63,7 +63,7 @@ class IngenicoSettingsType extends AbstractType
             ])
             ->add('paymentAction', ChoiceType::class, [
                 'choices' => $this->paymentActionDataProvider->getPaymentActions(),
-                'choice_label' => function ($action) {
+                'choice_label' => function (string $action) {
                     return $this->translator->trans(
                         sprintf('ingenico.settings.paymentAction.choice.%s', $action)
                     );

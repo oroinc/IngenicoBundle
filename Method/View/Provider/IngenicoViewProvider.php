@@ -20,7 +20,7 @@ class IngenicoViewProvider extends AbstractPaymentMethodViewProvider
     /**
      * @var IngenicoConfigProvider
      */
-    protected $factory;
+    private $factory;
 
     /**
      * @param IngenicoConfigProvider $configProvider

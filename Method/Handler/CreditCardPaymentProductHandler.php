@@ -3,11 +3,11 @@
 namespace Ingenico\Connect\OroCommerce\Method\Handler;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\AuthorizationMode;
-use Ingenico\Connect\OroCommerce\Ingenico\Response\PaymentResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
-use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
+use Ingenico\Connect\OroCommerce\Settings\DataProvider\PaymentActionDataProvider;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
+use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
 /**
@@ -18,34 +18,51 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     private const PENDING_APPROVAL_STATUS = 'PENDING_APPROVAL';
     private const CAPTURE_REQUESTED_STATUS = 'CAPTURE_REQUESTED';
 
+    public const ACTION_PURCHASE = 'purchase';
+    public const ACTION_CAPTURE = 'capture';
+
     /**
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
-     * @throws \JsonException
+     * @return array
      */
     public function purchase(
         PaymentTransaction $paymentTransaction,
         IngenicoConfig $config
     ) {
         $paymentTransaction->setSuccessful(false);
-        $response = $this->requestCreatePayment($paymentTransaction, $config);
 
+        $response = $this->requestCreatePayment(
+            $paymentTransaction,
+            $config,
+            $this->getCreatePaymentAdditionalOptions($config)
+        );
+
+        $paymentAction = $config->getPaymentAction() === PaymentActionDataProvider::PRE_AUTHORIZATION ?
+            PaymentMethodInterface::AUTHORIZE : $paymentTransaction->getAction();
         $paymentTransaction
             ->setSuccessful($response->isSuccessful())
             ->setActive($response->isSuccessful())
             ->setReference($response->getReference())
             ->setAction($this->getPurchaseActionByPaymentResponse($response))
             ->setResponse($response->toArray());
+
+        return [
+            'purchaseSuccessful' => $response->isSuccessful(),
+        ];
     }
 
     /**
-     * {@inheritdoc}
+     * @param IngenicoConfig $config
+     * @return array
      */
-    protected function getCreatePaymentOptions(
-        PaymentTransaction $paymentTransaction,
-        IngenicoConfig $config
-    ): array {
-        return [AuthorizationMode::NAME => $config->getPaymentAction()];
+    private function getCreatePaymentAdditionalOptions(IngenicoConfig $config): array
+    {
+        return [
+            AuthorizationMode::NAME => $config->getPaymentAction(),
+            // TODO: This logic should be moved from here
+            RequiresApproval::NAME => $config->getPaymentAction() !== PaymentActionDataProvider::SALE,
+        ];
     }
 
     /**
@@ -61,7 +78,15 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
      */
     protected function getType(): string
     {
-        return EnabledProductsDataProvider::CREDIT_CARDS;
+        return EnabledProductsDataProvider::CREDIT_CARDS_GROUP_ID;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function isActionSupported(string $actionName): bool
+    {
+        return in_array($actionName, [self::ACTION_CAPTURE, self::ACTION_PURCHASE], true);
     }
 
     /**
