@@ -15,7 +15,7 @@ class PaymentProductHandlerRegistry
     private $paymentProductsHandlers;
 
     /**
-     * @param iterable\PaymentProductHandlerInterface[] $paymentProductsHandlers
+     * @param iterable|PaymentProductHandlerInterface[] $paymentProductsHandlers
      */
     public function __construct(iterable $paymentProductsHandlers)
     {
@@ -30,7 +30,7 @@ class PaymentProductHandlerRegistry
         PaymentTransaction $paymentTransaction
     ): ?PaymentProductHandlerInterface {
         foreach ($this->paymentProductsHandlers as $productTypeHandler) {
-            if ($productTypeHandler->supports($paymentTransaction)) {
+            if ($productTypeHandler->isApplicable($paymentTransaction)) {
                 return $productTypeHandler;
             }
         }

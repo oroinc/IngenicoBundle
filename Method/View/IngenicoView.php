@@ -3,8 +3,8 @@
 namespace Ingenico\Connect\OroCommerce\Method\View;
 
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
+use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Ingenico\Connect\OroCommerce\Provider\PaymentTransactionProvider;
-use Oro\Bundle\CurrencyBundle\Rounding\RoundingServiceInterface;
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Method\View\PaymentMethodViewInterface;
 
@@ -19,8 +19,8 @@ class IngenicoView implements PaymentMethodViewInterface
     /** @var string */
     private $currentLocalizationCode;
 
-    /** @var RoundingServiceInterface */
-    private $rounding;
+    /** @var AmountNormalizer */
+    private $amountNormalizer;
 
     /** @var PaymentTransactionProvider */
     private $paymentTransactionProvider;
@@ -28,18 +28,18 @@ class IngenicoView implements PaymentMethodViewInterface
     /**
      * @param IngenicoConfig $config
      * @param string $currentLocalizationCode
-     * @param RoundingServiceInterface $rounding
+     * @param AmountNormalizer $amountNormalizer
      * @param PaymentTransactionProvider $paymentTransactionProvider
      */
     public function __construct(
         IngenicoConfig $config,
         string $currentLocalizationCode,
-        RoundingServiceInterface $rounding,
+        AmountNormalizer $amountNormalizer,
         PaymentTransactionProvider $paymentTransactionProvider
     ) {
         $this->config = $config;
         $this->currentLocalizationCode = $currentLocalizationCode;
-        $this->rounding = $rounding;
+        $this->amountNormalizer = $amountNormalizer;
         $this->paymentTransactionProvider = $paymentTransactionProvider;
     }
 
@@ -52,12 +52,12 @@ class IngenicoView implements PaymentMethodViewInterface
             'saveForLaterUseEnabled' => $this->config->isTokenizationEnabled(),
             'savedCreditCardList' => $this->getSavedCardList(),
             'paymentDetails' => [
-                'totalAmount' => (int) ($this->rounding->round($context->getTotal()) * 100),
+                'totalAmount' => $this->amountNormalizer->normalize($context->getTotal()),
                 'currency' => $context->getCurrency(),
                 'countryCode' => $context->getBillingAddress()->getCountryIso2(),
                 'isRecurring' => false,
-                'locale' => $this->currentLocalizationCode
-            ]
+                'locale' => $this->currentLocalizationCode,
+            ],
         ];
     }
 
@@ -93,7 +93,9 @@ class IngenicoView implements PaymentMethodViewInterface
         return $this->config->getAdminLabel();
     }
 
-    /** {@inheritdoc} */
+    /**
+     * {@inheritdoc}
+     */
     public function getPaymentMethodIdentifier()
     {
         return $this->config->getPaymentMethodIdentifier();

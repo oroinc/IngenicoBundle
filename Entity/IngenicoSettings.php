@@ -7,7 +7,8 @@ use Oro\Bundle\IntegrationBundle\Entity\Transport;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
 /**
- * IngenicoSettings Entity.
+ * Ingenico payment integration settings entity
+ *
  * @ORM\Entity(repositoryClass="Ingenico\Connect\OroCommerce\Entity\Repository\IngenicoSettingsRepository")
  */
 class IngenicoSettings extends Transport
@@ -23,49 +24,49 @@ class IngenicoSettings extends Transport
     /**
      * @var ParameterBag
      */
-    protected $settings;
+    private $settings;
 
     /**
      * @var string
      *
      * @ORM\Column(name="ingenico_api_key_id", type="string", length=255, nullable=true)
      */
-    protected $apiKeyId;
+    private $apiKeyId;
 
     /**
      * @var string
      *
      * @ORM\Column(name="ingenico_api_secret", type="crypted_string", length=255, nullable=true)
      */
-    protected $apiSecret;
+    private $apiSecret;
 
     /**
      * @var string
      *
      * @ORM\Column(name="ingenico_api_endpoint", type="text", length=255, nullable=true)
      */
-    protected $apiEndpoint;
+    private $apiEndpoint;
 
     /**
      * @var string
      *
      * @ORM\Column(name="ingenico_merchant_id", type="string", length=255, nullable=true)
      */
-    protected $merchantId;
+    private $merchantId;
 
     /**
      * @var array
      *
      * @ORM\Column(name="ingenico_enabled_products", type="array", nullable=true)
      */
-    protected $enabledProducts = [];
+    private $enabledProducts = [];
 
     /**
      * @var string
      *
      * @ORM\Column(name="ingenico_payment_action", type="string", length=255, nullable=true)
      */
-    protected $paymentAction;
+    private $paymentAction;
 
     /**
      * @var bool
@@ -106,7 +107,7 @@ class IngenicoSettings extends Transport
      * @param string $apiKeyId
      * @return IngenicoSettings
      */
-    public function setApiKeyId($apiKeyId): IngenicoSettings
+    public function setApiKeyId(string $apiKeyId): IngenicoSettings
     {
         $this->apiKeyId = $apiKeyId;
 
@@ -123,10 +124,9 @@ class IngenicoSettings extends Transport
 
     /**
      * @param string $apiSecret
-     *
      * @return IngenicoSettings
      */
-    public function setApiSecret($apiSecret): IngenicoSettings
+    public function setApiSecret(string $apiSecret): IngenicoSettings
     {
         $this->apiSecret = $apiSecret;
 
@@ -143,10 +143,9 @@ class IngenicoSettings extends Transport
 
     /**
      * @param string $apiEndpoint
-     *
      * @return IngenicoSettings
      */
-    public function setApiEndpoint($apiEndpoint): IngenicoSettings
+    public function setApiEndpoint(string $apiEndpoint): IngenicoSettings
     {
         $this->apiEndpoint = $apiEndpoint;
 
@@ -163,10 +162,9 @@ class IngenicoSettings extends Transport
 
     /**
      * @param string $merchantId
-     *
      * @return IngenicoSettings
      */
-    public function setMerchantId($merchantId): IngenicoSettings
+    public function setMerchantId(string $merchantId): IngenicoSettings
     {
         $this->merchantId = $merchantId;
 
@@ -183,10 +181,9 @@ class IngenicoSettings extends Transport
 
     /**
      * @param array $enabledProducts
-     *
      * @return IngenicoSettings
      */
-    public function setEnabledProducts($enabledProducts): IngenicoSettings
+    public function setEnabledProducts(array $enabledProducts): IngenicoSettings
     {
         $this->enabledProducts = $enabledProducts;
 
@@ -203,10 +200,9 @@ class IngenicoSettings extends Transport
 
     /**
      * @param string $paymentAction
-     *
      * @return IngenicoSettings
      */
-    public function setPaymentAction($paymentAction): IngenicoSettings
+    public function setPaymentAction(string $paymentAction): IngenicoSettings
     {
         $this->paymentAction = $paymentAction;
 

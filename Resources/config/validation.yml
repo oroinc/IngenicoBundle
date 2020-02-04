@@ -2,12 +2,18 @@ Ingenico\Connect\OroCommerce\Entity\IngenicoSettings:
     properties:
         apiKeyId:
             - NotBlank: ~
+            - Length:
+                  max: 255
         apiSecret:
             - NotBlank: ~
+            - Length:
+                  max: 255
         apiEndpoint:
             - NotBlank: ~
         merchantId:
             - NotBlank: ~
+            - Length:
+                  max: 255
         enabledProducts:
             - NotBlank: ~
         paymentAction:

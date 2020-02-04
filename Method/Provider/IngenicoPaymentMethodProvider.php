@@ -2,9 +2,9 @@
 
 namespace Ingenico\Connect\OroCommerce\Method\Provider;
 
+use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Method\Config\Provider\IngenicoConfigProvider;
 use Ingenico\Connect\OroCommerce\Method\Factory\IngenicoPaymentMethodFactory;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 use Oro\Bundle\PaymentBundle\Method\Provider\AbstractPaymentMethodProvider;
 
 /**
@@ -48,9 +48,9 @@ class IngenicoPaymentMethodProvider extends AbstractPaymentMethodProvider
     }
 
     /**
-     * @param PaymentConfigInterface $config
+     * @param IngenicoConfig $config
      */
-    protected function addIngenicoMethod(PaymentConfigInterface $config): void
+    private function addIngenicoMethod(IngenicoConfig $config): void
     {
         $this->addMethod(
             $config->getPaymentMethodIdentifier(),

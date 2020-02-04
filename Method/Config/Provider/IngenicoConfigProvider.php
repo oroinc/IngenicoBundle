@@ -7,7 +7,6 @@ use Ingenico\Connect\OroCommerce\Entity\IngenicoSettings;
 use Ingenico\Connect\OroCommerce\Entity\Repository\IngenicoSettingsRepository;
 use Ingenico\Connect\OroCommerce\Method\Config\Factory\IngenicoConfigFactory;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -53,7 +52,7 @@ class IngenicoConfigProvider
     }
 
     /**
-     * {@inheritDoc}
+     * @return IngenicoConfig[]
      */
     public function getPaymentConfigs()
     {
@@ -70,9 +69,10 @@ class IngenicoConfigProvider
     }
 
     /**
-     * {@inheritDoc}
+     * @param string $identifier
+     * @return IngenicoConfig
      */
-    public function getPaymentConfig($identifier): PaymentConfigInterface
+    public function getPaymentConfig(string $identifier): IngenicoConfig
     {
         $paymentConfigs = $this->getPaymentConfigs();
 
@@ -84,9 +84,10 @@ class IngenicoConfigProvider
     }
 
     /**
-     * {@inheritDoc}
+     * @param string $identifier
+     * @return bool
      */
-    public function hasPaymentConfig($identifier): bool
+    public function hasPaymentConfig(string $identifier): bool
     {
         return null !== $this->getPaymentConfig($identifier);
     }

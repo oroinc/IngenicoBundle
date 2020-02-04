@@ -16,7 +16,7 @@ define(function(require) {
         options: {
             paymentMethod: null,
             paymentDetails: {},
-            createSessionRoute: 'ingenico.create-session',
+            createSessionRoute: 'ingenico_create_session',
             saveForLaterUseEnabled: false,
             savedCreditCardList: [],
             cardsGroupName: 'cards',
@@ -27,6 +27,15 @@ define(function(require) {
                 paymentGeneralFields: '.ingenico__payment-general-fields',
                 paymentProductFields: '.ingenico__payment-product-fields'
             }
+        },
+
+        listen: {
+            'checkout:payment:method:changed mediator': 'onPaymentMethodChanged',
+            'checkout:payment:before-transit mediator': 'beforeTransit',
+            'checkout:payment:before-hide-filled-form mediator': 'beforeHideFilledForm',
+            'checkout:payment:before-restore-filled-form mediator': 'beforeRestoreFilledForm',
+            'checkout:payment:remove-filled-form mediator': 'removeFilledForm',
+            'checkout-content:initialized mediator': 'refreshPaymentMethod'
         },
 
         session: null,
@@ -60,6 +69,9 @@ define(function(require) {
          */
         disposable: true,
 
+        /**
+         * @property {Object}
+         */
         _requiredFields: {},
 
         /**
@@ -88,20 +100,13 @@ define(function(require) {
                 )
                 .on('change.' + this.cid, this.getSaveForLaterSelector(), this.onSaveForLaterChange.bind(this))
                 .on('change.' + this.cid, this.getTokenFieldSelector(), this.onTokenChange.bind(this));
-
-            mediator.on('checkout:payment:method:changed', this.onPaymentMethodChange, this);
-            mediator.on('checkout-content:initialized', this.refreshPaymentMethod, this);
-            mediator.on('checkout:payment:before-transit', this.beforeTransit, this);
-            mediator.on('checkout:payment:before-restore-filled-form', this.beforeRestoreFilledForm, this);
-            mediator.on('checkout:payment:before-hide-filled-form', this.beforeHideFilledForm, this);
-            mediator.on('checkout:payment:remove-filled-form', this.removeFilledForm, this);
         },
 
         refreshPaymentMethod: function() {
             mediator.trigger('checkout:payment:method:changed', {paymentMethod: this.options.paymentMethod});
         },
 
-        onPaymentMethodChange: function(eventData) {
+        onPaymentMethodChanged: function(eventData) {
             if (eventData.paymentMethod === this.options.paymentMethod) {
                 // reset save for later use checkbox to default value
                 // because we support this feature for credit card payment group only
@@ -123,19 +128,19 @@ define(function(require) {
                 $.getJSON(
                     routing.generate(
                         this.options.createSessionRoute,
-                        {paymentIdentifier: this.options.paymentMethod}
+                        {paymentMethod: this.options.paymentMethod}
                     ),
-                    function(data) {
+                    data => {
                         if (data.success) {
                             this.session = new ConnectSdk(data.sessionInfo);
+                            mediator.execute('hideLoading');
                             deffer.resolve();
                         } else {
-                            mediator.execute('showFlashMessage', 'error', data.errorMessage);
+                            this.$el.html(__('ingenico.payment_method_is_not_available'));
+                            mediator.execute('hideLoading');
                             deffer.reject();
                         }
-
-                        mediator.execute('hideLoading');
-                    }.bind(this)
+                    }
                 );
             }
 
@@ -150,14 +155,14 @@ define(function(require) {
             } else {
                 mediator.execute('showLoading');
                 this.session.getBasicPaymentItems(this.options.paymentDetails).then(
-                    function(_basicPaymentItems) {
+                    _basicPaymentItems => {
                         this.paymentProductItems = _basicPaymentItems.basicPaymentItems;
                         mediator.execute('hideLoading');
                         deffer.resolve();
-                    }.bind(this),
-                    function() {
+                    },
+                    () => {
                         mediator.execute('hideLoading');
-                        mediator.execute('showFlashMessage', 'error', __('ingenico.api.error.get_payment_products'));
+                        this.$el.html(__('ingenico.api.error.no_available_payment_products'));
                         deffer.reject();
                     }
                 );
@@ -173,12 +178,12 @@ define(function(require) {
                 this.session
                     .getPaymentProduct(paymentProductId, this.options.paymentDetails)
                     .then(
-                        function(paymentProduct) {
+                        paymentProduct => {
                             this.currentPaymentProduct = paymentProduct;
                             mediator.execute('hideLoading');
                             deffer.resolve();
-                        }.bind(this),
-                        function() {
+                        },
+                        () => {
                             mediator.execute('hideLoading');
                             mediator.execute(
                                 'showFlashMessage',
@@ -216,8 +221,8 @@ define(function(require) {
 
         renderPaymentProductFields: function(paymentProductId) {
             this.getSession()
-                .then(this.getPaymentProductDetails.bind(this, paymentProductId))
-                .then(function() {
+                .then(() => this.getPaymentProductDetails(paymentProductId))
+                .then(() => {
                     this._renderCurrentProductPaymentFields();
 
                     const fields = [];
@@ -241,7 +246,7 @@ define(function(require) {
 
                     this.$paymentGeneralFieldsElement.html(fields.join(''));
                     this.$paymentGeneralFieldsElement.find('select').inputWidget('create', 'select2');
-                }.bind(this));
+                });
         },
 
         _renderCurrentProductPaymentFields: function() {
@@ -328,9 +333,13 @@ define(function(require) {
         beforeTransit: function(eventData) {
             if (eventData.data.paymentMethod === this.options.paymentMethod) {
                 eventData.stopped = true;
+
                 if (this.validate()) {
+                    mediator.execute('showLoading');
                     this.storeEcryptedCutomerDetailes().then(function() {
                         eventData.resume();
+                    }).catch(function() {
+                        mediator.execute('hideLoading');
                     });
                 }
             }
@@ -342,7 +351,7 @@ define(function(require) {
 
         collectFormData: function() {
             const fields = [];
-            _.each(this.currentPaymentProduct.paymentProductFields, function(field) {
+            _.each(this.currentPaymentProduct.paymentProductFields, field => {
                 const fieldName = this.buildFieldIdentifier(field.id, 'field');
                 if ($(fieldName).length) {
                     const value = $(fieldName).val();
@@ -351,7 +360,7 @@ define(function(require) {
                         value: value
                     });
                 }
-            }.bind(this));
+            });
 
             return fields;
         },
@@ -425,6 +434,8 @@ define(function(require) {
             });
 
             if (!paymentRequest.isValid()) {
+                // as we need partial validation we do not get validation by all payment product product fields
+                // just only fields in payment request should be validated
                 _.each(paymentRequest.getValues(), (value, name) => {
                     const field = paymentRequest.getPaymentProduct().paymentProductFieldById[name];
                     if (field) {
@@ -455,7 +466,7 @@ define(function(require) {
             const encryptor = this.session.getEncryptor();
             const paymentRequest = this.session.getPaymentRequest();
             encryptor.encrypt(paymentRequest).then(
-                function(encryptedString) {
+                encryptedString => {
                     let data = {
                         ingenicoPaymentProduct: paymentRequest.getPaymentProduct().paymentProductGroup,
                         ingenicoCustomerEncDetails: encryptedString
@@ -471,9 +482,8 @@ define(function(require) {
 
                     this.addPaymentAdditionalData(data);
                     deffer.resolve();
-                }.bind(this),
-                function(errors) {
-                    console.log(errors);
+                },
+                () => {
                     deffer.reject();
                     mediator.execute('showFlashMessage', 'error', __('ingenico.crypt_error'));
                 }
@@ -522,13 +532,6 @@ define(function(require) {
             if (this.disposed || !this.disposable) {
                 return;
             }
-
-            mediator.off('checkout:payment:method:changed', this.onPaymentMethodChange, this);
-            mediator.off('checkout-content:initialized', this.refreshPaymentMethod, this);
-            mediator.off('checkout:payment:before-transit', this.beforeTransit, this);
-            mediator.off('checkout:payment:before-restore-filled-form', this.beforeRestoreFilledForm, this);
-            mediator.off('checkout:payment:before-hide-filled-form', this.beforeHideFilledForm, this);
-            mediator.off('checkout:payment:remove-filled-form', this.removeFilledForm, this);
 
             this.$el
                 .off('click.' + this.cid, this.options.selectors.paymentProductItem)

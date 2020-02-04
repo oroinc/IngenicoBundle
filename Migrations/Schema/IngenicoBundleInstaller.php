@@ -21,13 +21,12 @@ class IngenicoBundleInstaller implements Installation
      */
     public function up(Schema $schema, QueryBag $queries)
     {
-        /** update integration transport table */
         $this->updateOroIntegrationTransportTable($schema);
         $this->addTokenizationEnabledField($schema);
     }
 
     /**
-     * Create oro_integration_transport table
+     * Add Ingenico configuration fields to the oro_integration_transport table
      *
      * @param Schema $schema
      */

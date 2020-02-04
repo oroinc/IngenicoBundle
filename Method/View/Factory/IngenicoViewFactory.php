@@ -2,12 +2,12 @@
 
 namespace Ingenico\Connect\OroCommerce\Method\View\Factory;
 
+use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Method\View\IngenicoView;
+use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Ingenico\Connect\OroCommerce\Provider\PaymentTransactionProvider;
-use Oro\Bundle\CurrencyBundle\Rounding\RoundingServiceInterface;
 use Oro\Bundle\LocaleBundle\Helper\LocalizationHelper;
 use Oro\Bundle\LocaleBundle\Manager\LocalizationManager;
-use Oro\Bundle\PaymentBundle\Method\Config\PaymentConfigInterface;
 
 /**
  * Factory for creating views of Ingenico payment method
@@ -20,8 +20,8 @@ class IngenicoViewFactory
     /** @var LocalizationManager */
     private $localizationManager;
 
-    /** @var RoundingServiceInterface */
-    private $rounding;
+    /** @var AmountNormalizer */
+    private $amountNormalizer;
 
     /** @var PaymentTransactionProvider */
     private $paymentTransactionProvider;
@@ -29,32 +29,31 @@ class IngenicoViewFactory
     /**
      * @param LocalizationHelper $localizationHelper
      * @param LocalizationManager $localizationManager
-     * @param RoundingServiceInterface $rounding
+     * @param AmountNormalizer $amountNormalizer
      * @param PaymentTransactionProvider $paymentTransactionProvider
      */
     public function __construct(
         LocalizationHelper $localizationHelper,
         LocalizationManager $localizationManager,
-        RoundingServiceInterface $rounding,
+        AmountNormalizer $amountNormalizer,
         PaymentTransactionProvider $paymentTransactionProvider
     ) {
         $this->localizationHelper = $localizationHelper;
         $this->localizationManager = $localizationManager;
-        $this->rounding = $rounding;
+        $this->amountNormalizer = $amountNormalizer;
         $this->paymentTransactionProvider = $paymentTransactionProvider;
     }
 
     /**
-     * @param PaymentConfigInterface $config
-     *
+     * @param IngenicoConfig $config
      * @return IngenicoView
      */
-    public function create(PaymentConfigInterface $config): IngenicoView
+    public function create(IngenicoConfig $config): IngenicoView
     {
         return new IngenicoView(
             $config,
             $this->getLocalizationCode(),
-            $this->rounding,
+            $this->amountNormalizer,
             $this->paymentTransactionProvider
         );
     }
