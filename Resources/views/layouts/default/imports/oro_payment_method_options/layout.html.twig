@@ -7,5 +7,9 @@
          data-page-component-module="ingenico/js/app/components/ingenico-credit-card-component"
          data-page-component-options="{{ componentOptions|json_encode }}"
     >
+        <input type="hidden" class="current-payment-product" name="{{ name ~ '-current-payment-product' }}">
+        <input type="hidden" class="current-payment-product-fields-values" name="{{ name ~ '-current-payment-product-fields-values' }}">
+
+        <div class="payment-body"></div>
     </div>
 {% endblock %}
