@@ -101,10 +101,10 @@ define(function(require) {
         _initializeIngenicoPayment: function() {
             this._deferredInit();
 
-            const productState = parseInt(this.getPaymentProductState());
             this.getSession()
                 .then(() => this.getPaymentProducts())
                 .then(() => {
+                    const productState = parseInt(this.getPaymentProductState());
                     if (productState) {
                         this.getPaymentProductDetails(productState)
                             .then(() => this.renderCurrentPaymentProductFields());
@@ -195,7 +195,7 @@ define(function(require) {
                         paymentProduct => {
                             this.currentPaymentProduct = paymentProduct;
 
-                            // save state to hidden field and clear previously saved fields state
+                            // save state to hidden field
                             this.savePaymentProductState(paymentProductId);
 
                             mediator.execute('hideLoading');
