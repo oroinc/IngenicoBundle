@@ -165,8 +165,7 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
             EncryptedCustomerInput::NAME => $customerEncryptedDetails,
             AmountOfMoney\Amount::NAME => $this->normalizeAmount($paymentTransaction),
             AmountOfMoney\CurrencyCode::NAME => $paymentTransaction->getCurrency(),
-            // TODO: Remove this temporary fix with merchant reference
-            MerchantReference::NAME => sprintf('oroCommerceOrder:%d:', $paymentTransaction->getEntityIdentifier()).rand(1,100).rand(1,100),
+            MerchantReference::NAME => $this->generateMerchantReference($paymentTransaction),
         ];
 
         $checkoutOptions = $this->checkoutInformationProvider->getCheckoutOptions($paymentTransaction);
@@ -225,6 +224,19 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
     protected function normalizeAmount(PaymentTransaction $paymentTransaction)
     {
         return $this->amountNormalizer->normalize($paymentTransaction->getAmount());
+    }
+
+    /**
+     * Generate merchant reference for the payment transaction on the Ingenico side
+     * This reference must be unique.
+     * This method uses next format: "o:<order_id>:n:<random_nonce>"
+     *
+     * @param PaymentTransaction $paymentTransaction
+     * @return string
+     */
+    protected function generateMerchantReference(PaymentTransaction $paymentTransaction)
+    {
+        return sprintf('o:%d:n:%s', $paymentTransaction->getEntityIdentifier(), uniqid());
     }
 
     /**
