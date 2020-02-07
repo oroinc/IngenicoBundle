@@ -1,5 +1,14 @@
 <div class="form-row checkout">
-    <label class="label label--full<% if (field.dataRestrictions.isRequired) { %> required<% } %>"><%= field.displayHints.label %><% if (field.dataRestrictions.isRequired) { %><em>*</em><% } %></label>
-    <input type="text" name="<%= field.id %>-<%= paymentMethod %>" class="<%= field.id %>-<%= paymentMethod %>-field input input--full" placeholder="<%= field.displayHints.placeholderLabel %>">
-    <span class="<%= field.id %>-<%= paymentMethod %>-error validation-failed hidden"><%= _.__('ingenico.general_error') %></span>
+    <label for="<%= fieldElementId %>"
+           class="label label--full<% if (field.dataRestrictions.isRequired) { %> required<% } %>"><%= field.displayHints.label %><% if (field.dataRestrictions.isRequired) { %><em>*</em><% } %></label>
+    <input type="text"
+           id="<%= fieldElementId %>"
+           name="<%= field.id %>-<%= paymentProductId %>-<%= paymentMethod %>"
+           class="<%= field.id %>-field input input--full"
+           placeholder="<%= field.displayHints.placeholderLabel %>"
+           data-field-id="<%= field.id %>"
+           <% if (!_.isUndefined(field.dataValidation)) { %>data-validation="<%- JSON.stringify(field.dataValidation) %>"<% } %>>
+
+    <span id="<%= fieldErrorElementId %>"
+          class="<%= field.id %>-<%= paymentMethod %>-error validation-failed hidden"><%= _.__('ingenico.general_error') %></span>
 </div>
