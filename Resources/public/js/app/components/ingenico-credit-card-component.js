@@ -54,6 +54,11 @@ define(function(require) {
         disposable: true,
 
         /**
+         * @property {Boolean}
+         */
+        rendered: false,
+
+        /**
          * @inheritDoc
          */
         constructor: function IngenicoCreditCardComponent(options) {
@@ -247,6 +252,11 @@ define(function(require) {
          * Renders payment products list retrieved with Ingenico SDK.
          */
         renderPaymentProductsList: function() {
+            // don't allow the same content to be displayed a couple of times
+            if (this.rendered) {
+                return;
+            }
+
             const items = _.map(this.paymentProductItems, function(item) {
                 return {
                     id: item.id,
@@ -260,7 +270,8 @@ define(function(require) {
                 paymentMethod: this.options.paymentMethod
             };
 
-            return this.$el.find(this.options.selectors.body).html(this.paymentProductListTemplate(templateVars));
+            this.$el.find(this.options.selectors.body).html(this.paymentProductListTemplate(templateVars));
+            this.rendered = true;
         },
 
         /**
@@ -309,7 +320,7 @@ define(function(require) {
 
                 deffer.resolve();
 
-                return;
+                return deffer.promise();
             }
 
             this.getSession()
