@@ -7,7 +7,7 @@ define(function(require) {
     const __ = require('orotranslation/js/translator');
     const $ = require('jquery');
     const BaseComponent = require('oroui/js/app/components/base/component');
-    const connectsdk = require('connect-sdk-client-js');
+    const ConnectSdk = require('connect-sdk-client-js');
     const mediator = require('oroui/js/mediator');
     const routing = require('routing');
     const paymentProductListTemplate = require('tpl-loader!ingenico/templates/payment-products-list.html');
@@ -22,7 +22,11 @@ define(function(require) {
                 state: {
                     paymentProduct: '.current-payment-product',
                     paymentProductFields: '.current-payment-product-fields-values'
-                }
+                },
+                paymentProductChoice: '.payment-product__choice',
+                paymentProductItem: '.payment-product',
+                paymentProductFormFieldsHolder: '.payment-product__form-fields',
+                genericInput: '.input--full'
             }
         },
 
@@ -64,8 +68,19 @@ define(function(require) {
 
             this.$el = this.options._sourceElement;
 
-            this.$el.on('click.' + this.cid, 'a.payment-product__item', this.renderPaymentProductFields.bind(this));
-            this.$el.on('change.' + this.cid, 'input, select, checkbox, radio', () => this.saveFieldsState());
+            this.$el.on('change.' + this.cid, this.options.selectors.genericInput, this.saveFieldsState.bind(this));
+
+            this.$el.on(
+                'click.' + this.cid,
+                this.options.selectors.paymentProductChoice,
+                this.onPaymentProductItemClick.bind(this)
+            );
+
+            this.$el.on(
+                'focusout.' + this.cid,
+                this.options.selectors.genericInput,
+                this.validateField.bind(this)
+            );
 
             this._initializeIngenicoPayment();
         },
@@ -104,15 +119,14 @@ define(function(require) {
             this.getSession()
                 .then(() => this.getPaymentProducts())
                 .then(() => {
-                    const productState = parseInt(this.getPaymentProductState());
-                    if (productState) {
-                        this.getPaymentProductDetails(productState)
-                            .then(() => this.renderCurrentPaymentProductFields());
+                    this.renderPaymentProductsList();
+                    const paymentProductId = parseInt(this.getPaymentProductState());
+                    if (paymentProductId) {
+                        this.showSelectedPaymentProductFields(paymentProductId)
+                            .then(() => this._resolveDeferredInit());
                     } else {
-                        this.renderPaymentProductsList();
+                        this._resolveDeferredInit();
                     }
-
-                    this._resolveDeferredInit();
                 });
         },
 
@@ -122,6 +136,11 @@ define(function(require) {
             }
         },
 
+        /**
+         * Gets Ingenico session to operate with Ingeinco JS SDK.
+         * The session represents checkout amount, currency, locale values
+         * and Ingenico's expected payment product to be used.
+         */
         getSession: function() {
             const deffer = $.Deferred();
 
@@ -136,7 +155,7 @@ define(function(require) {
                     ),
                     data => {
                         if (data.success) {
-                            this.session = new connectsdk(data.sessionInfo);
+                            this.session = new ConnectSdk(data.sessionInfo);
                             mediator.execute('hideLoading');
                             deffer.resolve();
                         } else {
@@ -153,6 +172,9 @@ define(function(require) {
             return deffer.promise();
         },
 
+        /**
+         * Retrieves payment products general details with Ingenico SDK by properly setup Ingenico session.
+         */
         getPaymentProducts: function() {
             const deffer = $.Deferred();
 
@@ -179,6 +201,9 @@ define(function(require) {
             return deffer.promise();
         },
 
+        /**
+         * Retrieves payment product details with Ingenico SDK.
+         */
         getPaymentProductDetails: function(paymentProductId) {
             const deffer = $.Deferred();
 
@@ -195,7 +220,7 @@ define(function(require) {
                         paymentProduct => {
                             this.currentPaymentProduct = paymentProduct;
 
-                            // save state to hidden field
+                            // save chosen payment product state
                             this.savePaymentProductState(paymentProductId);
 
                             mediator.execute('hideLoading');
@@ -218,6 +243,9 @@ define(function(require) {
             return deffer.promise();
         },
 
+        /**
+         * Renders payment products list retrieved with Ingenico SDK.
+         */
         renderPaymentProductsList: function() {
             const items = _.map(this.paymentProductItems, function(item) {
                 return {
@@ -227,39 +255,107 @@ define(function(require) {
                 };
             });
 
-            this.$el.find(this.options.selectors.body).html(this.paymentProductListTemplate({productPayments: items}));
+            const templateVars = {
+                paymentProducts: items,
+                paymentMethod: this.options.paymentMethod
+            };
+
+            return this.$el.find(this.options.selectors.body).html(this.paymentProductListTemplate(templateVars));
         },
 
-        renderPaymentProductFields: function(event) {
-            event.preventDefault();
+        /**
+         * Payment products forms switcher(accordion like).
+         */
+        onPaymentProductItemClick: function(event) {
             const paymentProductId = $(event.currentTarget).data('product-id');
-
-            this.getSession()
-                .then(() => this.getPaymentProductDetails(paymentProductId))
-                .then(() => this.renderCurrentPaymentProductFields());
+            this.showSelectedPaymentProductFields(paymentProductId);
         },
 
-        renderCurrentPaymentProductFields: function() {
-            if (!this.currentPaymentProduct.paymentProductFields) {
+        /**
+         * Renders selected payment product's form if it's not.
+         */
+        showSelectedPaymentProductFields: function(paymentProductId) {
+            const deffer = $.Deferred();
+
+            const element = _.first(_.filter(
+                this.$el.find(this.options.selectors.paymentProductChoice),
+                el => $(el).data('product-id') === paymentProductId
+            ));
+            const choiceElement = $(element);
+
+            // fix checkbox checked state when function calls not from element click event
+            choiceElement.prop('checked', true);
+
+            const paymentProductFieldsHolder = choiceElement
+                .parents(this.options.selectors.paymentProductItem)
+                .find(this.options.selectors.paymentProductFormFieldsHolder);
+
+            this.$el.find(this.options.selectors.paymentProductChoice).attr('area-expanded', false)
+                .removeAttr('aria-disabled');
+            this.$el.find(this.options.selectors.paymentProductFormFieldsHolder)
+                .addClass('hidden');
+
+            if (paymentProductFieldsHolder.data('paymentProduct')) {
+                this.currentPaymentProduct = paymentProductFieldsHolder.data('paymentProduct');
+                paymentProductFieldsHolder.removeClass('hidden');
+                choiceElement.attr('area-expanded', true)
+                    .attr('aria-disabled', true);
+
+                // update product fields state
+                this.saveFieldsState();
+
+                // save chosen payment product state
+                this.savePaymentProductState(paymentProductId);
+
+                deffer.resolve();
+
                 return;
             }
 
+            this.getSession()
+                .then(() => this.getPaymentProductDetails(paymentProductId))
+                .then(() => {
+                    const renderedFields = this.renderPaymentProductFields(
+                        this.currentPaymentProduct.paymentProductFields,
+                        paymentProductId
+                    );
+
+                    paymentProductFieldsHolder.html(renderedFields.join(''))
+                        .data('paymentProduct', this.currentPaymentProduct)
+                        .removeClass('hidden');
+
+                    choiceElement.attr('area-expanded', true)
+                        .attr('aria-disabled', true);
+
+                    deffer.resolve();
+                }, () => deffer.reject());
+
+            return deffer.promise();
+        },
+
+        /**
+         * Renders payment product fields according to guiding rules retrieved with Ingenico SDK.
+         */
+        renderPaymentProductFields: function(fields, paymentProductId) {
+            const renderedFields = [];
             const fieldsState = this.getFieldsState();
-            const fields = [];
-            _.each(this.currentPaymentProduct.paymentProductFields, field => {
+            _.each(fields, field => {
                 // look for previously saved value
                 const valueItem = _.find(fieldsState, item => item.field === field.id);
                 const value = valueItem ? valueItem.value : '';
 
                 const rendererFieldName = 'ingenico::' + field.id;
-                fields.push(_.macros(rendererFieldName)({
+                renderedFields.push(_.macros(rendererFieldName)({
                     paymentMethod: this.options.paymentMethod,
+                    paymentProductId: paymentProductId,
                     field: field,
-                    value: value
+                    value: value,
+                    fieldElementId: this.buildFieldIdentifier(field.id, 'field', paymentProductId),
+                    fieldErrorElementId: this.buildFieldIdentifier(field.id, 'error', paymentProductId)
                 }));
             });
 
-            this.$el.find(this.options.selectors.body).html(fields.join(''));
+            return renderedFields;
         },
 
         isPaymentProductChanged: function(paymentProductId) {
@@ -287,30 +383,32 @@ define(function(require) {
             }
         },
 
-        buildFieldIdentifier: function(id, key) {
-            return '.' + id + '-' + this.options.paymentMethod + '-' + key;
+        /**
+         * Payment product form field identifier builder according to currently selected payment product.
+         */
+        buildFieldIdentifier: function(fieldId, key, productId) {
+            return fieldId + '-' + (productId ? productId : this.currentPaymentProduct.id) +
+                '-' + this.options.paymentMethod + '-' + key;
         },
 
+        /**
+         * Collects form fields values for selected payment product.
+         */
         collectFormData: function() {
-            const fields = [];
+            const collectedFields = [];
             _.each(this.currentPaymentProduct.paymentProductFields, field => {
-                const fieldName = this.buildFieldIdentifier(field.id, 'field');
+                const fieldName = '#' + this.buildFieldIdentifier(field.id, 'field');
                 if ($(fieldName).length) {
-                    let value = $(fieldName).val();
+                    const value = $(fieldName).val();
 
-                    // workaround for showing validation message
-                    // because empty value does not treat as error by sdk validation
-                    if (!value) {
-                        value = '#';
-                    }
-                    fields.push({
+                    collectedFields.push({
                         field: field.id,
                         value: value
                     });
                 }
             });
 
-            return fields;
+            return collectedFields;
         },
 
         validate: function(fields) {
@@ -328,27 +426,48 @@ define(function(require) {
                 paymentRequest.setValue(item.field, item.value);
             });
 
-            if (!paymentRequest.isValid()) {
-                _.each(paymentRequest.getPaymentProduct().paymentProductFields, field => {
-                    const fieldName = this.buildFieldIdentifier(field.id, 'error');
-                    if ($(fieldName).length) {
-                        if (field.getErrorCodes().length) {
-                            $(fieldName).removeClass('hidden');
-                        } else {
-                            $(fieldName).addClass('hidden');
-                        }
+            const isValid = paymentRequest.isValid();
+            // showing new errors for collected fields only(case when form field looses focus)
+            _.each(paymentRequest.getPaymentProduct().paymentProductFields, field => {
+                const canShowErrors = _.find(fields, function(item) {
+                    if (field.id === item.field) {
+                        return true;
                     }
                 });
+                if (!canShowErrors) {
+                    return;
+                }
 
-                return false;
-            }
+                const fieldErrorElement = $('#' + this.buildFieldIdentifier(field.id, 'error'));
+                const fieldValue = paymentRequest.getValue(field.id);
 
-            return true;
+                if (fieldErrorElement.length) {
+                    if (field.getErrorCodes().length || (field.dataRestrictions.isRequired && !fieldValue)) {
+                        fieldErrorElement.removeClass('hidden');
+                    } else {
+                        fieldErrorElement.addClass('hidden');
+                    }
+                }
+            });
+
+            return isValid;
         },
 
+        /**
+         * Validates single field on its 'focusout' event.
+         */
+        validateField: function(event) {
+            const fieldElement = $(event.currentTarget);
+            const fields = [{
+                field: fieldElement.data('field-id'),
+                value: fieldElement.val()
+            }];
+
+            return this.validate(fields);
+        },
 
         /**
-         * Crypts selected payment product's form values and storing it to DOM storage. INGA-29 basic implementation
+         * Crypts selected payment product's form values and storing it to DOM storage.
          */
         storeEcryptedCutomerDetailes: function() {
             const deffer = $.Deferred();
@@ -372,6 +491,10 @@ define(function(require) {
             return deffer.promise();
         },
 
+        /**
+         * Allows to expand payment transaction additional data with given object's values.
+         * This data is sent on payment method step submission.
+         */
         addPaymentAdditionalData: function(updateData) {
             let additionalData;
             const holder = {};
@@ -384,7 +507,9 @@ define(function(require) {
             }
 
             for (const key in updateData) {
-                additionalData[key] = updateData[key];
+                if ({}.hasOwnProperty.call(updateData, key)) {
+                    additionalData[key] = updateData[key];
+                }
             }
 
             mediator.trigger('checkout:payment:additional-data:set', JSON.stringify(additionalData));
@@ -413,7 +538,9 @@ define(function(require) {
                 return;
             }
 
-            this.$el.off('click' + this.cid, '.payment-product__item');
+            this.$el.off('change.' + this.cid, this.options.selectors.genericInput);
+            this.$el.off('click.' + this.cid, this.options.selectors.paymentProductChoice);
+            this.$el.off('focusout.' + this.cid, this.options.selectors.genericInput);
 
             IngenicoCreditCardComponent.__super__.dispose.call(this);
         }
