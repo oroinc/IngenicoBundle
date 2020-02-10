@@ -9,3 +9,13 @@ ingenico:
     payment_method_is_not_available: |
         The selected payment method is not available.
         Please select a different one.
+    order:
+        payment_transaction:
+            mark_paid:
+                title: 'Mark Payment as Paid'
+                message: 'The payment will be marked as paid. Are you sure you want to continue?'
+                button.okText: 'Yes, Mark It'
+            mark_declined:
+                title: 'Mark Payment as Declined'
+                message: 'The payment will be marked as declined. Are you sure you want to continue?'
+                button.okText: 'Yes, Mark It'

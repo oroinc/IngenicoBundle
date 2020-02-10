@@ -1,0 +1,89 @@
+operations:
+    ingenico_oro_order_payment_direct_debit_transaction_mark_base:
+        label: 'Label'
+        preactions:
+            - '@assign_constant_value':
+                attribute: $.paymentMethodAction
+                value: Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface::PENDING
+            - '@call_service_method':
+                service: oro_payment.payment_method.composite_provider
+                method: getPaymentMethod
+                method_parameters: [$.data.paymentMethod]
+                attribute: $.paymentMethod
+            - '@find_entity':
+                class: 'Oro\Bundle\OrderBundle\Entity\Order'
+                where:
+                    id: $.data.entityIdentifier
+                attribute: $.order
+        preconditions:
+            '@and':
+                - '@acl_granted':  ['CHARGE_AUTHORIZED_PAYMENTS',  $.order]
+                - '@equal': [$.data.entity_class,  'Oro\Bundle\OrderBundle\Entity\Order']
+                - '@equal': [$.data.action,  $.paymentMethodAction]
+                - '@equal': [$.data.active,  true]
+                - '@equal': [$.data.successful,  true]
+                - '@not_empty': $.paymentMethod
+                - '@instanceof': [$.paymentMethod, Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod]
+
+    ingenico_oro_order_direct_debit_payment_transaction_mark_paid:
+        extends: ingenico_oro_order_payment_direct_debit_transaction_mark_base
+        label: ingenico.payment.direct_debit.mark_paid
+        button_options:
+            icon:  fa-check
+        applications: [default]
+        datagrids:
+            - order-payment-transactions-grid
+        order:  20
+        actions:
+            - '@ingenico_direct_debit_payment_transaction_mark':
+                  paymentTransaction: $.data
+                  markAsPaid: true
+                  attribute: $.result
+            - '@flash_message':
+                conditions:
+                  '@equal': ['$.result[successful]',  true]
+                message: ingenico.order.payment_transaction.mark_paid.result.success
+                type:  'success'
+            - '@flash_message':
+                conditions:
+                  '@equal': ['$.result[successful]',  false]
+                message: '$.result[message]'
+                type: 'error'
+        frontend_options:
+            confirmation:
+                title: ingenico.order.payment_transaction.mark_paid.title
+                message: ingenico.order.payment_transaction.mark_paid.message
+                okText: ingenico.order.payment_transaction.mark_paid.button.okText
+                component: oroui/js/standart-confirmation
+
+    ingenico_oro_order_direct_debit_payment_transaction_mark_declined:
+        extends: ingenico_oro_order_payment_direct_debit_transaction_mark_base
+
+        label: ingenico.payment.direct_debit.mark_declined
+        button_options:
+            icon:  fa-close
+        applications: [default]
+        datagrids:
+            - order-payment-transactions-grid
+        order:  30
+        actions:
+            - '@ingenico_direct_debit_payment_transaction_mark':
+                paymentTransaction: $.data
+                markAsPaid: false
+                attribute: $.result
+            - '@flash_message':
+                  conditions:
+                      '@equal': ['$.result[successful]', true]
+                  message: ingenico.order.payment_transaction.mark_declined.result.success
+                  type:  'success'
+            - '@flash_message':
+                  conditions:
+                      '@equal':  ['$.result[successful]',  false]
+                  message:  '$.result[message]'
+                  type:  'error'
+        frontend_options:
+            confirmation:
+                title: ingenico.order.payment_transaction.mark_declined.title
+                message: ingenico.order.payment_transaction.mark_declined.message
+                okText: ingenico.order.payment_transaction.mark_declined.button.okText
+                component: oroui/js/standart-confirmation
