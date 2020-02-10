@@ -4,6 +4,7 @@ namespace Ingenico\Connect\OroCommerce\Provider;
 
 use Doctrine\Common\Collections\Criteria;
 use Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod;
+use Oro\Bundle\CustomerBundle\Entity\CustomerUser;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider as BasePaymentTransactionProvider;
 
@@ -27,12 +28,20 @@ class PaymentTransactionProvider extends BasePaymentTransactionProvider
         string $type,
         array $transactionOptions
     ): PaymentTransaction {
+        // as entityIdentifier field couldn't be null we should set dummy value in case there is no CustomerUser
+        $entityIdentifier = 0;
+
+        $customerUser = $this->customerUserProvider->getLoggedUser(true);
+        if ($customerUser) {
+            $entityIdentifier = $customerUser->getId();
+        }
+
         return $this->createEmptyPaymentTransaction()
             ->setPaymentMethod($paymentTransaction->getPaymentMethod())
             ->setAction($type)
-            ->setEntityClass($paymentTransaction->getEntityClass())
-            ->setEntityIdentifier($paymentTransaction->getEntityIdentifier())
-            ->setFrontendOwner($this->customerUserProvider->getLoggedUser(true))
+            ->setEntityClass(CustomerUser::class)
+            ->setEntityIdentifier($entityIdentifier)
+            ->setFrontendOwner($customerUser)
             ->setTransactionOptions($transactionOptions)
             ->setActive(true)
             ->setSuccessful(true)
@@ -49,7 +58,7 @@ class PaymentTransactionProvider extends BasePaymentTransactionProvider
     {
         $customerUser = $this->customerUserProvider->getLoggedUser(true);
         if (!$customerUser) {
-            return null;
+            return [];
         }
 
         return $this->doctrineHelper->getEntityRepository($this->paymentTransactionClass)->findBy(
