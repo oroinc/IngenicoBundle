@@ -1,0 +1,3 @@
+ingenico:
+    direct_debit_text:
+        not_blank: 'This value should not be blank if SEPA Direct Debit or ACH Payments was chosen'

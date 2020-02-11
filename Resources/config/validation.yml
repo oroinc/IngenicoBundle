@@ -18,3 +18,7 @@ Ingenico\Connect\OroCommerce\Entity\IngenicoSettings:
             - NotBlank: ~
         paymentAction:
             - NotBlank: ~
+
+Oro\Bundle\IntegrationBundle\Entity\Channel:
+    constraints:
+        - Ingenico\Connect\OroCommerce\Validator\Constraints\NotBlankDirectDebitText: ~

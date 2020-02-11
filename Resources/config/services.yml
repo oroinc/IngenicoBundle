@@ -166,3 +166,9 @@ services:
     Ingenico\Connect\OroCommerce\Ingenico\Provider\CheckoutInformationProvider:
         arguments:
             - '@oro_entity.doctrine_helper'
+
+    Ingenico\Connect\OroCommerce\Validator\Constraints\NotBlankDirectDebitTextValidator:
+        arguments:
+            - '@Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider'
+        tags:
+            - { name: validator.constraint_validator }

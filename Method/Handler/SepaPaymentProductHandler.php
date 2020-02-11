@@ -99,9 +99,7 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
     {
         return [
             Token::NAME => $this->lastTokenResponse ? $this->lastTokenResponse->getToken() : null,
-            // hardcoded value to be replaced with a value from payment integration's settings
-            // @INGA-45 related.
-            DirectDebitText::NAME => 'COMPANYNAME 123-123-1234 ZIP CODE UK'
+            DirectDebitText::NAME => $config->getDirectDebitText(),
         ];
     }
 

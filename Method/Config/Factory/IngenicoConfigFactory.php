@@ -46,6 +46,7 @@ class IngenicoConfigFactory
         $params[IngenicoConfig::FIELD_PAYMENT_ACTION_KEY] = (string)$settings->getPaymentAction();
         $params[IngenicoConfig::FIELD_PAYMENT_METHOD_IDENTIFIER] =
             $this->identifierGenerator->generateIdentifier($channel);
+        $params[IngenicoConfig::FIELD_DIRECT_DEBIT_TEXT_KEY] = (string)$settings->getDirectDebitText();
 
         return new IngenicoConfig($params);
     }

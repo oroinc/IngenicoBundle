@@ -19,6 +19,7 @@ class IngenicoSettings extends Transport
     public const MERCHANT_ID = 'merchant_id';
     public const ENABLED_PRODUCTS = 'enabled_products';
     public const PAYMENT_ACTION = 'payment_action';
+    public const DIRECT_DEBIT_TEXT = 'direct_debit_text';
 
     /**
      * @var ParameterBag
@@ -68,6 +69,13 @@ class IngenicoSettings extends Transport
     private $paymentAction;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="ingenico_direct_debit_text", type="text", nullable=true)
+     */
+    private $directDebitText;
+
+    /**
      * {@inheritdoc}
      */
     public function getSettingsBag()
@@ -80,6 +88,7 @@ class IngenicoSettings extends Transport
                 self::MERCHANT_ID => $this->getMerchantId(),
                 self::ENABLED_PRODUCTS => $this->getEnabledProducts(),
                 self::PAYMENT_ACTION => $this->getPaymentAction(),
+                self::DIRECT_DEBIT_TEXT => $this->getDirectDebitText(),
             ]);
         }
 
@@ -196,6 +205,25 @@ class IngenicoSettings extends Transport
     public function setPaymentAction(string $paymentAction): IngenicoSettings
     {
         $this->paymentAction = $paymentAction;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDirectDebitText()
+    {
+        return $this->directDebitText;
+    }
+
+    /**
+     * @param string $directDebitText
+     * @return IngenicoSettings
+     */
+    public function setDirectDebitText(string $directDebitText): IngenicoSettings
+    {
+        $this->directDebitText = $directDebitText;
 
         return $this;
     }

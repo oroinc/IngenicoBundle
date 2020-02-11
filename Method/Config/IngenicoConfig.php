@@ -16,7 +16,7 @@ class IngenicoConfig extends AbstractParameterBagPaymentConfig
     const FIELD_MERCHANT_ID_KEY = 'merchant_id';
     const FIELD_ENABLED_PRODUCTS_KEY = 'enabled_products';
     const FIELD_PAYMENT_ACTION_KEY = 'payment_action';
-
+    const FIELD_DIRECT_DEBIT_TEXT_KEY = 'direct_debit_text';
 
     /**
      * {@inheritdoc}
@@ -72,5 +72,13 @@ class IngenicoConfig extends AbstractParameterBagPaymentConfig
     public function getPaymentAction(): ?string
     {
         return $this->get(self::FIELD_PAYMENT_ACTION_KEY);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDirectDebitText(): ?string
+    {
+        return $this->get(self::FIELD_DIRECT_DEBIT_TEXT_KEY);
     }
 }
