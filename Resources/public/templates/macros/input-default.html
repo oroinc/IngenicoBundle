@@ -8,7 +8,4 @@
            placeholder="<%= field.displayHints.placeholderLabel %>"
            data-field-id="<%= field.id %>"
            <% if (!_.isUndefined(field.dataValidation)) { %>data-validation="<%- JSON.stringify(field.dataValidation) %>"<% } %>>
-
-    <span id="<%= fieldErrorElementId %>"
-          class="<%= field.id %>-<%= paymentMethod %>-error validation-failed hidden"><%= _.__('ingenico.general_error') %></span>
 </div>

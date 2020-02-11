@@ -11,6 +11,7 @@ define(function(require) {
     const mediator = require('oroui/js/mediator');
     const routing = require('routing');
     const paymentProductListTemplate = require('tpl-loader!ingenico/templates/payment-products-list.html');
+    const errorHintTemplate = require('tpl-loader!ingenico/templates/error-hint.html');
 
     const IngenicoCreditCardComponent = BaseComponent.extend({
         options: {
@@ -38,6 +39,7 @@ define(function(require) {
         paymentProductItems: [],
         currentPaymentProduct: null,
         paymentProductListTemplate: paymentProductListTemplate,
+        errorHintTemplate: errorHintTemplate,
 
         /**
          * @property {jQuery}
@@ -338,26 +340,13 @@ define(function(require) {
             });
 
             const isValid = paymentRequest.isValid();
-            // showing new errors for collected fields only(case when form field looses focus)
-            _.each(paymentRequest.getPaymentProduct().paymentProductFields, field => {
-                const canShowErrors = _.find(fields, function(item) {
-                    if (field.id === item.field) {
-                        return true;
-                    }
-                });
-                if (!canShowErrors) {
-                    return;
-                }
-
-                const fieldErrorElement = $('#' + this.buildFieldIdentifier(field.id, 'error'));
-                const fieldValue = paymentRequest.getValue(field.id);
-
-                if (fieldErrorElement.length) {
-                    if (field.getErrorCodes().length || (field.dataRestrictions.isRequired && !fieldValue)) {
-                        fieldErrorElement.removeClass('hidden');
-                    } else {
-                        fieldErrorElement.addClass('hidden');
-                    }
+            // showing new errors for collected fields only (case when form field looses focus)
+            _.each(paymentRequest.getValues(), (value, name) => {
+                const field = paymentRequest.getPaymentProduct().paymentProductFieldById[name];
+                if (!field.isValid(value)) {
+                    this.addError(name);
+                } else {
+                    this.removeError(name);
                 }
             });
 
@@ -375,6 +364,34 @@ define(function(require) {
             }];
 
             return this.validate(fields);
+        },
+
+        /**
+         * Add error hint below field with validation message
+         */
+        addError: function(fieldId, message) {
+            const fieldElementId = '#' + this.buildFieldIdentifier(fieldId, 'field');
+            const fieldErrorElementId = this.buildFieldIdentifier(fieldId, 'error');
+            const fieldErrorElement = $('#' + fieldErrorElementId);
+            if (!$(fieldErrorElement).length) {
+                const errorMessage = message ? message : __('ingenico.general_error');
+                const fieldErrorElementClass = this.buildFieldIdentifier(fieldId, 'error');
+                const templateOptions = {
+                    fieldErrorElementId: fieldErrorElementId,
+                    fieldErrorElementClass: fieldErrorElementClass,
+                    errorMessage: errorMessage
+                };
+                // notice: error container should be <p> not <span> as it conflicts with jquery.validation
+                $(fieldElementId).after(this.errorHintTemplate(templateOptions));
+            }
+        },
+
+        /**
+         * Remove error hint from field
+         */
+        removeError: function(fieldId) {
+            const fieldErrorElementId = '#' + this.buildFieldIdentifier(fieldId, 'error');
+            $(fieldErrorElementId).remove();
         },
 
         /**
