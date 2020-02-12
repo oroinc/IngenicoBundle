@@ -124,8 +124,12 @@ define(function(require) {
             this._deferredInit();
 
             this.getSession()
-                .then(() => this.getPaymentProducts())
+                .then(() => this.getPaymentProducts(), () => this._resolveDeferredInit())
                 .then(() => {
+                    if (!this.paymentProductItems.length) {
+                        return;
+                    }
+
                     this.renderPaymentProductsList();
                     const paymentProductId = parseInt(this.getPaymentProductState());
                     if (paymentProductId) {
