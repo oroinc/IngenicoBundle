@@ -49,12 +49,6 @@ class IngenicoView implements PaymentMethodViewInterface
                 'countryCode' => $context->getBillingAddress()->getCountryIso2(),
                 'isRecurring' => false,
                 'locale' => $this->currentLocalizationCode,
-            ],
-            'paymentProductAliasesInfo' => [
-                'achProductId' => EnabledProductsDataProvider::ACH_ID,
-                'achProductAlias' => EnabledProductsDataProvider::ACH,
-                'sepaProductId' => EnabledProductsDataProvider::SEPA_ID,
-                'sepaProductAlias' => EnabledProductsDataProvider::SEPA,
             ]
         ];
     }

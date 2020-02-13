@@ -17,15 +17,12 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
  */
 class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
 {
-    private const PENDING_APPROVAL_STATUS = 'PENDING_APPROVAL';
-    private const CAPTURE_REQUESTED_STATUS = 'CAPTURE_REQUESTED';
-
     /**
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
      * @return array
      */
-    public function purchase(
+    protected function purchase(
         PaymentTransaction $paymentTransaction,
         IngenicoConfig $config
     ): array {
@@ -89,6 +86,9 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     }
 
     /**
+     * Return new payment action based on the response from the Ingenico API
+     * In case we are requesting AUTHORIZE but Ingenico does CHARGE/SALE
+     *
      * @param PaymentResponse $response
      * @return string
      */
@@ -96,12 +96,14 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     {
         $paymentStatus = $response->getPaymentStatus();
 
-        if ($paymentStatus == self::PENDING_APPROVAL_STATUS) {
+        if ($paymentStatus === PaymentResponse::PENDING_APPROVAL_PAYMENT_STATUS) {
             return PaymentMethodInterface::AUTHORIZE;
-        } elseif ($paymentStatus == self::CAPTURE_REQUESTED_STATUS) {
+        }
+
+        if ($paymentStatus === PaymentResponse::CAPTURE_REQUESTED_PAYMENT_STATUS) {
             return PaymentMethodInterface::CAPTURE;
         }
 
-        return parent::getPurchaseActionByPaymentResponse($response);
+        return PaymentMethodInterface::CHARGE;
     }
 }

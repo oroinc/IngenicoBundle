@@ -17,7 +17,6 @@ define(function(require) {
         options: {
             paymentMethod: null,
             paymentDetails: {},
-            paymentProductAliasesInfo: {},
             createSessionRoute: 'ingenico_create_session',
             selectors: {
                 paymentProductChoice: '.payment-product__choice',
@@ -375,8 +374,16 @@ define(function(require) {
             const isValid = paymentRequest.isValid();
             // showing new errors for collected fields only (case when form field looses focus)
             _.each(paymentRequest.getValues(), (value, name) => {
+                // Payment request is stored inside the session.
+                // session.getPaymentRequest() returns the same instance each time and it has all fields
+                // even from the another payment products
+                // We need to verify that this field is applicable for current payment product
                 const field = paymentRequest.getPaymentProduct().paymentProductFieldById[name];
-                if (!field.isValid(value)) {
+                if (!field) {
+                    return;
+                }
+
+                if (!field.isValid(value) || (field.dataRestrictions.isRequired && value === "")) {
                     this.addError(name);
                 } else {
                     this.removeError(name);
@@ -437,8 +444,12 @@ define(function(require) {
             const paymentRequest = this.session.getPaymentRequest();
             encryptor.encrypt(paymentRequest).then(
                 encryptedString => {
+                    const paymentProduct = paymentRequest.getPaymentProduct();
+                    const ingenicoPaymentProduct = paymentProduct.paymentProductGroup
+                        ? paymentProduct.paymentProductGroup
+                        : paymentProduct.id;
                     this.addPaymentAdditionalData({
-                        ingenicoPaymentProduct: this.getPaymentProductAlias(paymentRequest.getPaymentProduct()),
+                        ingenicoPaymentProduct: ingenicoPaymentProduct,
                         ingenicoCustomerEncDetails: encryptedString
                     });
                     deffer.resolve();
@@ -450,18 +461,6 @@ define(function(require) {
             );
 
             return deffer.promise();
-        },
-
-        getPaymentProductAlias: function(paymentProduct) {
-            const paymentProductAliasesInfo = this.options.paymentProductAliasesInfo;
-
-            if (paymentProduct.id === paymentProductAliasesInfo.achProductId) {
-                return paymentProductAliasesInfo.achProductAlias;
-            } else if (paymentProduct.id === paymentProductAliasesInfo.sepaProductId) {
-                return paymentProductAliasesInfo.sepaProductAlias;
-            }
-
-            return paymentProduct.paymentProductGroup ? paymentProduct.paymentProductGroup : '';
         },
 
         /**

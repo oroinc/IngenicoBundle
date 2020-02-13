@@ -81,7 +81,7 @@ class Gateway
                 $requestBody
             );
         } catch (ResponseException $e) {
-            $response = json_decode($e->getResponse()->toJson(), true);
+            $response = (array)$e->getResponse()->toObject();
         }
 
         return Response::create($response);
