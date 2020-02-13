@@ -385,9 +385,6 @@ define(function(require) {
         beforeTransit: function(eventData) {
             if (eventData.data.paymentMethod === this.options.paymentMethod) {
                 eventData.stopped = true;
-                if (!this.currentPaymentProduct) {
-                    return;
-                }
                 const fields = this.collectFormData();
                 if (this.validate(fields)) {
                     mediator.execute('showLoading');
@@ -413,6 +410,10 @@ define(function(require) {
          */
         collectFormData: function() {
             const collectedFields = [];
+            if (!this.currentPaymentProduct) {
+                return collectedFields;
+            }
+
             _.each(this.currentPaymentProduct.paymentProductFields, field => {
                 const fieldName = '#' + this.buildFieldIdentifier(field.id, 'field');
                 if ($(fieldName).length) {
