@@ -221,7 +221,7 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
      * @param PaymentTransaction $paymentTransaction
      * @return int
      */
-    protected function normalizeAmount(PaymentTransaction $paymentTransaction)
+    protected function normalizeAmount(PaymentTransaction $paymentTransaction): int
     {
         return $this->amountNormalizer->normalize($paymentTransaction->getAmount());
     }

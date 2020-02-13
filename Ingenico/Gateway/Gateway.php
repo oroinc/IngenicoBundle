@@ -9,6 +9,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Request\ActionParamsAwareInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Request\RequestRegistry;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\Response;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
+use Ingenico\Connect\Sdk\ResponseException;
 
 /**
  * Responsible for converting own request object to Ingenico request,
@@ -72,7 +73,16 @@ class Gateway
             $requestBody = array_merge($resolverActionParams, $requestBody);
         }
 
-        $response = $this->client->send($paymentConfig, $request->getResource(), $request->getAction(), $requestBody);
+        try {
+            $response = $this->client->send(
+                $paymentConfig,
+                $request->getResource(),
+                $request->getAction(),
+                $requestBody
+            );
+        } catch (ResponseException $e) {
+            $response = (array)$e->getResponse()->toObject();
+        }
 
         return Response::create($response);
     }

@@ -57,6 +57,11 @@ services:
         tags:
             - { name: ingenico.payment_product_group.handler }
 
+    Ingenico\Connect\OroCommerce\Method\Handler\AchPaymentProductHandler:
+        parent: Ingenico\Connect\OroCommerce\Method\Handler\AbstractPaymentProductHandler
+        tags:
+            - { name: ingenico.payment_product_group.handler}
+
     Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductHandlerRegistry:
         arguments:
             - !tagged_iterator ingenico.payment_product_group.handler
@@ -105,6 +110,10 @@ services:
              - { name: ingenico.ingenico.request }
 
     Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\CreateCardsPaymentRequest:
+        tags:
+            - { name: ingenico.ingenico.request }
+
+    Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\DirectDebitPaymentRequest:
         tags:
             - { name: ingenico.ingenico.request }
 

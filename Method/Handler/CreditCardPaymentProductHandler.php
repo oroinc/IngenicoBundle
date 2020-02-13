@@ -4,6 +4,7 @@ namespace Ingenico\Connect\OroCommerce\Method\Handler;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\AuthorizationMode;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\RequiresApproval;
+use Ingenico\Connect\OroCommerce\Ingenico\Response\PaymentResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
@@ -16,18 +17,15 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
  */
 class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
 {
-    public const ACTION_PURCHASE = 'purchase';
-    public const ACTION_CAPTURE = 'capture';
-
     /**
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
      * @return array
      */
-    public function purchase(
+    protected function purchase(
         PaymentTransaction $paymentTransaction,
         IngenicoConfig $config
-    ) {
+    ): array {
         $paymentTransaction->setSuccessful(false);
 
         $response = $this->requestCreatePayment(
@@ -42,7 +40,7 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
             ->setSuccessful($response->isSuccessful())
             ->setActive($response->isSuccessful())
             ->setReference($response->getReference())
-            ->setAction($paymentAction)
+            ->setAction($this->getPurchaseActionByPaymentResponse($response))
             ->setResponse($response->toArray());
 
         return [
@@ -80,10 +78,32 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function isActionSupported(string $actionName): bool
     {
-        return in_array($actionName, [self::ACTION_CAPTURE, self::ACTION_PURCHASE], true);
+        return in_array($actionName, [PaymentMethodInterface::PURCHASE, PaymentMethodInterface::CAPTURE], true);
+    }
+
+    /**
+     * Return new payment action based on the response from the Ingenico API
+     * In case we are requesting AUTHORIZE but Ingenico does CHARGE/SALE
+     *
+     * @param PaymentResponse $response
+     * @return string
+     */
+    protected function getPurchaseActionByPaymentResponse(PaymentResponse $response): string
+    {
+        $paymentStatus = $response->getPaymentStatus();
+
+        if ($paymentStatus === PaymentResponse::PENDING_APPROVAL_PAYMENT_STATUS) {
+            return PaymentMethodInterface::AUTHORIZE;
+        }
+
+        if ($paymentStatus === PaymentResponse::CAPTURE_REQUESTED_PAYMENT_STATUS) {
+            return PaymentMethodInterface::CAPTURE;
+        }
+
+        return PaymentMethodInterface::CHARGE;
     }
 }

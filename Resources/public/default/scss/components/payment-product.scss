@@ -1,5 +1,11 @@
+.checkout {
+  .ingenico-payment-form {
+    padding: 24px;
+  }
+}
+
 .payment-product {
-  padding: 0 7px 0;
+  padding: 0 8px 0;
 
   &__choice-label * {
     vertical-align: middle;
@@ -7,12 +13,20 @@
   }
 
   &__form-fields {
-    margin: 7px 0 0;
+    margin: 7px 0 24px;
+
+    .form-row:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &:last-child .payment-product__form-fields {
+    margin-bottom: 8px;
   }
 
   &__logo {
     max-width: 50px;
-    margin-right: 10px;
+    margin-right: 16px;
   }
 
   + .payment-product {
@@ -21,3 +35,4 @@
     border-top: 1px solid get-color('additional', 'light');
   }
 }
+

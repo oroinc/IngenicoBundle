@@ -48,7 +48,7 @@ class IngenicoController extends AbstractController
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public static function getSubscribedServices()
     {

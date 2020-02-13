@@ -43,6 +43,7 @@ define(function(require) {
         paymentProductItems: [],
         currentPaymentProduct: null,
         paymentProductListTemplate: paymentProductListTemplate,
+        bankCodeFieldId: 'bankCode', // bank code field ID in payment product object received via Ingenico's SDK
         errorHintTemplate: errorHintTemplate,
 
         /**
@@ -229,6 +230,9 @@ define(function(require) {
                     .getPaymentProduct(paymentProductId, this.options.paymentDetails)
                     .then(
                         paymentProduct => {
+                            // workaround to solve payment product's fields validation issues
+                            // caused by improper fields setup received from Ingenico's SDK
+                            this.fixFieldsRestrictions(paymentProduct);
                             this.currentPaymentProduct = paymentProduct;
 
                             // save chosen payment product state
@@ -252,6 +256,33 @@ define(function(require) {
             }
 
             return deffer.promise();
+        },
+
+        /**
+         * Workaround to solve payment product's fields validation issues
+         * caused by improper fields setup received from Ingenico's SDK
+         */
+        fixFieldsRestrictions: function(paymentProduct) {
+            if (paymentProduct.paymentProductFieldById[this.bankCodeFieldId]) {
+                this.fixBankCodeFieldRestrictions(paymentProduct.paymentProductFieldById[this.bankCodeFieldId]);
+            }
+        },
+
+        /**
+         * Fixes bank code field's issued validation setup
+         */
+        fixBankCodeFieldRestrictions: function(bankCodeField) {
+            const validationRuleByType = bankCodeField.dataRestrictions.validationRuleByType;
+
+            if (validationRuleByType['length']) {
+                // original maxLength is 8. Proper bank code for test proposes is '121000248'
+                validationRuleByType.length.maxLength = 9;
+            }
+
+            if (validationRuleByType['regularExpression']) {
+                // original regularExpression is '^[0-9]{1,9}$'
+                validationRuleByType.regularExpression.regularExpression = '^[0-9]{1,9}$';
+            }
         },
 
         /**
@@ -456,14 +487,20 @@ define(function(require) {
                     return;
                 }
 
+                // Payment request is stored inside the session.
+                // session.getPaymentRequest() returns the same instance each time and it has all fields
+                // even from the another payment products
+                // We need to verify that this field is applicable for current payment product
                 const field = paymentRequest.getPaymentProduct().paymentProductFieldById[paymentField.id];
-                if (field) {
-                    const fieldValue = paymentRequest.getValue(paymentField.id);
-                    if (!field.isValid(fieldValue)) {
-                        this.addError(paymentField.id);
-                    } else {
-                        this.removeError(paymentField.id);
-                    }
+                if (!field) {
+                    return;
+                }
+
+                const fieldValue = paymentRequest.getValue(paymentField.id);
+                if (!field.isValid(fieldValue) || (field.dataRestrictions.isRequired && fieldValue === '')) {
+                    this.addError(paymentField.id);
+                } else {
+                    this.removeError(paymentField.id);
                 }
             });
 
@@ -521,8 +558,12 @@ define(function(require) {
             const paymentRequest = this.session.getPaymentRequest();
             encryptor.encrypt(paymentRequest).then(
                 encryptedString => {
+                    const paymentProduct = paymentRequest.getPaymentProduct();
+                    const ingenicoPaymentProduct = paymentProduct.paymentProductGroup
+                        ? paymentProduct.paymentProductGroup
+                        : paymentProduct.id;
                     this.addPaymentAdditionalData({
-                        ingenicoPaymentProduct: paymentRequest.getPaymentProduct().paymentProductGroup,
+                        ingenicoPaymentProduct: ingenicoPaymentProduct,
                         ingenicoCustomerEncDetails: encryptedString
                     });
                     deffer.resolve();

@@ -4,6 +4,7 @@ namespace Ingenico\Connect\OroCommerce\Method\View;
 
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
+use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Method\View\PaymentMethodViewInterface;
 
@@ -48,7 +49,7 @@ class IngenicoView implements PaymentMethodViewInterface
                 'countryCode' => $context->getBillingAddress()->getCountryIso2(),
                 'isRecurring' => false,
                 'locale' => $this->currentLocalizationCode,
-            ],
+            ]
         ];
     }
 
@@ -84,7 +85,9 @@ class IngenicoView implements PaymentMethodViewInterface
         return $this->config->getAdminLabel();
     }
 
-    /** {@inheritdoc} */
+    /**
+     * {@inheritdoc}
+     */
     public function getPaymentMethodIdentifier()
     {
         return $this->config->getPaymentMethodIdentifier();

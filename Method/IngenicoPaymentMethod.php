@@ -34,11 +34,11 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
      */
     public function __construct(
         IngenicoConfig $config,
-        PaymentProductHandlerRegistry $paymentProductHandlersRegistry,
+        PaymentProductHandlerRegistry $paymentProductHandlerRegistry,
         Gateway $gateway
     ) {
         $this->config = $config;
-        $this->paymentProductHandlerRegistry = $paymentProductHandlersRegistry;
+        $this->paymentProductHandlerRegistry = $paymentProductHandlerRegistry;
         $this->gateway = $gateway;
     }
 
