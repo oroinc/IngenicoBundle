@@ -19,7 +19,7 @@ class AchPaymentProductHandler extends AbstractPaymentProductHandler
      * @param IngenicoConfig $config
      * @return array
      */
-    public function purchase(
+    protected function purchase(
         PaymentTransaction $paymentTransaction,
         IngenicoConfig $config
     ): array {
@@ -66,7 +66,7 @@ class AchPaymentProductHandler extends AbstractPaymentProductHandler
      */
     protected function isActionSupported(string $actionName): bool
     {
-        return  $actionName === PaymentMethodInterface::PURCHASE;
+        return $actionName === PaymentMethodInterface::PURCHASE;
     }
 
     /**
@@ -74,6 +74,6 @@ class AchPaymentProductHandler extends AbstractPaymentProductHandler
      */
     protected function getType(): string
     {
-        return EnabledProductsDataProvider::ACH;
+        return EnabledProductsDataProvider::ACH_ID;
     }
 }

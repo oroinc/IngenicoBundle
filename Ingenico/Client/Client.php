@@ -53,6 +53,6 @@ class Client
         /** @var DataObject $response */
         $response = $resourceObject->$action(...$body);
 
-        return json_decode($response->toJson(), true);
+        return (array)$response->toObject();
     }
 }

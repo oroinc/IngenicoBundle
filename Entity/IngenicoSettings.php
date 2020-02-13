@@ -43,7 +43,7 @@ class IngenicoSettings extends Transport
     /**
      * @var string
      *
-     * @ORM\Column(name="ingenico_api_endpoint", type="text", length=255, nullable=true)
+     * @ORM\Column(name="ingenico_api_endpoint", type="text", nullable=true)
      */
     private $apiEndpoint;
 

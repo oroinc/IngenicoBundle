@@ -7,8 +7,6 @@
            name="<%= field.id %>-<%= paymentProductId %>-<%= paymentMethod %>"
            class="<%= field.id %>-field input input--full"
            placeholder="<%= field.displayHints.placeholderLabel %>"
+           data-field-id="<%= field.id %>"
            <% if (!_.isUndefined(field.dataValidation)) { %>data-validation="<%- JSON.stringify(field.dataValidation) %>"<% } %>>
-
-    <span id="<%= field.id %>-<%= paymentProductId %>-<%= paymentMethod %>-error"
-          class="<%= field.id %>-<%= paymentMethod %>-error validation-failed hidden"><%= _.__('ingenico.general_error') %></span>
 </div>

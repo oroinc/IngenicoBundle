@@ -111,7 +111,6 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
      * Create client session to allow interacting from Client JS SDK
      *
      * @return array
-     * @throws \JsonException
      */
     public function createSession(): array
     {

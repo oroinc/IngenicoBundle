@@ -14,7 +14,6 @@ use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
-use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
 /**
  * Abstract(generic) class for Ingenico payment products handler
@@ -166,11 +165,7 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
             EncryptedCustomerInput::NAME => $customerEncryptedDetails,
             AmountOfMoney\Amount::NAME => $this->normalizeAmount($paymentTransaction),
             AmountOfMoney\CurrencyCode::NAME => $paymentTransaction->getCurrency(),
-            MerchantReference::NAME => sprintf(
-                'o:%d:n:%s',
-                $paymentTransaction->getEntityIdentifier(),
-                uniqid()
-            ),
+            MerchantReference::NAME => $this->generateMerchantReference($paymentTransaction),
         ];
 
         $checkoutOptions = $this->checkoutInformationProvider->getCheckoutOptions($paymentTransaction);
@@ -232,12 +227,16 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
     }
 
     /**
-     * @param PaymentResponse $response
+     * Generate merchant reference for the payment transaction on the Ingenico side
+     * This reference must be unique.
+     * This method uses next format: "o:<order_id>:n:<random_nonce>"
+     *
+     * @param PaymentTransaction $paymentTransaction
      * @return string
      */
-    protected function getPurchaseActionByPaymentResponse(PaymentResponse $response): string
+    protected function generateMerchantReference(PaymentTransaction $paymentTransaction)
     {
-        return PaymentMethodInterface::PURCHASE;
+        return sprintf('o:%d:n:%s', $paymentTransaction->getEntityIdentifier(), uniqid());
     }
 
     /**

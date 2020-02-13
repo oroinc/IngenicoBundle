@@ -11,7 +11,7 @@ ingenico:
             choice:
                 cards: 'Credit cards'
                 sepa: 'SEPA Direct Debit'
-                ach: 'ACH Paymentss'
+                ach: 'ACH'
 
         paymentAction:
             label: 'Payment Action'
