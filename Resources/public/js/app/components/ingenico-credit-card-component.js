@@ -110,9 +110,7 @@ define(function(require) {
         },
 
         saveFieldsState: function() {
-            // TODO: filter function should be removed when task of ACH or SEPA merged.
-            // They containing fix of validation related to # symbol in request
-            const fields = _.filter(this.collectFormData(), item => item.value !== '#');
+            const fields = this.collectFormData();
             this.$el.find(this.options.selectors.state.paymentProductFields).val(JSON.stringify(fields));
         },
 
@@ -132,7 +130,9 @@ define(function(require) {
 
                     this.renderPaymentProductsList();
                     const paymentProductId = parseInt(this.getPaymentProductState());
-                    if (paymentProductId) {
+                    const paymentProductInList = paymentProductId
+                        ? _.find(this.paymentProductItems, item => item.id === paymentProductId) : false;
+                    if (paymentProductInList) {
                         this.showSelectedPaymentProductFields(paymentProductId)
                             .then(() => this._resolveDeferredInit());
                     } else {
@@ -445,12 +445,24 @@ define(function(require) {
 
             const isValid = paymentRequest.isValid();
             // showing new errors for collected fields only (case when form field looses focus)
-            _.each(paymentRequest.getValues(), (value, name) => {
-                const field = paymentRequest.getPaymentProduct().paymentProductFieldById[name];
-                if (!field.isValid(value)) {
-                    this.addError(name);
-                } else {
-                    this.removeError(name);
+            _.each(paymentRequest.getPaymentProduct().paymentProductFields, paymentField => {
+                const canShowErrors = _.find(fields, function(item) {
+                    if (paymentField.id === item.field) {
+                        return true;
+                    }
+                });
+                if (!canShowErrors) {
+                    return;
+                }
+
+                const field = paymentRequest.getPaymentProduct().paymentProductFieldById[paymentField.id];
+                if (field) {
+                    const fieldValue = paymentRequest.getValue(paymentField.id);
+                    if (!field.isValid(fieldValue)) {
+                        this.addError(paymentField.id);
+                    } else {
+                        this.removeError(paymentField.id);
+                    }
                 }
             });
 
