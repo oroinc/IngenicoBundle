@@ -47,6 +47,8 @@ class IngenicoSettingsType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+        $paymentActionTooltip = nl2br($this->translator->trans('ingenico.settings.paymentAction.tooltip'));
+
         $builder
             ->add('apiKeyId', TextType::class)
             ->add('apiSecret', OroPlaceholderPasswordType::class)
@@ -67,7 +69,8 @@ class IngenicoSettingsType extends AbstractType
                     return $this->translator->trans(
                         sprintf('ingenico.settings.paymentAction.choice.%s', $action)
                     );
-                }
+                },
+                'tooltip' => $paymentActionTooltip,
             ]);
     }
 
