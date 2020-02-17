@@ -18,6 +18,11 @@ Ingenico\Connect\OroCommerce\Entity\IngenicoSettings:
             - NotBlank: ~
         paymentAction:
             - NotBlank: ~
+        directDebitText:
+            - Length:
+                  # Max length according to the API
+                  # See Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\DirectDebitPayment\DirectDebitText
+                  max: 50
 
 Oro\Bundle\IntegrationBundle\Entity\Channel:
     constraints:

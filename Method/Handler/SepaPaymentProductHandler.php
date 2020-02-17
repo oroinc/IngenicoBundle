@@ -2,8 +2,8 @@
 
 namespace Ingenico\Connect\OroCommerce\Method\Handler;
 
-use Ingenico\Connect\OroCommerce\Ingenico\Gateway\Gateway;
-use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\PaymenProducttId;
+use Ingenico\Connect\OroCommerce\Exception\InsufficientDataException;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\PaymentProductId;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\DirectDebitText;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Customer\BillingAddress\CountryCode;
@@ -11,15 +11,11 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Manda
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\BankAccountIban\Iban;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\DebtorSurname;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\MandateApproval;
-use Ingenico\Connect\OroCommerce\Ingenico\Provider\CheckoutInformationProvider;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\TokenResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
-use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
-use Oro\Bundle\EntityBundle\ORM\DoctrineHelper;
-use Oro\Bundle\OrderBundle\Entity\Order;
-use Oro\Bundle\OrderBundle\Entity\OrderAddress;
+use Oro\Bundle\AddressBundle\Entity\AbstractAddress;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
@@ -32,34 +28,9 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
     private const ACCOUNT_HOLDER_NAME_OPTION_KEY = 'ingenicoSepaDetails:accountHolderName';
 
     /**
-     * @var DoctrineHelper
-     */
-    private $doctrineHelper;
-
-    /**
-     * @var TokenResponse
-     */
-    private $lastTokenResponse;
-
-    /**
-     * @param Gateway $gateway
-     * @param AmountNormalizer $amountNormalizer
-     * @param CheckoutInformationProvider $checkoutInformationProvider
-     * @param DoctrineHelper $doctrineHelper
-     */
-    public function __construct(
-        Gateway $gateway,
-        AmountNormalizer $amountNormalizer,
-        CheckoutInformationProvider $checkoutInformationProvider,
-        DoctrineHelper $doctrineHelper
-    ) {
-        parent::__construct($gateway, $amountNormalizer, $checkoutInformationProvider);
-        $this->doctrineHelper = $doctrineHelper;
-    }
-
-    /**
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
+     * @return array
      */
     public function purchase(
         PaymentTransaction $paymentTransaction,
@@ -72,7 +43,7 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
             $paymentResponse = $this->requestCreatePayment(
                 $paymentTransaction,
                 $config,
-                $this->getCreatePaymentAdditionalOptions($config)
+                $this->getCreatePaymentAdditionalOptions($config, $tokenResponse)
             );
 
             $paymentTransaction
@@ -82,7 +53,8 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
                 ->setReference($paymentResponse->getReference())
                 ->setResponse($paymentResponse->toArray());
         } else {
-            $paymentTransaction->setActive(false)
+            $paymentTransaction
+                ->setActive(false)
                 ->setResponse($tokenResponse->toArray());
         }
 
@@ -93,12 +65,13 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
 
     /**
      * @param IngenicoConfig $config
+     * @param TokenResponse $tokenResponse
      * @return array
      */
-    private function getCreatePaymentAdditionalOptions(IngenicoConfig $config): array
+    private function getCreatePaymentAdditionalOptions(IngenicoConfig $config, TokenResponse $tokenResponse): array
     {
         return [
-            Token::NAME => $this->lastTokenResponse ? $this->lastTokenResponse->getToken() : null,
+            Token::NAME => $tokenResponse->getToken(),
             DirectDebitText::NAME => $config->getDirectDebitText(),
         ];
     }
@@ -116,7 +89,7 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
      */
     protected function getType(): string
     {
-        return EnabledProductsDataProvider::SEPA;
+        return EnabledProductsDataProvider::SEPA_ID;
     }
 
     /**
@@ -128,18 +101,14 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
         PaymentTransaction $paymentTransaction,
         IngenicoConfig $config
     ): TokenResponse {
-        /** @var Order $order */
-        $order = $this->doctrineHelper->getEntity(
-            $paymentTransaction->getEntityClass(),
-            $paymentTransaction->getEntityIdentifier()
-        );
 
-        if (!$order instanceof Order) {
-            return TokenResponse::create([TokenResponse::ERROR_ID => -1]);
+        $billingAddress = $this->checkoutInformationProvider->getBillingAddress($paymentTransaction);
+
+        if (!$billingAddress) {
+            throw new InsufficientDataException('Can not extract billing address from the payment transaction');
         }
 
-        /** @var OrderAddress $billingAddress */
-        $billingAddress = $order->getBillingAddress();
+        $currentDateTime = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
 
         /** @var TokenResponse $response */
         $response = $this->gateway->request(
@@ -147,19 +116,19 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
             Transaction::CREATE_SEPA_DIRECT_DEBIT_PAYMENT_TOKEN,
             [
                 CountryCode::NAME => $billingAddress->getCountryIso2(),
-                DebtorSurname::NAME => $billingAddress->getLastName(),
+                DebtorSurname::NAME => $this->getDebtorSurname($billingAddress),
                 AccountHolderName::NAME => $this->getAdditionalDataFieldByKey(
                     $paymentTransaction,
                     self::ACCOUNT_HOLDER_NAME_OPTION_KEY
                 ),
-                MandateApproval\MandateSignaturePlace::NAME => substr($billingAddress->getCity(), 0, 51),
+                MandateApproval\MandateSignaturePlace::NAME => $billingAddress->getCity(),
                 Iban::NAME => $this->getAdditionalDataFieldByKey($paymentTransaction, self::IBAN_OPTION_KEY),
-                PaymenProducttId::NAME => EnabledProductsDataProvider::SEPA_ID
+                PaymentProductId::NAME => EnabledProductsDataProvider::SEPA_ID,
+                MandateApproval\MandateSignatureDate::NAME => $currentDateTime->format('Ymd'),
             ],
         );
-        $this->lastTokenResponse = TokenResponse::create($response->toArray());
 
-        return $this->lastTokenResponse;
+        return TokenResponse::create($response->toArray());
     }
 
     /**
@@ -167,6 +136,19 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
      */
     protected function isActionSupported(string $actionName): bool
     {
-        return  $actionName === PaymentMethodInterface::PURCHASE;
+        return $actionName === PaymentMethodInterface::PURCHASE;
+    }
+
+    /**
+     * @param AbstractAddress $billingAddress
+     * @return string
+     */
+    private function getDebtorSurname(AbstractAddress $billingAddress)
+    {
+        if ($billingAddress->getLastName()) {
+            return $billingAddress->getLastName();
+        }
+
+        throw new InsufficientDataException('Can not extract debtor surname from the billing address.');
     }
 }

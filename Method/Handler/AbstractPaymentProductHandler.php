@@ -5,6 +5,7 @@ namespace Ingenico\Connect\OroCommerce\Method\Handler;
 use Ingenico\Connect\OroCommerce\Ingenico\Gateway\Gateway;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\ActionParams\PaymentId;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Capture;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address\CountryCode;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\EncryptedCustomerInput;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\AmountOfMoney;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\References\MerchantReference;
@@ -82,7 +83,8 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
         if (!$this->isActionSupported($action)) {
             throw new \InvalidArgumentException(
                 sprintf(
-                    '"%s" payment method "%s" action is not supported',
+                    'Payment product handler "%s" for payment method "%s" doesn\'t support "%s" action',
+                    static::class,
                     $config->getPaymentMethodIdentifier(),
                     $action
                 )
@@ -121,7 +123,7 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
 
         return [
             'message' => $response->getErrors() ? implode("\n", $response->getErrors()) : null,
-            'successful' => $response->isSuccessful()
+            'successful' => $response->isSuccessful(),
         ];
     }
 
@@ -168,7 +170,11 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
             MerchantReference::NAME => $this->generateMerchantReference($paymentTransaction),
         ];
 
-        $checkoutOptions = $this->checkoutInformationProvider->getCheckoutOptions($paymentTransaction);
+        $checkoutOptions = [];
+        $billingAddress = $this->checkoutInformationProvider->getBillingAddress($paymentTransaction);
+        if ($billingAddress) {
+            $checkoutOptions[CountryCode::NAME] = $billingAddress->getCountryIso2();
+        }
 
         $response = $this->gateway->request(
             $config,

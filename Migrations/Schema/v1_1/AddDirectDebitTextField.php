@@ -14,6 +14,6 @@ class AddDirectDebitTextField implements Migration
     public function up(Schema $schema, QueryBag $queries)
     {
         $table = $schema->getTable('oro_integration_transport');
-        $table->addColumn('ingenico_direct_debit_text', 'text', ['notnull' => false]);
+        $table->addColumn('ingenico_direct_debit_text', 'string', ['length' => 255, 'notnull' => false]);
     }
 }

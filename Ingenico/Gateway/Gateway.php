@@ -10,6 +10,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Request\RequestRegistry;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\Response;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\Sdk\ResponseException;
+use Psr\Log\LoggerInterface;
 
 /**
  * Responsible for converting own request object to Ingenico request,
@@ -26,19 +27,25 @@ class Gateway
     /** @var RequestBodyConverter */
     private $requestBodyConverter;
 
+    /** @var LoggerInterface */
+    private $logger;
+
     /**
      * @param Client $client
      * @param RequestRegistry $requestRegistry
      * @param RequestBodyConverter $requestBodyConverter
+     * @param LoggerInterface $logger
      */
     public function __construct(
         Client $client,
         RequestRegistry $requestRegistry,
-        RequestBodyConverter $requestBodyConverter
+        RequestBodyConverter $requestBodyConverter,
+        LoggerInterface $logger
     ) {
         $this->client = $client;
         $this->requestRegistry = $requestRegistry;
         $this->requestBodyConverter = $requestBodyConverter;
+        $this->logger = $logger;
     }
 
     /**
@@ -82,6 +89,7 @@ class Gateway
             );
         } catch (ResponseException $e) {
             $response = (array)$e->getResponse()->toObject();
+            $this->logger->error('Ingenico response exception', ['exception' => $e, 'response' => $response]);
         }
 
         return Response::create($response);

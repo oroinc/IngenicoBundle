@@ -2,6 +2,7 @@
 
 namespace Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Customer\BillingAddress;
 
+use Ingenico\Connect\OroCommerce\Ingenico\Option\LengthNormalizerTrait;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 
@@ -10,7 +11,10 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
  */
 class CountryCode implements OptionInterface
 {
+    use LengthNormalizerTrait;
+
     public const NAME = '[sepaDirectDebit][customer][billingAddress][countryCode]';
+    private const MAX_LENGTH = 2;
 
     /**
      * {@inheritdoc}
@@ -18,7 +22,8 @@ class CountryCode implements OptionInterface
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setDefault(self::NAME, 'US')
-            ->setAllowedTypes(self::NAME, 'string');
+            ->setRequired(self::NAME)
+            ->setAllowedTypes(self::NAME, 'string')
+            ->setNormalizer(self::NAME, $this->getLengthNormalizer(self::MAX_LENGTH));
     }
 }

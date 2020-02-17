@@ -19,6 +19,19 @@ class AuthorizationMode implements OptionInterface
     {
         $resolver
             ->setRequired(self::NAME)
-            ->setAllowedTypes(self::NAME, 'string');
+            ->setAllowedTypes(self::NAME, 'string')
+            ->setAllowedValues(self::NAME, $this->getAllowedValues());
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function getAllowedValues(): array
+    {
+        return [
+            'FINAL_AUTHORIZATION',
+            'PRE_AUTHORIZATION',
+            'SALE',
+        ];
     }
 }

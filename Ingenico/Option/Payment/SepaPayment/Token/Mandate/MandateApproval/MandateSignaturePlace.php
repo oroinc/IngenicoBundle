@@ -2,6 +2,7 @@
 
 namespace Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Mandate\MandateApproval;
 
+use Ingenico\Connect\OroCommerce\Ingenico\Option\LengthNormalizerTrait;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 
@@ -10,7 +11,10 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
  */
 class MandateSignaturePlace implements OptionInterface
 {
+    use LengthNormalizerTrait;
+
     public const NAME = '[sepaDirectDebit][mandate][mandateApproval][mandateSignaturePlace]';
+    private const MAX_LENGTH = 51;
 
     /**
      * {@inheritdoc}
@@ -19,6 +23,7 @@ class MandateSignaturePlace implements OptionInterface
     {
         $resolver
             ->setRequired(self::NAME)
-            ->setAllowedTypes(self::NAME, 'string');
+            ->setAllowedTypes(self::NAME, 'string')
+            ->setNormalizer(self::NAME, $this->getLengthNormalizer(self::MAX_LENGTH));
     }
 }

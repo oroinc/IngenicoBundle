@@ -10,7 +10,7 @@ class TokenResponse extends Response
     public const TOKEN = 'token';
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getToken(): ?string
     {

@@ -64,8 +64,6 @@ services:
 
     Ingenico\Connect\OroCommerce\Method\Handler\SepaPaymentProductHandler:
         parent: Ingenico\Connect\OroCommerce\Method\Handler\AbstractPaymentProductHandler
-        arguments:
-            - '@oro_entity.doctrine_helper'
         tags:
             - { name: ingenico.payment_product.handler}
 
@@ -103,6 +101,7 @@ services:
             - '@Ingenico\Connect\OroCommerce\Ingenico\Client\Client'
             - '@Ingenico\Connect\OroCommerce\Ingenico\Request\RequestRegistry'
             - '@Ingenico\Connect\OroCommerce\Ingenico\Converter\RequestBodyConverter'
+            - '@logger'
 
     Ingenico\Connect\OroCommerce\Ingenico\Request\RequestRegistry:
         arguments:

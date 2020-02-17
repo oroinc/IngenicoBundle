@@ -1,10 +1,10 @@
 ingenico:
     api:
         error:
-            get_payment_products: 'Ingenico payment products retrieval failed.'
-            get_payment_product_details: 'Ingenico payment product details retrieval failed'
-    no_choosen_payment_product: 'Need to choose payment product.'
-    crypt_error: 'Failed to crypt payment form data.'
+            no_available_payment_products: 'No available payment products'
+            get_payment_product_details: 'Cannot get payment details. Please refresh the page and try again or contact us for assistance.'
+    no_choosen_payment_product: 'Please choose payment product'
+    crypt_error: 'Cannot prepare data for the payment. Please refresh the page and try again or contact us for assistance.'
     general_error: 'Invalid value.'
     payment_method_is_not_available: |
         The selected payment method is not available.
@@ -19,3 +19,6 @@ ingenico:
                 placeholder: 'John Doe'
             mandateDisclaimer:
                 label: 'By signing this mandate form, you authorise us to send instructions to your bank to debit your account and your bank to debit your account in accordance with the instructions from us. As part of your rights, you are entitled to a refund from your bank under the terms and conditions of your agreement with your bank. A refund must be claimed within 8 weeks starting from the date on which your account was debited. Your rights are explained in a statement that you can obtain from your bank.'
+
+        validation:
+            iban: "Please enter a valid IBAN number."

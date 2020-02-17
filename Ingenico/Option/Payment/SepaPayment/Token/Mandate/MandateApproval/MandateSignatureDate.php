@@ -17,9 +17,8 @@ class MandateSignatureDate implements OptionInterface
      */
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $utcNowDate = new \DateTime('now', new \DateTimeZone('UTC'));
         $resolver
-            ->setDefault(self::NAME, $utcNowDate->format('Ymd'))
+            ->setRequired(self::NAME)
             ->setAllowedTypes(self::NAME, 'string');
     }
 }

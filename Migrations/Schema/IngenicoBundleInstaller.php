@@ -22,7 +22,6 @@ class IngenicoBundleInstaller implements Installation
     public function up(Schema $schema, QueryBag $queries)
     {
         $this->updateOroIntegrationTransportTable($schema);
-        $this->addDirectDebitTextField($schema);
     }
 
     /**
@@ -48,11 +47,6 @@ class IngenicoBundleInstaller implements Installation
         $table->addColumn('ingenico_merchant_id', 'string', ['notnull' => false, 'length' => 255]);
         $table->addColumn('ingenico_enabled_products', 'array', ['notnull' => false, 'comment' => '(DC2Type:array)']);
         $table->addColumn('ingenico_payment_action', 'string', ['notnull' => false, 'length' => 255]);
-    }
-
-    protected function addDirectDebitTextField(Schema $schema)
-    {
-        $table = $schema->getTable('oro_integration_transport');
-        $table->addColumn('ingenico_direct_debit_text', 'text', ['notnull' => false]);
+        $table->addColumn('ingenico_direct_debit_text', 'string', ['length' => 255, 'notnull' => false]);
     }
 }

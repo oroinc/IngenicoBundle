@@ -5,7 +5,7 @@
     <input type="text"
            id="<%= field.id %>-<%= paymentProductId %>-<%= paymentMethod %>-field"
            name="<%= field.id %>-<%= paymentProductId %>-<%= paymentMethod %>"
-           class="<%= field.id %>-field input input--full"
+           class="<%= field.id %>-<%= paymentMethod %>-field input input--full"
            placeholder="<%= field.displayHints.placeholderLabel %>"
            data-field-id="<%= field.id %>"
            <% if (!_.isUndefined(field.dataValidation)) { %>data-validation="<%- JSON.stringify(field.dataValidation) %>"<% } %>>

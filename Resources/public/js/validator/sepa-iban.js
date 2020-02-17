@@ -8,12 +8,9 @@ define([
     'use strict';
 
     const defaultParam = {
-        message: 'oro.wirecard.validation.iban'
+        message: 'ingenico.sepa.validation.iban'
     };
 
-    /**
-     * @export orowirecard/js/validator/sepa-iban
-     */
     return [
         'ingenico-sepa-iban',
         function(...args) {
