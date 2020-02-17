@@ -120,6 +120,11 @@ define(function(require) {
         },
 
         _initializeIngenicoPayment: function() {
+            // we should initialize only selected payment methods
+            if (!this.$el.is(':visible')) {
+                return;
+            }
+
             this._deferredInit();
 
             this.getSession()
