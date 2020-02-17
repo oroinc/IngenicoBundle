@@ -2,6 +2,7 @@
 
 namespace Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer;
 
+use Ingenico\Connect\OroCommerce\Ingenico\Option\LengthNormalizerTrait;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 
@@ -10,7 +11,10 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
  */
 class Locale implements OptionInterface
 {
+    use LengthNormalizerTrait;
+
     public const NAME = '[order][customer][locale]';
+    private const MAX_LENGTH = 6;
 
     /**
      * {@inheritdoc}
@@ -19,6 +23,7 @@ class Locale implements OptionInterface
     {
         $resolver
             ->setDefault(self::NAME, 'en_US')
-            ->setAllowedTypes(self::NAME, 'string');
+            ->setAllowedTypes(self::NAME, 'string')
+            ->setNormalizer(self::NAME, $this->getLengthNormalizer(self::MAX_LENGTH));
     }
 }

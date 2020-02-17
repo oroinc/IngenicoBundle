@@ -48,7 +48,7 @@ class IngenicoView implements PaymentMethodViewInterface
                 'countryCode' => $context->getBillingAddress()->getCountryIso2(),
                 'isRecurring' => false,
                 'locale' => $this->currentLocalizationCode,
-            ],
+            ]
         ];
     }
 
@@ -84,7 +84,9 @@ class IngenicoView implements PaymentMethodViewInterface
         return $this->config->getAdminLabel();
     }
 
-    /** {@inheritdoc} */
+    /**
+     * {@inheritdoc}
+     */
     public function getPaymentMethodIdentifier()
     {
         return $this->config->getPaymentMethodIdentifier();

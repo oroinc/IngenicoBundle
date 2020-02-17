@@ -13,7 +13,7 @@ use Ingenico\Connect\Sdk\DataObject;
 use Ingenico\Connect\Sdk\Domain\Payment\ApprovePaymentRequest as SDKApprovePaymentRequest;
 
 /**
- * Handle approve(capture) payment request.
+ * Handles approve(capture) payment request.
  */
 class ApprovePaymentRequest implements RequestInterface, ActionParamsAwareInterface
 {

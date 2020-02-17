@@ -19,6 +19,7 @@ class IngenicoSettings extends Transport
     public const MERCHANT_ID = 'merchant_id';
     public const ENABLED_PRODUCTS = 'enabled_products';
     public const PAYMENT_ACTION = 'payment_action';
+    public const DIRECT_DEBIT_TEXT = 'direct_debit_text';
 
     /**
      * @var ParameterBag
@@ -42,7 +43,7 @@ class IngenicoSettings extends Transport
     /**
      * @var string
      *
-     * @ORM\Column(name="ingenico_api_endpoint", type="text", length=255, nullable=true)
+     * @ORM\Column(name="ingenico_api_endpoint", type="text", nullable=true)
      */
     private $apiEndpoint;
 
@@ -68,6 +69,13 @@ class IngenicoSettings extends Transport
     private $paymentAction;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="ingenico_direct_debit_text", type="string", length=255, nullable=true)
+     */
+    private $directDebitText;
+
+    /**
      * {@inheritdoc}
      */
     public function getSettingsBag()
@@ -80,6 +88,7 @@ class IngenicoSettings extends Transport
                 self::MERCHANT_ID => $this->getMerchantId(),
                 self::ENABLED_PRODUCTS => $this->getEnabledProducts(),
                 self::PAYMENT_ACTION => $this->getPaymentAction(),
+                self::DIRECT_DEBIT_TEXT => $this->getDirectDebitText(),
             ]);
         }
 
@@ -95,10 +104,10 @@ class IngenicoSettings extends Transport
     }
 
     /**
-     * @param string $apiKeyId
+     * @param string|null $apiKeyId
      * @return IngenicoSettings
      */
-    public function setApiKeyId(string $apiKeyId): IngenicoSettings
+    public function setApiKeyId(?string $apiKeyId): IngenicoSettings
     {
         $this->apiKeyId = $apiKeyId;
 
@@ -106,7 +115,7 @@ class IngenicoSettings extends Transport
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getApiSecret()
     {
@@ -114,10 +123,10 @@ class IngenicoSettings extends Transport
     }
 
     /**
-     * @param string $apiSecret
+     * @param string|null $apiSecret
      * @return IngenicoSettings
      */
-    public function setApiSecret(string $apiSecret): IngenicoSettings
+    public function setApiSecret(?string $apiSecret): IngenicoSettings
     {
         $this->apiSecret = $apiSecret;
 
@@ -125,7 +134,7 @@ class IngenicoSettings extends Transport
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getApiEndpoint()
     {
@@ -133,10 +142,10 @@ class IngenicoSettings extends Transport
     }
 
     /**
-     * @param string $apiEndpoint
+     * @param string|null $apiEndpoint
      * @return IngenicoSettings
      */
-    public function setApiEndpoint(string $apiEndpoint): IngenicoSettings
+    public function setApiEndpoint(?string $apiEndpoint): IngenicoSettings
     {
         $this->apiEndpoint = $apiEndpoint;
 
@@ -152,10 +161,10 @@ class IngenicoSettings extends Transport
     }
 
     /**
-     * @param string $merchantId
+     * @param string|null $merchantId
      * @return IngenicoSettings
      */
-    public function setMerchantId(string $merchantId): IngenicoSettings
+    public function setMerchantId(?string $merchantId): IngenicoSettings
     {
         $this->merchantId = $merchantId;
 
@@ -190,12 +199,31 @@ class IngenicoSettings extends Transport
     }
 
     /**
-     * @param string $paymentAction
+     * @param string|null $paymentAction
      * @return IngenicoSettings
      */
-    public function setPaymentAction(string $paymentAction): IngenicoSettings
+    public function setPaymentAction(?string $paymentAction): IngenicoSettings
     {
         $this->paymentAction = $paymentAction;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDirectDebitText()
+    {
+        return $this->directDebitText;
+    }
+
+    /**
+     * @param string|null $directDebitText
+     * @return IngenicoSettings
+     */
+    public function setDirectDebitText(?string $directDebitText): IngenicoSettings
+    {
+        $this->directDebitText = $directDebitText;
 
         return $this;
     }

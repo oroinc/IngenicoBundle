@@ -2,7 +2,6 @@
 
 namespace Ingenico\Connect\OroCommerce\Ingenico\Provider;
 
-use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address\CountryCode;
 use Oro\Bundle\AddressBundle\Entity\AbstractAddress;
 use Oro\Bundle\CheckoutBundle\Entity\Checkout;
 use Oro\Bundle\EntityBundle\ORM\DoctrineHelper;
@@ -28,34 +27,17 @@ class CheckoutInformationProvider
 
     /**
      * @param PaymentTransaction $paymentTransaction
-     * @return array
+     * @return AbstractAddress|null
      */
-    public function getCheckoutOptions(PaymentTransaction $paymentTransaction)
-    {
-        return array_merge($this->getBillingAddressOptions($paymentTransaction));
-    }
-
-    /**
-     * @param $paymentTransaction
-     * @return array
-     */
-    private function getBillingAddressOptions(PaymentTransaction $paymentTransaction)
+    public function getBillingAddress(PaymentTransaction $paymentTransaction): ?AbstractAddress
     {
         $checkout = $this->extractCheckout($paymentTransaction);
 
         if (!$checkout) {
-            return [];
+            return null;
         }
 
-        $billingAddress = $checkout->getBillingAddress();
-
-        if (!$billingAddress instanceof AbstractAddress) {
-            return [];
-        }
-
-        return [
-            CountryCode::NAME => $billingAddress->getCountryIso2(),
-        ];
+        return $checkout->getBillingAddress();
     }
 
     /**
