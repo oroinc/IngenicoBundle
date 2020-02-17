@@ -39,10 +39,10 @@ ingenico:
             mark_paid:
                 title: 'Mark Payment as Paid'
                 message: 'The payment will be marked as paid. Are you sure you want to continue?'
-                button.okText: 'Yes, Mark It'
+                button.okText: 'Yes, Mark as Paid'
                 result.success: 'The payment has been marked successfully as paid.'
             mark_declined:
                 title: 'Mark Payment as Declined'
                 message: 'The payment will be marked as declined. Are you sure you want to continue?'
-                button.okText: 'Yes, Mark It'
+                button.okText: 'Yes, Decline'
                 result.success: 'The payment has been marked successfully as declined.'

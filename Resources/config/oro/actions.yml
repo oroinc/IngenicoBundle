@@ -37,7 +37,7 @@ operations:
         actions:
             - '@ingenico_direct_debit_payment_transaction_mark':
                   paymentTransaction: $.data
-                  markAsPaid: true
+                  markAs: 'paid'
                   attribute: $.result
             - '@flash_message':
                 conditions:
@@ -69,7 +69,7 @@ operations:
         actions:
             - '@ingenico_direct_debit_payment_transaction_mark':
                 paymentTransaction: $.data
-                markAsPaid: false
+                markAs: 'declined'
                 attribute: $.result
             - '@flash_message':
                   conditions:

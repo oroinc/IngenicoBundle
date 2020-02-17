@@ -9,13 +9,16 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\PropertyAccess\PropertyPathInterface;
 
 /**
- * Action to mark ingenico related pending payment transaction as paid or declined.
+ * Action to mark Ingenico related pending payment transaction as paid or declined.
  * It's a direct debit payment products related flow.
  */
 class DirectDebitPaymentTransactionMark extends AbstractPaymentMethodAction
 {
     public const OPTION_PAYMENT_TRANSACTION = 'paymentTransaction';
-    public const OPTION_PAYMENT_TRANSACTION_MARK_AS_PAID = 'markAsPaid';
+    public const OPTION_MARK_AS = 'markAs';
+
+    private const MARK_AS_PAID = 'paid';
+    private const MARK_AS_DECLINED = 'declined';
 
     /**
      * @param OptionsResolver $resolver
@@ -23,7 +26,15 @@ class DirectDebitPaymentTransactionMark extends AbstractPaymentMethodAction
     protected function configureOptionsResolver(OptionsResolver $resolver)
     {
         parent::configureOptionsResolver($resolver);
-        $this->commonConfigureOptionsResolver($resolver);
+
+        $resolver
+            ->remove(['object', 'amount', 'currency', 'paymentMethod'])
+            ->setRequired([self::OPTION_PAYMENT_TRANSACTION, self::OPTION_MARK_AS])
+            ->addAllowedTypes(
+                self::OPTION_PAYMENT_TRANSACTION,
+                [PaymentTransaction::class, PropertyPathInterface::class]
+            )
+            ->addAllowedValues(self::OPTION_MARK_AS, [self::MARK_AS_PAID, self::MARK_AS_DECLINED]);
     }
 
     /**
@@ -32,22 +43,14 @@ class DirectDebitPaymentTransactionMark extends AbstractPaymentMethodAction
     protected function configureValuesResolver(OptionsResolver $resolver)
     {
         parent::configureValuesResolver($resolver);
-        $this->commonConfigureOptionsResolver($resolver);
-    }
-
-    /**
-     * @param OptionsResolver $resolver
-     */
-    private function commonConfigureOptionsResolver(OptionsResolver $resolver)
-    {
         $resolver
             ->remove(['object', 'amount', 'currency', 'paymentMethod'])
-            ->setRequired(
-                [self::OPTION_PAYMENT_TRANSACTION, self::OPTION_PAYMENT_TRANSACTION_MARK_AS_PAID]
-            )->addAllowedTypes(
+            ->setRequired([self::OPTION_PAYMENT_TRANSACTION, self::OPTION_MARK_AS])
+            ->addAllowedTypes(
                 self::OPTION_PAYMENT_TRANSACTION,
-                [PaymentTransaction::class, PropertyPathInterface::class]
-            )->addAllowedTypes(self::OPTION_PAYMENT_TRANSACTION_MARK_AS_PAID, 'bool');
+                [PaymentTransaction::class]
+            )
+            ->addAllowedValues(self::OPTION_MARK_AS, [self::MARK_AS_PAID, self::MARK_AS_DECLINED]);
     }
 
     /**
@@ -57,12 +60,12 @@ class DirectDebitPaymentTransactionMark extends AbstractPaymentMethodAction
     {
         $options = $this->getOptions($context);
 
-        $pendingPaymentTransaction = $this->extractPaymentTransactionFromOptions($options);
-        if (!$this->paymentMethodProvider->hasPaymentMethod($pendingPaymentTransaction->getPaymentMethod())) {
+        $basePaymentTransaction = $this->extractPaymentTransactionFromOptions($options);
+        if (!$this->paymentMethodProvider->hasPaymentMethod($basePaymentTransaction->getPaymentMethod())) {
             $this->setAttributeValue(
                 $context,
                 [
-                    'transaction' => $pendingPaymentTransaction->getId(),
+                    'transaction' => $basePaymentTransaction->getId(),
                     'successful' => false,
                     'message' => 'oro.payment.message.error',
                 ]
@@ -73,18 +76,21 @@ class DirectDebitPaymentTransactionMark extends AbstractPaymentMethodAction
 
         $markedPaymentTransaction = $this->paymentTransactionProvider->createPaymentTransactionByParentTransaction(
             PaymentMethodInterface::PURCHASE,
-            $pendingPaymentTransaction
+            $basePaymentTransaction
         );
 
-        $markAsPaid = $this->extractPaymentTransactionMarkAsPaidFromOptions($options);
-        $pendingPaymentTransaction->setActive(false)
-            ->setSuccessful($markAsPaid);
-        $markedPaymentTransaction->setActive(false)
-            ->setSuccessful($markAsPaid)
-            ->setReference($pendingPaymentTransaction->getReference());
+        $isSuccessful = $this->isSuccessful($options);
+
+        $basePaymentTransaction
+            ->setActive(false)
+            ->setSuccessful($isSuccessful);
+
+        $markedPaymentTransaction
+            ->setActive(false)
+            ->setSuccessful($isSuccessful);
 
         $this->paymentTransactionProvider->savePaymentTransaction($markedPaymentTransaction);
-        $this->paymentTransactionProvider->savePaymentTransaction($pendingPaymentTransaction);
+        $this->paymentTransactionProvider->savePaymentTransaction($basePaymentTransaction);
 
         $this->setAttributeValue(
             $context,
@@ -108,11 +114,22 @@ class DirectDebitPaymentTransactionMark extends AbstractPaymentMethodAction
 
     /**
      * @param array $options
-     *
      * @return bool
      */
-    private function extractPaymentTransactionMarkAsPaidFromOptions(array $options): bool
+    private function isSuccessful(array $options): bool
     {
-        return $options[self::OPTION_PAYMENT_TRANSACTION_MARK_AS_PAID];
+        $markAs = $this->extractMarkAsFromOptions($options);
+
+        return $markAs === self::MARK_AS_PAID;
+    }
+
+    /**
+     * @param array $options
+     *
+     * @return string
+     */
+    private function extractMarkAsFromOptions(array $options): string
+    {
+        return $options[self::OPTION_MARK_AS];
     }
 }
