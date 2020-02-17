@@ -34,8 +34,6 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
             $this->getCreatePaymentAdditionalOptions($config)
         );
 
-        $paymentAction = $config->getPaymentAction() === PaymentActionDataProvider::PRE_AUTHORIZATION ?
-            PaymentMethodInterface::AUTHORIZE : $paymentTransaction->getAction();
         $paymentTransaction
             ->setSuccessful($response->isSuccessful())
             ->setActive($response->isSuccessful())
@@ -56,8 +54,7 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     {
         return [
             AuthorizationMode::NAME => $config->getPaymentAction(),
-            // TODO: This logic should be moved from here
-            RequiresApproval::NAME => $config->getPaymentAction() !== PaymentActionDataProvider::SALE,
+            RequiresApproval::NAME => $this->isRequiresApproval($config),
         ];
     }
 
@@ -105,5 +102,15 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
         }
 
         return PaymentMethodInterface::CHARGE;
+    }
+
+    /**
+     * @param IngenicoConfig $config
+     *
+     * @return bool
+     */
+    protected function isRequiresApproval(IngenicoConfig $config): bool
+    {
+        return $config->getPaymentAction() !== PaymentActionDataProvider::SALE;
     }
 }
