@@ -22,6 +22,9 @@ define(function(require) {
 
         // SEPA fields
         iban: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        mandateDisclaimer: require('tpl-loader!ingenico/templates/macros/disclaimer-text.html')
+        debtorSurname: require('tpl-loader!ingenico/templates/macros/input-default.html'),
+        mandateDisclaimer: require('tpl-loader!ingenico/templates/macros/disclaimer-text.html'),
+
+        hidden: require('tpl-loader!ingenico/templates/macros/input-hidden.html')
     });
 });

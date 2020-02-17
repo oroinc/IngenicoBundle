@@ -26,6 +26,7 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
 {
     private const IBAN_OPTION_KEY = 'ingenicoSepaDetails:iban';
     private const ACCOUNT_HOLDER_NAME_OPTION_KEY = 'ingenicoSepaDetails:accountHolderName';
+    private const DEBTOR_SURNAME_OPTION_KEY = 'ingenicoSepaDetails:debtorSurname';
 
     /**
      * @param PaymentTransaction $paymentTransaction
@@ -116,7 +117,10 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
             Transaction::CREATE_SEPA_DIRECT_DEBIT_PAYMENT_TOKEN,
             [
                 CountryCode::NAME => $billingAddress->getCountryIso2(),
-                DebtorSurname::NAME => $this->getDebtorSurname($billingAddress),
+                DebtorSurname::NAME => $this->getAdditionalDataFieldByKey(
+                    $paymentTransaction,
+                    self::DEBTOR_SURNAME_OPTION_KEY
+                ),
                 AccountHolderName::NAME => $this->getAdditionalDataFieldByKey(
                     $paymentTransaction,
                     self::ACCOUNT_HOLDER_NAME_OPTION_KEY
@@ -137,18 +141,5 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
     protected function isActionSupported(string $actionName): bool
     {
         return $actionName === PaymentMethodInterface::PURCHASE;
-    }
-
-    /**
-     * @param AbstractAddress $billingAddress
-     * @return string
-     */
-    private function getDebtorSurname(AbstractAddress $billingAddress)
-    {
-        if ($billingAddress->getLastName()) {
-            return $billingAddress->getLastName();
-        }
-
-        throw new InsufficientDataException('Can not extract debtor surname from the billing address.');
     }
 }

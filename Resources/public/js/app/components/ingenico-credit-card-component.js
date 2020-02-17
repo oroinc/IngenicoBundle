@@ -20,7 +20,7 @@ define(function(require) {
             paymentDetails: {},
             createSessionRoute: 'ingenico_create_session',
             paymentProducts: {
-                sepaId: 770,
+                sepaId: 770
             },
             selectors: {
                 paymentProductChoice: '.payment-product__choice',
@@ -44,6 +44,7 @@ define(function(require) {
         currentPaymentProduct: null,
         paymentProductListTemplate: paymentProductListTemplate,
         bankCodeFieldId: 'bankCode', // bank code field ID in payment product object received via Ingenico's SDK
+        hiddenFieldTemplateMacro: 'hidden',
         errorHintTemplate: errorHintTemplate,
 
         /**
@@ -288,7 +289,9 @@ define(function(require) {
         renderPaymentProductFields: function(fields, paymentProductId) {
             const renderedFields = [];
             _.each(fields, field => {
-                const rendererFieldName = 'ingenico::' + field.id;
+                const rendererFieldName = 'ingenico::' +
+                    (!field._passThroughValue ? field.id : this.hiddenFieldTemplateMacro);
+
                 renderedFields.push(_.macros(rendererFieldName)({
                     paymentMethod: this.options.paymentMethod,
                     paymentProductId: paymentProductId,
@@ -556,6 +559,28 @@ define(function(require) {
                         Length: {
                             // Max length for accountHolderName field from the Ingenico API doc
                             max: 30
+                        }
+                    }
+                },
+                {
+                    id: 'debtorSurname',
+                    _passThroughValue: this.options.paymentDetails.debtorSurname,
+                    dataRestrictions: {
+                        isRequired: true
+                    },
+                    displayHints: {
+                        label: __('ingenico.sepa.fields.debtorSurname.label'),
+                        placeholderLabel: __('ingenico.sepa.fields.debtorSurname.placeholder')
+                    },
+                    dataValidation: {
+                        NotBlank: {
+                            payload: null,
+                            allowNull: false,
+                            normalizer: null
+                        },
+                        Length: {
+                            // Max length for debtorSurname field from the Ingenico API doc
+                            max: 70
                         }
                     }
                 },
