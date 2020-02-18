@@ -28,4 +28,15 @@ class EnabledProductsDataProvider
             self::ACH,
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function getDirectDebitProducts(): array
+    {
+        return [
+            self::SEPA,
+            self::ACH,
+        ];
+    }
 }

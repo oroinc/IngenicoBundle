@@ -14,7 +14,7 @@ class PaymentResponse extends Response
     public const CAPTURE_REQUESTED_PAYMENT_STATUS = 'CAPTURE_REQUESTED';
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getReference(): ?string
     {
@@ -22,7 +22,7 @@ class PaymentResponse extends Response
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getPaymentStatus(): ?string
     {

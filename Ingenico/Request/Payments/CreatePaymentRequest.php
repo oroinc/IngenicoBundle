@@ -13,7 +13,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\Sdk\DataObject;
 
 /**
- * Handle create payment request.
+ * Handles create payment request.
  */
 class CreatePaymentRequest implements RequestInterface
 {
@@ -28,7 +28,8 @@ class CreatePaymentRequest implements RequestInterface
             ->addOption(new Locale())
             ->addOption(new CountryCode())
             ->addOption(new EncryptedCustomerInput())
-            ->addOption(new MerchantReference());
+            ->addOption(new MerchantReference())
+        ;
     }
 
     /**

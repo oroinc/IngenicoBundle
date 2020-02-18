@@ -12,12 +12,16 @@ define(function(require) {
     const routing = require('routing');
     const paymentProductListTemplate = require('tpl-loader!ingenico/templates/payment-products-list.html');
     const errorHintTemplate = require('tpl-loader!ingenico/templates/error-hint.html');
+    require('jquery.validate');
 
     const IngenicoCreditCardComponent = BaseComponent.extend({
         options: {
             paymentMethod: null,
             paymentDetails: {},
             createSessionRoute: 'ingenico_create_session',
+            paymentProducts: {
+                sepaId: 770,
+            },
             selectors: {
                 body: '.payment-body',
                 state: {
@@ -75,6 +79,8 @@ define(function(require) {
             this.options = _.extend({}, this.options, options);
 
             this.$el = this.options._sourceElement;
+
+            $.validator.loadMethod('ingenico/js/validator/sepa-iban');
 
             this.$el.on('change.' + this.cid, this.options.selectors.genericInput, this.saveFieldsState.bind(this));
 
@@ -219,7 +225,7 @@ define(function(require) {
         },
 
         /**
-         * Retrieves payment product details with Ingenico SDK.
+         * Retrieves payment product details with Ingenico SDK
          */
         getPaymentProductDetails: function(paymentProductId) {
             const deffer = $.Deferred();
@@ -235,8 +241,6 @@ define(function(require) {
                     .getPaymentProduct(paymentProductId, this.options.paymentDetails)
                     .then(
                         paymentProduct => {
-                            // workaround to solve payment product's fields validation issues
-                            // caused by improper fields setup received from Ingenico's SDK
                             this.fixFieldsRestrictions(paymentProduct);
                             this.currentPaymentProduct = paymentProduct;
 
@@ -265,7 +269,7 @@ define(function(require) {
 
         /**
          * Workaround to solve payment product's fields validation issues
-         * caused by improper fields setup received from Ingenico's SDK
+         * caused by empty validation rules from the Ingenico SDK
          */
         fixFieldsRestrictions: function(paymentProduct) {
             if (paymentProduct.paymentProductFieldById[this.bankCodeFieldId]) {
@@ -274,24 +278,24 @@ define(function(require) {
         },
 
         /**
-         * Fixes bank code field's issued validation setup
+         * Fixes bank code field issued validation setup.
          */
         fixBankCodeFieldRestrictions: function(bankCodeField) {
             const validationRuleByType = bankCodeField.dataRestrictions.validationRuleByType;
 
             if (validationRuleByType['length']) {
-                // original maxLength is 8. Proper bank code for test proposes is '121000248'
+                // maxLength returned from the SDK is 8, but it should be 9
                 validationRuleByType.length.maxLength = 9;
             }
 
             if (validationRuleByType['regularExpression']) {
-                // original regularExpression is '^[0-9]{1,9}$'
+                // original regularExpression is '^[0-8]{1,8}$'
                 validationRuleByType.regularExpression.regularExpression = '^[0-9]{1,9}$';
             }
         },
 
         /**
-         * Renders payment products list retrieved with Ingenico SDK.
+         * Renders payment products list retrieved with Ingenico SDK
          */
         renderPaymentProductsList: function() {
             // don't allow the same content to be displayed a couple of times
@@ -368,10 +372,9 @@ define(function(require) {
             this.getSession()
                 .then(() => this.getPaymentProductDetails(paymentProductId))
                 .then(() => {
-                    const renderedFields = this.renderPaymentProductFields(
-                        this.currentPaymentProduct.paymentProductFields,
-                        paymentProductId
-                    );
+                    const fields = paymentProductId === this.options.paymentProducts.sepaId
+                        ? this.getSepaFieldsInfo() : this.currentPaymentProduct.paymentProductFields;
+                    const renderedFields = this.renderPaymentProductFields(fields, paymentProductId);
 
                     paymentProductFieldsHolder.html(renderedFields.join(''))
                         .data('paymentProduct', this.currentPaymentProduct)
@@ -424,11 +427,23 @@ define(function(require) {
                 const fields = this.collectFormData();
                 if (this.validate(fields)) {
                     mediator.execute('showLoading');
-                    this.storeEcryptedCutomerDetailes().then(function() {
-                        eventData.resume();
-                    }).catch(function() {
-                        mediator.execute('hideLoading');
+                    this.clearAdditionalData();
+                    this.addPaymentAdditionalData({
+                        ingenicoPaymentProduct: this.getPaymentProductAlias(this.currentPaymentProduct)
                     });
+
+                    if (this.currentPaymentProduct.id === this.options.paymentProducts.sepaId) {
+                        this.storeCollectedFields(fields, 'ingenicoSepaDetails');
+                        this.addPaymentAdditionalData({ingenicoCustomerEncDetails: null});
+
+                        eventData.resume();
+                    } else {
+                        this.storeEcryptedCutomerDetailes().then(function() {
+                            eventData.resume();
+                        }).catch(function() {
+                            mediator.execute('hideLoading');
+                        });
+                    }
                 }
             }
         },
@@ -446,11 +461,15 @@ define(function(require) {
          */
         collectFormData: function() {
             const collectedFields = [];
+
             if (!this.currentPaymentProduct) {
                 return collectedFields;
             }
 
-            _.each(this.currentPaymentProduct.paymentProductFields, field => {
+            const fields = this.currentPaymentProduct.id === this.options.paymentProducts.sepaId
+                ? this.getSepaFieldsInfo() : this.currentPaymentProduct.paymentProductFields;
+
+            _.each(fields, field => {
                 const fieldName = '#' + this.buildFieldIdentifier(field.id, 'field');
                 if ($(fieldName).length) {
                     const value = $(fieldName).val();
@@ -465,11 +484,20 @@ define(function(require) {
             return collectedFields;
         },
 
+        /**
+         * Validates fulfilled form data for currently selected payment product using Ingenico SDK.
+         * For SEPA payment product Oro application's validation tools are used.
+         */
         validate: function(fields) {
             if (!this.currentPaymentProduct) {
                 mediator.execute('showFlashMessage', 'error', __('ingenico.no_choosen_payment_product'));
 
                 return false;
+            }
+
+            // SEPA payment product form data is validated with internal tools.
+            if (this.currentPaymentProduct.id === this.options.paymentProducts.sepaId) {
+                return this.validateSepaFields(fields);
             }
 
             const paymentRequest = this.session.getPaymentRequest();
@@ -529,7 +557,7 @@ define(function(require) {
          * Add error hint below field with validation message
          */
         addError: function(fieldId, message) {
-            const fieldElementId = '#' + this.buildFieldIdentifier(fieldId, 'field');
+            const fieldElementId = this.buildFieldIdentifier(fieldId, 'field');
             const fieldErrorElementId = this.buildFieldIdentifier(fieldId, 'error');
             const fieldErrorElement = $('#' + fieldErrorElementId);
             if (!$(fieldErrorElement).length) {
@@ -541,7 +569,7 @@ define(function(require) {
                     errorMessage: errorMessage
                 };
                 // notice: error container should be <p> not <span> as it conflicts with jquery.validation
-                $(fieldElementId).after(this.errorHintTemplate(templateOptions));
+                $('#' + fieldElementId).after(this.errorHintTemplate(templateOptions));
             }
         },
 
@@ -554,7 +582,20 @@ define(function(require) {
         },
 
         /**
-         * Crypts selected payment product's form values and storing it to DOM storage.
+         * Stores given payment product fields values into transactions additional data
+         * without encryption and with given values domain.
+         */
+        storeCollectedFields: function(fields, valuesDomain) {
+            _.each(fields, field => {
+                const mappedField = {};
+                mappedField[valuesDomain + ':' + field.field] = field.value;
+
+                this.addPaymentAdditionalData(mappedField);
+            });
+        },
+
+        /**
+         * Crypts sensitive part of create payment request to be safely processed on server side
          */
         storeEcryptedCutomerDetailes: function() {
             const deffer = $.Deferred();
@@ -563,14 +604,10 @@ define(function(require) {
             const paymentRequest = this.session.getPaymentRequest();
             encryptor.encrypt(paymentRequest).then(
                 encryptedString => {
-                    const paymentProduct = paymentRequest.getPaymentProduct();
-                    const ingenicoPaymentProduct = paymentProduct.paymentProductGroup
-                        ? paymentProduct.paymentProductGroup
-                        : paymentProduct.id;
                     this.addPaymentAdditionalData({
-                        ingenicoPaymentProduct: ingenicoPaymentProduct,
                         ingenicoCustomerEncDetails: encryptedString
                     });
+
                     deffer.resolve();
                 },
                 () => {
@@ -580,6 +617,107 @@ define(function(require) {
             );
 
             return deffer.promise();
+        },
+
+        /**
+         * Gets payment product group alias for given payment product
+         * so it will be handled with dedicated processor on server side.
+         */
+        getPaymentProductAlias: function(paymentProduct) {
+            return paymentProduct.paymentProductGroup ? paymentProduct.paymentProductGroup : paymentProduct.id;
+        },
+
+        /**
+         * Missing SEPA form fields retrieval.
+         * Ingenico SDK doesn't return any fields for SEPA DD. Render them manually.
+         * This data structure copycats one that is received for other payment products from Ingenico SDK.
+         */
+        getSepaFieldsInfo: function() {
+            return [
+                {
+                    id: 'iban',
+                    dataRestrictions: {
+                        isRequired: true
+                    },
+                    displayHints: {
+                        label: __('ingenico.sepa.fields.iban.label'),
+                        placeholderLabel: __('ingenico.sepa.fields.iban.placeholder')
+                    },
+                    dataValidation: {
+                        'ingenico-sepa-iban': {
+                            payload: null
+                        },
+                        NotBlank: {
+                            payload: null,
+                            allowNull: false,
+                            normalizer: null
+                        },
+                        Length: {
+                            // Max length for iban field from the Ingenico API doc
+                            max: 50
+                        }
+                    }
+                },
+                {
+                    id: 'accountHolderName',
+                    dataRestrictions: {
+                        isRequired: true
+                    },
+                    displayHints: {
+                        label: __('ingenico.sepa.fields.accountHolderName.label'),
+                        placeholderLabel: __('ingenico.sepa.fields.accountHolderName.placeholder')
+                    },
+                    dataValidation: {
+                        NotBlank: {
+                            payload: null,
+                            allowNull: false,
+                            normalizer: null
+                        },
+                        Length: {
+                            // Max length for accountHolderName field from the Ingenico API doc
+                            max: 30
+                        }
+                    }
+                },
+                {
+                    id: 'mandateDisclaimer',
+                    dataRestrictions: {
+                        isRequired: false
+                    },
+                    displayHints: {
+                        label: __('ingenico.sepa.fields.mandateDisclaimer.label'),
+                        placeholderLabel: ''
+                    },
+                    dataValidation: {}
+                }
+            ];
+        },
+
+        /**
+         * Validates SEPA form fields because Ingenico SDK doesn't provide any validators for SEPA
+         */
+        validateSepaFields: function(fields) {
+            const virtualForm = $('<form>');
+            _.each(fields, item => {
+                this.removeError(item.field);
+
+                const fieldElementClone = $('#' + this.buildFieldIdentifier(item.field, 'field')).clone();
+                fieldElementClone.data('fieldId', item.field);
+                virtualForm.append(fieldElementClone);
+            });
+
+            const validator = virtualForm.validate({
+                ignore: '',
+                errorPlacement: (error, element) => {
+                    this.addError(element.data('fieldId'), error.html());
+                }
+            });
+
+            return validator.form();
+        },
+
+        clearAdditionalData: function() {
+            mediator.trigger('checkout:payment:additional-data:set', JSON.stringify({}));
         },
 
         /**
@@ -629,9 +767,7 @@ define(function(require) {
                 return;
             }
 
-            this.$el.off('change.' + this.cid, this.options.selectors.genericInput);
-            this.$el.off('click.' + this.cid, this.options.selectors.paymentProductChoice);
-            this.$el.off('focusout.' + this.cid, this.options.selectors.genericInput);
+            this.$el.off('.' + this.cid);
 
             IngenicoCreditCardComponent.__super__.dispose.call(this);
         }

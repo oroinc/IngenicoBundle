@@ -9,6 +9,7 @@ class PaymentActionDataProvider
 {
     public const SALE = 'SALE';
     public const PRE_AUTHORIZATION = 'PRE_AUTHORIZATION';
+    public const FINAL_AUTHORIZATION = 'FINAL_AUTHORIZATION';
 
     /**
      * @return array
@@ -18,6 +19,7 @@ class PaymentActionDataProvider
         return [
             self::SALE,
             self::PRE_AUTHORIZATION,
+            self::FINAL_AUTHORIZATION,
         ];
     }
 }

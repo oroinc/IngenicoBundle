@@ -7,7 +7,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\DirectDebitPayment\Dire
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 
 /**
- * Handle create payment request specifically for direct debit payment products(ACH, SEPA).
+ * Handles create payment request specifically for direct debit payment products(ACH, SEPA).
  */
 class DirectDebitPaymentRequest extends CreatePaymentRequest
 {

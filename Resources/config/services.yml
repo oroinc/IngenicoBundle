@@ -55,16 +55,21 @@ services:
     Ingenico\Connect\OroCommerce\Method\Handler\CreditCardPaymentProductHandler:
         parent: Ingenico\Connect\OroCommerce\Method\Handler\AbstractPaymentProductHandler
         tags:
-            - { name: ingenico.payment_product_group.handler }
+            - { name: ingenico.payment_product.handler }
 
     Ingenico\Connect\OroCommerce\Method\Handler\AchPaymentProductHandler:
         parent: Ingenico\Connect\OroCommerce\Method\Handler\AbstractPaymentProductHandler
         tags:
-            - { name: ingenico.payment_product_group.handler}
+            - { name: ingenico.payment_product.handler}
+
+    Ingenico\Connect\OroCommerce\Method\Handler\SepaPaymentProductHandler:
+        parent: Ingenico\Connect\OroCommerce\Method\Handler\AbstractPaymentProductHandler
+        tags:
+            - { name: ingenico.payment_product.handler}
 
     Ingenico\Connect\OroCommerce\Method\Handler\PaymentProductHandlerRegistry:
         arguments:
-            - !tagged_iterator ingenico.payment_product_group.handler
+            - !tagged_iterator ingenico.payment_product.handler
 
     Ingenico\Connect\OroCommerce\Method\Factory\IngenicoPaymentMethodFactory:
         arguments:
@@ -96,6 +101,7 @@ services:
             - '@Ingenico\Connect\OroCommerce\Ingenico\Client\Client'
             - '@Ingenico\Connect\OroCommerce\Ingenico\Request\RequestRegistry'
             - '@Ingenico\Connect\OroCommerce\Ingenico\Converter\RequestBodyConverter'
+            - '@logger'
 
     Ingenico\Connect\OroCommerce\Ingenico\Request\RequestRegistry:
         arguments:
@@ -114,6 +120,14 @@ services:
             - { name: ingenico.ingenico.request }
 
     Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\DirectDebitPaymentRequest:
+        tags:
+            - { name: ingenico.ingenico.request }
+
+    Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\CreateSepaDirectDebitPaymentRequest:
+        tags:
+            - { name: ingenico.ingenico.request }
+
+    Ingenico\Connect\OroCommerce\Ingenico\Request\Payments\CreateSepaDirectDebitPaymentTokenRequest:
         tags:
             - { name: ingenico.ingenico.request }
 
@@ -151,3 +165,14 @@ services:
     Ingenico\Connect\OroCommerce\Ingenico\Provider\CheckoutInformationProvider:
         arguments:
             - '@oro_entity.doctrine_helper'
+
+    Ingenico\Connect\OroCommerce\Action\DirectDebitPaymentTransactionMark:
+        parent: oro_payment.action.payment_method_action.abstract
+        tags:
+            - { name: oro_action.action, alias: ingenico_direct_debit_payment_transaction_mark }
+
+    Ingenico\Connect\OroCommerce\Validator\Constraints\NotBlankDirectDebitTextValidator:
+        arguments:
+            - '@Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider'
+        tags:
+            - { name: validator.constraint_validator }

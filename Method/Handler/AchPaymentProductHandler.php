@@ -48,9 +48,8 @@ class AchPaymentProductHandler extends AbstractPaymentProductHandler
      */
     private function getCreatePaymentAdditionalOptions(IngenicoConfig $config): array
     {
-        // hardcoded value to be replaced with a value from payment integration's settings. @INGA-40
         return [
-            DirectDebitText::NAME => 'COMPANYNAME 123-123-1234 ZIP CODE UK',
+            DirectDebitText::NAME => $config->getDirectDebitText(),
         ];
     }
 
