@@ -178,7 +178,15 @@ define(function(require) {
                     ),
                     data => {
                         if (data.success) {
-                            this.session = new ConnectSdk(data.sessionInfo);
+                            try {
+                                this.session = new ConnectSdk(data.sessionInfo);
+                            } catch (e) {
+                                this.$el.html(__('ingenico.payment_method_is_not_available'));
+                                mediator.execute('hideLoading');
+                                deffer.reject();
+                                return;
+                            }
+
                             mediator.execute('hideLoading');
                             deffer.resolve();
                         } else {
