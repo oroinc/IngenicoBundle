@@ -40,7 +40,8 @@ define(function(require) {
             'checkout:payment:before-transit mediator': 'beforeTransit',
             'checkout:payment:before-hide-filled-form mediator': 'beforeHideFilledForm',
             'checkout:payment:before-restore-filled-form mediator': 'beforeRestoreFilledForm',
-            'checkout:payment:remove-filled-form mediator': 'removeFilledForm'
+            'checkout:payment:remove-filled-form mediator': 'removeFilledForm',
+            'checkout-content:initialized mediator': 'refreshPaymentMethod'
         },
 
         session: null,
@@ -97,6 +98,10 @@ define(function(require) {
             );
 
             this._initializeIngenicoPayment();
+        },
+
+        refreshPaymentMethod: function() {
+            mediator.trigger('checkout:payment:method:refresh');
         },
 
         getPaymentProductState: function() {
@@ -177,23 +182,21 @@ define(function(require) {
                         {paymentMethod: this.options.paymentMethod}
                     ),
                     data => {
+                        mediator.execute('hideLoading');
                         if (data.success) {
                             try {
                                 this.session = new ConnectSdk(data.sessionInfo);
                             } catch (e) {
                                 this.$el.html(__('ingenico.payment_method_is_not_available'));
-                                mediator.execute('hideLoading');
                                 deffer.reject();
                                 return;
                             }
 
-                            mediator.execute('hideLoading');
                             deffer.resolve();
                         } else {
                             this.$el
                                 .find(this.options.selectors.body)
                                 .html(__('ingenico.payment_method_is_not_available'));
-                            mediator.execute('hideLoading');
                             deffer.reject();
                         }
                     }
@@ -252,7 +255,7 @@ define(function(require) {
                             this.fixFieldsRestrictions(paymentProduct);
                             this.currentPaymentProduct = paymentProduct;
 
-                            // save chosen payment product state
+                            // save selected payment product state
                             this.savePaymentProductState(paymentProductId);
 
                             mediator.execute('hideLoading');
@@ -369,7 +372,7 @@ define(function(require) {
                 // update product fields state
                 this.saveFieldsState();
 
-                // save chosen payment product state
+                // save selected payment product state
                 this.savePaymentProductState(paymentProductId);
 
                 deffer.resolve();
@@ -377,6 +380,7 @@ define(function(require) {
                 return deffer.promise();
             }
 
+            mediator.execute('showLoading');
             this.getSession()
                 .then(() => this.getPaymentProductDetails(paymentProductId))
                 .then(() => {
@@ -392,7 +396,8 @@ define(function(require) {
                         .attr('aria-disabled', true);
 
                     deffer.resolve();
-                }, () => deffer.reject());
+                }, () => deffer.reject())
+                .always(() => mediator.execute('hideLoading'));
 
             return deffer.promise();
         },
@@ -498,7 +503,7 @@ define(function(require) {
          */
         validate: function(fields) {
             if (!this.currentPaymentProduct) {
-                mediator.execute('showFlashMessage', 'error', __('ingenico.no_choosen_payment_product'));
+                mediator.execute('showFlashMessage', 'error', __('ingenico.no_selected_payment_product'));
 
                 return false;
             }
