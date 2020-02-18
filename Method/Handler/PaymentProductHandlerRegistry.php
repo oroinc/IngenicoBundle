@@ -5,7 +5,7 @@ namespace Ingenico\Connect\OroCommerce\Method\Handler;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 
 /**
- * Handlers registry of Ingenico payment product groups
+ * Handlers registry of Ingenico payment products
  */
 class PaymentProductHandlerRegistry
 {

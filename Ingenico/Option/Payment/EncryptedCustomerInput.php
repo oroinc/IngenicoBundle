@@ -18,7 +18,7 @@ class EncryptedCustomerInput implements OptionInterface
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setRequired(self::NAME)
-            ->setAllowedTypes(self::NAME, 'string');
+            ->setDefined(self::NAME)
+            ->setAllowedTypes(self::NAME, ['string', 'null']);
     }
 }

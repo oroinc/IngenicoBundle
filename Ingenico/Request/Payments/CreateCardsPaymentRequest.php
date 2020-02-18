@@ -9,7 +9,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\Token;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 
 /**
- * Handle create payment request specificly for credit card payment products.
+ * Handles create payment request specifically for credit card payment products.
  */
 class CreateCardsPaymentRequest extends CreatePaymentRequest
 {

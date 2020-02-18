@@ -20,6 +20,13 @@ define(function(require) {
         surname: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         street: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         houseNumber: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        zip: require('tpl-loader!ingenico/templates/macros/input-default.html')
+        zip: require('tpl-loader!ingenico/templates/macros/input-default.html'),
+
+        // SEPA fields
+        iban: require('tpl-loader!ingenico/templates/macros/input-default.html'),
+        debtorSurname: require('tpl-loader!ingenico/templates/macros/input-default.html'),
+        mandateDisclaimer: require('tpl-loader!ingenico/templates/macros/disclaimer-text.html'),
+
+        hidden: require('tpl-loader!ingenico/templates/macros/input-hidden.html')
     });
 });

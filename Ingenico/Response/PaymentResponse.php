@@ -12,8 +12,11 @@ class PaymentResponse extends Response
     public const CARD_NUMBER = '[payment][paymentOutput][cardPaymentMethodSpecificOutput][card][cardNumber]';
     public const PAYMENT_PRODUCT = '[payment][paymentOutput][cardPaymentMethodSpecificOutput][paymentProductId]';
 
+    public const PENDING_APPROVAL_PAYMENT_STATUS = 'PENDING_APPROVAL';
+    public const CAPTURE_REQUESTED_PAYMENT_STATUS = 'CAPTURE_REQUESTED';
+
     /**
-     * @return string
+     * @return string|null
      */
     public function getReference(): ?string
     {
@@ -21,7 +24,7 @@ class PaymentResponse extends Response
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getPaymentStatus(): ?string
     {

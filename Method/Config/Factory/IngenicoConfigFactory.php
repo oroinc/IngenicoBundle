@@ -47,6 +47,7 @@ class IngenicoConfigFactory
         $params[IngenicoConfig::FIELD_TOKENIZAION_ENABLED_KEY] = $settings->isTokenizationEnabled();
         $params[IngenicoConfig::FIELD_PAYMENT_METHOD_IDENTIFIER] =
             $this->identifierGenerator->generateIdentifier($channel);
+        $params[IngenicoConfig::FIELD_DIRECT_DEBIT_TEXT_KEY] = (string)$settings->getDirectDebitText();
 
         return new IngenicoConfig($params);
     }

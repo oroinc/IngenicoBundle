@@ -11,15 +11,45 @@ ingenico:
             choice:
                 cards: 'Credit cards'
                 sepa: 'SEPA Direct Debit'
-                ach: 'ACH Paymentss'
+                ach: 'ACH'
+
         paymentAction:
             label: 'Payment Action'
             choice:
                 SALE: 'Sale'
                 PRE_AUTHORIZATION: 'Pre-Authorization'
+                FINAL_AUTHORIZATION: 'Final Authorization'
+            tooltip: |
+                * Final Authorization - The payment creation results in an authorization that is ready for capture. Final authorizations can't be reversed and need to be captured for the full amount within 7 days.
+
+                * Pre-Authorization - The payment creation results in a pre-authorization that is ready for capture. Pre-authortizations can be reversed and can be captured within 30 days. The capture amount can be lower than the authorized amount.
+
+                * Sale - The payment creation results in an authorization that is already captured at the moment of approval.
+
         tokenizationEnabled:
             label: 'Allow tokenization'
             tooltip: 'Allow tokenization to store payment credentials for future payments'
+
+        directDebitText:
+            label: 'Direct Debit Text'
+            tooltip: 'Description of the transaction that will appear on the customer bank statement to aid the customer in recognizing the transaction.'
+
+    payment:
+        direct_debit:
+            mark_paid: 'Mark as Paid'
+            mark_declined: 'Mark as Declined'
+    order:
+        payment_transaction:
+            mark_paid:
+                title: 'Mark Payment as Paid'
+                message: 'The payment will be marked as paid. Are you sure you want to continue?'
+                button.okText: 'Yes, Mark as Paid'
+                result.success: 'The payment has been marked successfully as paid.'
+            mark_declined:
+                title: 'Mark Payment as Declined'
+                message: 'The payment will be marked as declined. Are you sure you want to continue?'
+                button.okText: 'Yes, Decline'
+                result.success: 'The payment has been marked successfully as declined.'
 
 oro:
     payment:

@@ -1,8 +1,26 @@
-<div class="payment-product">
-    <% _.each(productPayments, function(item) { %>
-    <a href="#" class="payment-product__item" data-product-id="<%= item.id %>">
-        <img src="<%= item.logo %>" alt="" class="payment-product__logo">
-        <span class="payment-product__label"><%= item.label %></span>
-    </a>
+<div class="payment-products" role>
+    <% _.each(paymentProducts, function(item) { %>
+    <div class="payment-product">
+        <label id="payment-product__choice-label__<%= paymentMethod %>-<%= item.id %>"
+               class="custom-radio custom-radio--large payment-product__choice-label">
+            <input class="custom-radio__control payment-product__choice"
+                   type="radio"
+                   name="ingenicoPaymentProduct"
+                   data-product-id="<%= item.id %>"
+                   value="<%= item.id %>"
+                   role="button"
+                   area-expanded="false"
+                   area-controls="payment-product__form-fields__<%= paymentMethod %>-<%= item.id %>"><!--
+         --><span class="custom-radio__text"><!--
+             --><img src="<%= item.logo %>" alt="" class="payment-product__logo"><!--
+             --><span class="payment-product__label"><%= item.label %></span>
+            </span>
+        </label>
+
+        <div id="payment-product__form-fields__<%= paymentMethod %>-<%= item.id %>"
+             class="payment-product__form-fields hidden"
+             role="region"
+             aria-labelledby="payment-product__choice-label__<%= paymentMethod %>-<%= item.id %>"></div>
+    </div>
     <% }) %>
 </div>

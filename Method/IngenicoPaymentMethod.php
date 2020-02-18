@@ -1,4 +1,5 @@
 <?php
+
 namespace Ingenico\Connect\OroCommerce\Method;
 
 use Ingenico\Connect\OroCommerce\Ingenico\Gateway\Gateway;
@@ -18,6 +19,10 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
  */
 class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInterface
 {
+    /**
+     * Internal payment action which is used only in payment transaction to mark it
+     * as transaction with tokenized credit card data
+     */
     public const TOKENIZE = 'tokenize';
 
     /** @var IngenicoConfig */
@@ -31,16 +36,16 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
 
     /**
      * @param IngenicoConfig $config
-     * @param PaymentProductHandlerRegistry $paymentProductHandlersRegistry
+     * @param PaymentProductHandlerRegistry $paymentProductHandlerRegistry
      * @param Gateway $gateway
      */
     public function __construct(
         IngenicoConfig $config,
-        PaymentProductHandlerRegistry $paymentProductHandlersRegistry,
+        PaymentProductHandlerRegistry $paymentProductHandlerRegistry,
         Gateway $gateway
     ) {
         $this->config = $config;
-        $this->paymentProductHandlerRegistry = $paymentProductHandlersRegistry;
+        $this->paymentProductHandlerRegistry = $paymentProductHandlerRegistry;
         $this->gateway = $gateway;
     }
 
@@ -52,9 +57,18 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
         $paymentProductHandler =
             $this->paymentProductHandlerRegistry->getPaymentProductHandler($paymentTransaction);
 
-        if (null === $paymentProductHandler || !$this->supports($action)) {
+        if (null === $paymentProductHandler) {
             throw new \InvalidArgumentException(
-                sprintf('"%s" payment method "%s" action is not supported', $this->getIdentifier(), $action)
+                sprintf(
+                    'Cannot find payment product handler for transaction, with id="%d", action="%s"',
+                    $paymentTransaction->getId(),
+                    $paymentTransaction->getAction()
+                )
+            );
+        }
+        if (!$this->supports($action)) {
+            throw new \InvalidArgumentException(
+                sprintf('Payment handler "%s" doesn\'t support "%s" action', get_class($paymentProductHandler), $action)
             );
         }
 

@@ -57,7 +57,8 @@ class IngenicoView implements PaymentMethodViewInterface
                 'countryCode' => $context->getBillingAddress()->getCountryIso2(),
                 'isRecurring' => false,
                 'locale' => $this->currentLocalizationCode,
-            ],
+                'debtorSurname' => $context->getBillingAddress()->getLastName()
+            ]
         ];
     }
 

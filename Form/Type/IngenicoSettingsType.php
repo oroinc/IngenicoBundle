@@ -48,6 +48,8 @@ class IngenicoSettingsType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+        $paymentActionTooltip = nl2br($this->translator->trans('ingenico.settings.paymentAction.tooltip'));
+
         $builder
             ->add('apiKeyId', TextType::class)
             ->add('apiSecret', OroPlaceholderPasswordType::class)
@@ -60,7 +62,7 @@ class IngenicoSettingsType extends AbstractType
                         sprintf('ingenico.settings.enabledProducts.choice.%s', $action)
                     );
                 },
-                'multiple' => true
+                'multiple' => true,
             ])
             ->add('paymentAction', ChoiceType::class, [
                 'choices' => $this->paymentActionDataProvider->getPaymentActions(),
@@ -68,10 +70,15 @@ class IngenicoSettingsType extends AbstractType
                     return $this->translator->trans(
                         sprintf('ingenico.settings.paymentAction.choice.%s', $action)
                     );
-                }
+                },
+                'tooltip' => $paymentActionTooltip,
             ])
             ->add('tokenizationEnabled', CheckboxType::class, [
-                'tooltip' => 'ingenico.settings.tokenizationEnabled.tooltip'
+                'tooltip' => 'ingenico.settings.tokenizationEnabled.tooltip',
+            ])
+            ->add('directDebitText', TextType::class, [
+                'tooltip' => 'ingenico.settings.directDebitText.tooltip',
+                'required' => false,
             ]);
     }
 
@@ -82,7 +89,7 @@ class IngenicoSettingsType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => IngenicoSettings::class,
-            'label_format' => 'ingenico.settings.%name%.label'
+            'label_format' => 'ingenico.settings.%name%.label',
         ]);
     }
 }

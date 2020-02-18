@@ -1,5 +1,13 @@
-<label for="<%= field.id %>-<%= paymentMethod %>" class="custom-checkbox input-widget <% if (field.dataRestrictions.isRequired) { %> required<% } %>">
-    <input type="checkbox" id="<%= field.id %>-<%= paymentMethod %>" name="<%= field.id %>-<%= paymentMethod %>" class="custom-checkbox__input <%= field.id %>-<%= paymentMethod %>-field">
-    <span class="custom-checkbox__icon"></span>
-    <span class="custom-checkbox__text"><%= field.displayHints.label %><% if (field.dataRestrictions.isRequired) { %><em>*</em><% } %></span>
-</label>
+<div class="form-row checkout">
+    <label for="<%= fieldElementId %>"
+           class="custom-checkbox input-widget <% if (field.dataRestrictions.isRequired) { %> required<% } %>">
+        <input type="checkbox"
+               id="<%= fieldElementId %>"
+               name="<%= field.id %>-<%= paymentProductId %>-<%= paymentMethod %>"
+               class="custom-checkbox__input <%= field.id %>-field input input--full">
+        <span class="custom-checkbox__icon"></span>
+        <span class="custom-checkbox__text">
+        <%= field.displayHints.label %><% if (field.dataRestrictions.isRequired) { %><em>*</em><% } %>
+    </span>
+    </label>
+</div>

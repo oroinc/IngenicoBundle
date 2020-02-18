@@ -1,6 +1,10 @@
 <div class="form-row checkout">
-    <label class="label label--full<% if (field.dataRestrictions.isRequired) { %> required<% } %>"><%= field.displayHints.label %><% if (field.dataRestrictions.isRequired) { %><em>*</em><% } %></label>
-    <select name="<%= field.id %>-<%= paymentMethod %>" class="<%= field.id %>-<%= paymentMethod %>-field select select--full">
+    <label class="label label--full<% if (field.dataRestrictions.isRequired) { %> required<% } %>">
+        <%= field.displayHints.label %><% if (field.dataRestrictions.isRequired) { %><em>*</em><% } %>
+    </label>
+    <select name="<%= field.id %>-<%= paymentProductId %>-<%= paymentMethod %>"
+            id="<%= fieldElementId %>"
+            class="<%= field.id %>-field select select--full input input--full">
         <% if (field.displayHints.placeholderLabel) { %>
         <option value=""><%= field.displayHints.placeholderLabel %></option>
         <% } %>
@@ -8,5 +12,4 @@
         <option value="<%= option %>"><%= values[option] %></option>
         <% } %>
     </select>
-    <span class="<%= field.id %>-<%= paymentMethod %>-error validation-failed hidden"><%= _.__('ingenico.general_error') %></span>
 </div>

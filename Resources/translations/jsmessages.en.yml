@@ -2,14 +2,42 @@ ingenico:
     api:
         error:
             no_available_payment_products: 'No available payment products'
-            get_payment_product_details: 'Ingenico payment product details retrieval failed'
-    no_choosen_payment_product: 'Need to choose payment product.'
-    crypt_error: 'Failed to crypt payment form data.'
+            get_payment_product_details: 'Cannot get payment details. Please refresh the page and try again or contact us for assistance.'
+    no_selected_payment_product: 'Please select payment product'
+    crypt_error: 'Cannot prepare data for the payment. Please refresh the page and try again or contact us for assistance.'
     general_error: 'Invalid value.'
-    saveForLaterUse.label: 'Save for later use'
+    saveForLaterUse.label: 'Save card for later use'
     token:
         label: 'Saved card'
         placeholder: 'Do not use saved card'
     payment_method_is_not_available: |
         The selected payment method is not available.
         Please select a different one.
+
+    order:
+        payment_transaction:
+            mark_paid:
+                title: 'Mark Payment as Paid'
+                message: 'The payment will be marked as paid. Are you sure you want to continue?'
+                button.okText: 'Yes, Mark as Paid'
+            mark_declined:
+                title: 'Mark Payment as Declined'
+                message: 'The payment will be marked as declined. Are you sure you want to continue?'
+                button.okText: 'Yes, Decline'
+
+    sepa:
+        fields:
+            iban:
+                label: 'IBAN'
+                placeholder: ''
+            accountHolderName:
+                label: 'Account Holder Name'
+                placeholder: 'John Doe'
+            debtorSurname:
+                label: "Debtor's Surname"
+                placeholder: 'Smith'
+            mandateDisclaimer:
+                label: 'By signing this mandate form, you authorise us to send instructions to your bank to debit your account and your bank to debit your account in accordance with the instructions from us. As part of your rights, you are entitled to a refund from your bank under the terms and conditions of your agreement with your bank. A refund must be claimed within 8 weeks starting from the date on which your account was debited. Your rights are explained in a statement that you can obtain from your bank.'
+
+        validation:
+            iban: "Please enter a valid IBAN number."

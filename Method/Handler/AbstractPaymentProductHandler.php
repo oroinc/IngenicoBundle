@@ -82,7 +82,8 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
         if (!$this->isActionSupported($action)) {
             throw new \InvalidArgumentException(
                 sprintf(
-                    '"%s" payment method "%s" action is not supported',
+                    'Payment product handler "%s" for payment method "%s" doesn\'t support "%s" action',
+                    static::class,
                     $config->getPaymentMethodIdentifier(),
                     $action
                 )
@@ -128,21 +129,25 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
     /**
      * @param PaymentTransaction $paymentTransaction
      * @param string $key
+     * @param bool $throwException
      * @return mixed
      */
-    protected function getAdditionalDataFieldByKey(PaymentTransaction $paymentTransaction, string $key)
-    {
+    protected function getAdditionalDataFieldByKey(
+        PaymentTransaction $paymentTransaction,
+        string $key,
+        $throwException = true
+    ) {
         $transactionOptions = $paymentTransaction->getTransactionOptions();
         $additionalData = json_decode($transactionOptions['additionalData'], true);
 
-        if (!array_key_exists($key, $additionalData)) {
+        if ($throwException && !array_key_exists($key, $additionalData)) {
             throw new \InvalidArgumentException(sprintf(
                 'Can not find field "%s" in additional data',
                 $key
             ));
         }
 
-        return $additionalData[$key];
+        return $additionalData[$key] ?? null;
     }
 
     /**
@@ -165,7 +170,7 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
             EncryptedCustomerInput::NAME => $customerEncryptedDetails,
             AmountOfMoney\Amount::NAME => $this->normalizeAmount($paymentTransaction),
             AmountOfMoney\CurrencyCode::NAME => $paymentTransaction->getCurrency(),
-            MerchantReference::NAME => sprintf('oroCommerceOrder:%d', $paymentTransaction->getEntityIdentifier()),
+            MerchantReference::NAME => $this->generateMerchantReference($paymentTransaction),
         ];
 
         $checkoutOptions = $this->checkoutInformationProvider->getCheckoutOptions($paymentTransaction);
@@ -221,9 +226,22 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
      * @param PaymentTransaction $paymentTransaction
      * @return int
      */
-    protected function normalizeAmount(PaymentTransaction $paymentTransaction)
+    protected function normalizeAmount(PaymentTransaction $paymentTransaction): int
     {
         return $this->amountNormalizer->normalize($paymentTransaction->getAmount());
+    }
+
+    /**
+     * Generate merchant reference for the payment transaction on the Ingenico side
+     * This reference must be unique.
+     * This method uses next format: "o:<order_id>:n:<random_nonce>"
+     *
+     * @param PaymentTransaction $paymentTransaction
+     * @return string
+     */
+    protected function generateMerchantReference(PaymentTransaction $paymentTransaction)
+    {
+        return sprintf('o:%d:n:%s', $paymentTransaction->getEntityIdentifier(), uniqid());
     }
 
     /**

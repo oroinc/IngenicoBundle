@@ -2,9 +2,22 @@
 
 namespace Ingenico\Connect\OroCommerce\Ingenico\Provider;
 
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address\City;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address\CountryCode;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address\HouseNumber;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address\State;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address\StateCode;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address\Street;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\BillingAddress\Address\Zip;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\ContactDetails\CompanyName;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\ContactDetails\EmailAddress;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\ContactDetails\PhoneNumber;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\MerchantCustomerId;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\PersonalInformation\FirstName;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\PersonalInformation\Surname;
 use Oro\Bundle\AddressBundle\Entity\AbstractAddress;
 use Oro\Bundle\CheckoutBundle\Entity\Checkout;
+use Oro\Bundle\CustomerBundle\Entity\CustomerUser;
 use Oro\Bundle\EntityBundle\ORM\DoctrineHelper;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 
@@ -30,9 +43,27 @@ class CheckoutInformationProvider
      * @param PaymentTransaction $paymentTransaction
      * @return array
      */
-    public function getCheckoutOptions(PaymentTransaction $paymentTransaction)
+    public function getCheckoutOptions(PaymentTransaction $paymentTransaction): array
     {
-        return array_merge($this->getBillingAddressOptions($paymentTransaction));
+        return array_merge(
+            $this->getBillingAddressOptions($paymentTransaction),
+            $this->getCustomerUserOptions($paymentTransaction)
+        );
+    }
+
+    /**
+     * @param $paymentTransaction
+     * @return AbstractAddress|null
+     */
+    public function getBillingAddress(PaymentTransaction $paymentTransaction): ?AbstractAddress
+    {
+        $checkout = $this->extractCheckout($paymentTransaction);
+
+        if (!$checkout) {
+            return null;
+        }
+
+        return $checkout->getBillingAddress();
     }
 
     /**
@@ -41,21 +72,55 @@ class CheckoutInformationProvider
      */
     private function getBillingAddressOptions(PaymentTransaction $paymentTransaction)
     {
+        $billingAddress = $this->getBillingAddress($paymentTransaction);
+
+        if (!$billingAddress) {
+            return [];
+        }
+
+        return [
+            CountryCode::NAME => $billingAddress->getCountryIso2(),
+            City::NAME => $billingAddress->getCity(),
+            StateCode::NAME => $billingAddress->getRegionCode(),
+            State::NAME => $billingAddress->getRegionName(),
+            Street::NAME => $billingAddress->getStreet(),
+            HouseNumber::NAME => $billingAddress->getStreet2(),
+            Zip::NAME => $billingAddress->getPostalCode(),
+            PhoneNumber::NAME => $billingAddress->getPhone(),
+        ];
+    }
+
+    /**
+     * @param $paymentTransaction
+     * @return array
+     */
+    private function getCustomerUserOptions(PaymentTransaction $paymentTransaction)
+    {
         $checkout = $this->extractCheckout($paymentTransaction);
 
         if (!$checkout) {
             return [];
         }
 
-        $billingAddress = $checkout->getBillingAddress();
+        $customerUser = $checkout->getCustomerUser();
 
-        if (!$billingAddress instanceof AbstractAddress) {
+        if (!$customerUser instanceof CustomerUser) {
             return [];
         }
 
-        return [
-            CountryCode::NAME => $billingAddress->getCountryIso2(),
+        $customerUserOptions = [
+            EmailAddress::NAME => $customerUser->getEmail(),
+            FirstName::NAME => $customerUser->getFirstName(),
+            Surname::NAME => $customerUser->getLastName(),
+            MerchantCustomerId::NAME => (string)$customerUser->getId(),
         ];
+
+        $customer = $customerUser->getCustomer();
+        if ($customer) {
+            $customerUserOptions[CompanyName::NAME] = $customer->getName();
+        }
+
+        return $customerUserOptions;
     }
 
     /**
