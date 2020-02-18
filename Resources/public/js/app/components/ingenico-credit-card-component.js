@@ -23,9 +23,14 @@ define(function(require) {
                 sepaId: 770
             },
             selectors: {
+                body: '.payment-body',
+                state: {
+                    paymentProduct: '.current-payment-product',
+                    paymentProductFields: '.current-payment-product-fields-values'
+                },
                 paymentProductChoice: '.payment-product__choice',
                 paymentProductItem: '.payment-product',
-                paymentProductFormFieldsHodler: '.payment-product__form-fields',
+                paymentProductFormFieldsHolder: '.payment-product__form-fields',
                 genericInput: '.input--full'
             }
         },
@@ -58,6 +63,11 @@ define(function(require) {
         disposable: true,
 
         /**
+         * @property {Boolean}
+         */
+        rendered: false,
+
+        /**
          * @inheritDoc
          */
         constructor: function IngenicoCreditCardComponent(options) {
@@ -74,10 +84,12 @@ define(function(require) {
 
             $.validator.loadMethod('ingenico/js/validator/sepa-iban');
 
+            this.$el.on('change.' + this.cid, this.options.selectors.genericInput, this.saveFieldsState.bind(this));
+
             this.$el.on(
                 'click.' + this.cid,
                 this.options.selectors.paymentProductChoice,
-                this.showSelectedPaymentProductFields.bind(this)
+                this.onPaymentProductItemClick.bind(this)
             );
 
             this.$el.on(
@@ -85,17 +97,71 @@ define(function(require) {
                 this.options.selectors.genericInput,
                 this.validateField.bind(this)
             );
+
+            this._initializeIngenicoPayment();
         },
 
         refreshPaymentMethod: function() {
-            mediator.trigger('checkout:payment:method:changed', {paymentMethod: this.options.paymentMethod});
+            mediator.trigger('checkout:payment:method:refresh');
+        },
+
+        getPaymentProductState: function() {
+            return this.$el.find(this.options.selectors.state.paymentProduct).val();
+        },
+
+        savePaymentProductState: function(paymentProductId) {
+            this.$el.find(this.options.selectors.state.paymentProduct).val(paymentProductId);
+        },
+
+        getFieldsState: function() {
+            const jsonString = this.$el.find(this.options.selectors.state.paymentProductFields).val();
+            try {
+                return JSON.parse(jsonString);
+            } catch (e) {
+                return [];
+            }
+        },
+
+        saveFieldsState: function() {
+            const fields = this.collectFormData();
+            this.$el.find(this.options.selectors.state.paymentProductFields).val(JSON.stringify(fields));
+        },
+
+        clearFieldsState: function() {
+            this.$el.find(this.options.selectors.state.paymentProductFields).val('');
+        },
+
+        _initializeIngenicoPayment: function() {
+            // we should initialize only selected payment methods
+            if (!this.$el.is(':visible')) {
+                return;
+            }
+
+            this._deferredInit();
+
+            this.getSession()
+                .then(() => this.getPaymentProducts(), () => this._resolveDeferredInit())
+                .then(() => {
+                    if (!this.paymentProductItems.length) {
+                        return;
+                    }
+
+                    this.renderPaymentProductsList();
+                    const paymentProductId = parseInt(this.getPaymentProductState());
+                    const paymentProductInList = paymentProductId
+                        ? _.find(this.paymentProductItems, item => item.id === paymentProductId) : false;
+                    if (paymentProductInList) {
+                        this.showSelectedPaymentProductFields(paymentProductId)
+                            .then(() => this._resolveDeferredInit());
+                    } else {
+                        this._resolveDeferredInit();
+                    }
+                });
         },
 
         onPaymentMethodChanged: function(eventData) {
             if (eventData.paymentMethod === this.options.paymentMethod) {
-                this.getSession()
-                    .then(this.getPaymentProducts.bind(this))
-                    .then(this.renderPaymentProductsList.bind(this));
+                this._initializeIngenicoPayment();
             }
         },
 
@@ -117,13 +183,21 @@ define(function(require) {
                         {paymentMethod: this.options.paymentMethod}
                     ),
                     data => {
+                        mediator.execute('hideLoading');
                         if (data.success) {
-                            this.session = new ConnectSdk(data.sessionInfo);
-                            mediator.execute('hideLoading');
+                            try {
+                                this.session = new ConnectSdk(data.sessionInfo);
+                            } catch (e) {
+                                this.$el.html(__('ingenico.payment_method_is_not_available'));
+                                deffer.reject();
+                                return;
+                            }
+
                             deffer.resolve();
                         } else {
-                            this.$el.html(__('ingenico.payment_method_is_not_available'));
-                            mediator.execute('hideLoading');
+                            this.$el
+                                .find(this.options.selectors.body)
+                                .html(__('ingenico.payment_method_is_not_available'));
                             deffer.reject();
                         }
                     }
@@ -150,8 +224,10 @@ define(function(require) {
                         deffer.resolve();
                     },
                     () => {
+                        this.$el
+                            .find(this.options.selectors.body)
+                            .html(__('ingenico.api.error.no_available_payment_products'));
                         mediator.execute('hideLoading');
-                        this.$el.html(__('ingenico.api.error.no_available_payment_products'));
                         deffer.reject();
                     }
                 );
@@ -166,8 +242,12 @@ define(function(require) {
         getPaymentProductDetails: function(paymentProductId) {
             const deffer = $.Deferred();
 
-            if (this.isPaymentProductChanged(paymentProductId)) {
-                mediator.execute('showLoading');
+            if (!this.currentPaymentProduct || this.isPaymentProductChanged(paymentProductId)) {
+                // we should clear fields state when payment product was chosen before and changed to new one
+                // to prevent situation when same fields in different payment product share same saved fields state
+                if (this.currentPaymentProduct) {
+                    this.clearFieldsState();
+                }
 
                 this.session
                     .getPaymentProduct(paymentProductId, this.options.paymentDetails)
@@ -175,6 +255,10 @@ define(function(require) {
                         paymentProduct => {
                             this.fixFieldsRestrictions(paymentProduct);
                             this.currentPaymentProduct = paymentProduct;
+
+                            // save selected payment product state
+                            this.savePaymentProductState(paymentProductId);
+
                             mediator.execute('hideLoading');
                             deffer.resolve();
                         },
@@ -226,6 +310,11 @@ define(function(require) {
          * Renders payment products list retrieved with Ingenico SDK
          */
         renderPaymentProductsList: function() {
+            // don't allow the same content to be displayed a couple of times
+            if (this.rendered) {
+                return;
+            }
+
             const items = _.map(this.paymentProductItems, function(item) {
                 return {
                     id: item.id,
@@ -239,23 +328,40 @@ define(function(require) {
                 paymentMethod: this.options.paymentMethod
             };
 
-            return this.$el.html(this.paymentProductListTemplate(templateVars));
+            this.$el.find(this.options.selectors.body).html(this.paymentProductListTemplate(templateVars));
+            this.rendered = true;
         },
 
         /**
          * Payment products forms switcher(accordion like).
-         * Also renders selected payment product's form if it's not
          */
-        showSelectedPaymentProductFields: function(event) {
-            const choiceElement = $(event.currentTarget);
-            const paymentProductId = choiceElement.data('product-id');
-            const paymentProductFieldsHolder = $(event.currentTarget)
+        onPaymentProductItemClick: function(event) {
+            const paymentProductId = $(event.currentTarget).data('product-id');
+            this.showSelectedPaymentProductFields(paymentProductId);
+        },
+
+        /**
+         * Renders selected payment product's form if it's not.
+         */
+        showSelectedPaymentProductFields: function(paymentProductId) {
+            const deffer = $.Deferred();
+
+            const element = _.first(_.filter(
+                this.$el.find(this.options.selectors.paymentProductChoice),
+                el => $(el).data('product-id') === paymentProductId
+            ));
+            const choiceElement = $(element);
+
+            // fix checkbox checked state when function calls not from element click event
+            choiceElement.prop('checked', true);
+
+            const paymentProductFieldsHolder = choiceElement
                 .parents(this.options.selectors.paymentProductItem)
-                .find(this.options.selectors.paymentProductFormFieldsHodler);
+                .find(this.options.selectors.paymentProductFormFieldsHolder);
 
             this.$el.find(this.options.selectors.paymentProductChoice).attr('area-expanded', false)
                 .removeAttr('aria-disabled');
-            this.$el.find(this.options.selectors.paymentProductFormFieldsHodler)
+            this.$el.find(this.options.selectors.paymentProductFormFieldsHolder)
                 .addClass('hidden');
 
             if (paymentProductFieldsHolder.data('paymentProduct')) {
@@ -264,9 +370,18 @@ define(function(require) {
                 choiceElement.attr('area-expanded', true)
                     .attr('aria-disabled', true);
 
-                return;
+                // update product fields state
+                this.saveFieldsState();
+
+                // save selected payment product state
+                this.savePaymentProductState(paymentProductId);
+
+                deffer.resolve();
+
+                return deffer.promise();
             }
 
+            mediator.execute('showLoading');
             this.getSession()
                 .then(() => this.getPaymentProductDetails(paymentProductId))
                 .then(() => {
@@ -280,7 +395,12 @@ define(function(require) {
 
                     choiceElement.attr('area-expanded', true)
                         .attr('aria-disabled', true);
-                });
+
+                    deffer.resolve();
+                }, () => deffer.reject())
+                .always(() => mediator.execute('hideLoading'));
+
+            return deffer.promise();
         },
 
         /**
@@ -288,7 +408,12 @@ define(function(require) {
          */
         renderPaymentProductFields: function(fields, paymentProductId) {
             const renderedFields = [];
+            const fieldsState = this.getFieldsState();
             _.each(fields, field => {
+                // look for previously saved value
+                const valueItem = _.find(fieldsState, item => item.field === field.id);
+                const value = valueItem ? valueItem.value : '';
+
                 const rendererFieldName = 'ingenico::' +
                     (!field._passThroughValue ? field.id : this.hiddenFieldTemplateMacro);
 
@@ -296,6 +421,7 @@ define(function(require) {
                     paymentMethod: this.options.paymentMethod,
                     paymentProductId: paymentProductId,
                     field: field,
+                    value: value,
                     fieldElementId: this.buildFieldIdentifier(field.id, 'field', paymentProductId),
                     fieldErrorElementId: this.buildFieldIdentifier(field.id, 'error', paymentProductId)
                 }));
@@ -305,10 +431,6 @@ define(function(require) {
         },
 
         isPaymentProductChanged: function(paymentProductId) {
-            if (!this.currentPaymentProduct) {
-                return true;
-            }
-
             return this.currentPaymentProduct.id !== paymentProductId;
         },
 
@@ -318,10 +440,6 @@ define(function(require) {
         beforeTransit: function(eventData) {
             if (eventData.data.paymentMethod === this.options.paymentMethod) {
                 eventData.stopped = true;
-                if (!this.currentPaymentProduct) {
-                    return;
-                }
-
                 const fields = this.collectFormData();
                 if (this.validate(fields)) {
                     mediator.execute('showLoading');
@@ -359,6 +477,11 @@ define(function(require) {
          */
         collectFormData: function() {
             const collectedFields = [];
+
+            if (!this.currentPaymentProduct) {
+                return collectedFields;
+            }
+
             const fields = this.currentPaymentProduct.id === this.options.paymentProducts.sepaId
                 ? this.getSepaFieldsInfo() : this.currentPaymentProduct.paymentProductFields;
 
@@ -383,7 +506,7 @@ define(function(require) {
          */
         validate: function(fields) {
             if (!this.currentPaymentProduct) {
-                mediator.execute('showFlashMessage', 'error', __('ingenico.no_choosen_payment_product'));
+                mediator.execute('showFlashMessage', 'error', __('ingenico.no_selected_payment_product'));
 
                 return false;
             }
@@ -403,20 +526,30 @@ define(function(require) {
 
             const isValid = paymentRequest.isValid();
             // showing new errors for collected fields only (case when form field looses focus)
-            _.each(paymentRequest.getValues(), (value, name) => {
+            _.each(paymentRequest.getPaymentProduct().paymentProductFields, paymentField => {
+                const canShowErrors = _.find(fields, function(item) {
+                    if (paymentField.id === item.field) {
+                        return true;
+                    }
+                });
+                if (!canShowErrors) {
+                    return;
+                }
+
                 // Payment request is stored inside the session.
                 // session.getPaymentRequest() returns the same instance each time and it has all fields
                 // even from the another payment products
                 // We need to verify that this field is applicable for current payment product
-                const field = paymentRequest.getPaymentProduct().paymentProductFieldById[name];
+                const field = paymentRequest.getPaymentProduct().paymentProductFieldById[paymentField.id];
                 if (!field) {
                     return;
                 }
 
-                if (!field.isValid(value) || (field.dataRestrictions.isRequired && value === "")) {
-                    this.addError(name);
+                const fieldValue = paymentRequest.getValue(paymentField.id);
+                if (!field.isValid(fieldValue) || (field.dataRestrictions.isRequired && fieldValue === '')) {
+                    this.addError(paymentField.id);
                 } else {
-                    this.removeError(name);
+                    this.removeError(paymentField.id);
                 }
             });
 

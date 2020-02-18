@@ -8,5 +8,6 @@
            class="<%= field.id %>-<%= paymentMethod %>-field input input--full"
            placeholder="<%= field.displayHints.placeholderLabel %>"
            data-field-id="<%= field.id %>"
+           value="<%= value %>"
            <% if (!_.isUndefined(field.dataValidation)) { %>data-validation="<%- JSON.stringify(field.dataValidation) %>"<% } %>>
 </div>
