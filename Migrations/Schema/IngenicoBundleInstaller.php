@@ -22,7 +22,6 @@ class IngenicoBundleInstaller implements Installation
     public function up(Schema $schema, QueryBag $queries)
     {
         $this->updateOroIntegrationTransportTable($schema);
-        $this->addTokenizationEnabledField($schema);
     }
 
     /**
