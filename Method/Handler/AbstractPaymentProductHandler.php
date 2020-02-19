@@ -174,7 +174,8 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
     ): PaymentResponse {
         $customerEncryptedDetails = $this->getAdditionalDataFieldByKey(
             $paymentTransaction,
-            self::CUSTOMER_ENC_DETAILS_OPTION_KEY
+            self::CUSTOMER_ENC_DETAILS_OPTION_KEY,
+            false
         );
 
         $requestOptions = [
