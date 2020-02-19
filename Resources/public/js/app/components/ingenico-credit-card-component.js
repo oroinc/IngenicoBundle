@@ -593,7 +593,7 @@ define(function(require) {
         },
 
         _saveRequiredFieldsList: function() {
-            if (!this.currentPaymentProduct) {
+            if (!this.currentPaymentProduct || this._requiredFields[this.currentPaymentProduct.id]) {
                 return;
             }
 
@@ -622,7 +622,7 @@ define(function(require) {
 
             const requiredFields = this._requiredFields[this.currentPaymentProduct.id];
             _.each(this.currentPaymentProduct.paymentProductFields, field => {
-                if (_.has(this._requiredFields, field.id)) {
+                if (_.has(this._requiredFields[this.currentPaymentProduct.id], field.id)) {
                     field.dataRestrictions.isRequired = true;
                     field.dataRestrictions.validationRules = requiredFields[field.id];
                     this.currentPaymentProduct.paymentProductFieldById[field.id].isRequired = true;
@@ -635,7 +635,7 @@ define(function(require) {
                 }
             });
 
-            this._requiredFields[this.currentPaymentProduct.id] = {};
+            delete this._requiredFields[this.currentPaymentProduct.id];
         },
 
         /**
