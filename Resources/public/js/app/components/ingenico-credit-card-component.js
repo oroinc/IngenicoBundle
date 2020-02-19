@@ -606,11 +606,12 @@ define(function(require) {
                     field.dataRestrictions.validationRules = [];
                     this.currentPaymentProduct.paymentProductFieldById[field.id].isRequired = false;
                     this.currentPaymentProduct.paymentProductFieldById[field.id].validationRules = [];
-                    $('#' + this.buildFieldIdentifier(field.id, 'field'))
-                        .parents(this.options.selectors.genericInputContainer)
-                        .addClass('hidden');
+
+                    this._hideField(field.id);
                 }
             });
+
+            this._hideField('saveForLaterUse');
 
             this._requiredFields[this.currentPaymentProduct.id] = requiredFields;
         },
@@ -629,13 +630,24 @@ define(function(require) {
                     this.currentPaymentProduct.paymentProductFieldById[field.id]
                         .validationRules = requiredFields[field.id];
 
-                    $('#' + this.buildFieldIdentifier(field.id, 'field'))
-                        .parents(this.options.selectors.genericInputContainer)
-                        .removeClass('hidden');
+                    this._showField(field.id);
                 }
             });
 
+            this._showField('saveForLaterUse');
             delete this._requiredFields[this.currentPaymentProduct.id];
+        },
+
+        _hideField: function(fieldName) {
+            $('#' + this.buildFieldIdentifier(fieldName, 'field'))
+                .parents(this.options.selectors.genericInputContainer)
+                .addClass('hidden');
+        },
+
+        _showField: function(fieldName) {
+            $('#' + this.buildFieldIdentifier(fieldName, 'field'))
+                .parents(this.options.selectors.genericInputContainer)
+                .removeClass('hidden');
         },
 
         /**
