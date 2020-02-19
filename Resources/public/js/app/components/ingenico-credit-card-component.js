@@ -21,7 +21,6 @@ define(function(require) {
             createSessionRoute: 'ingenico_create_session',
             saveForLaterUseEnabled: false,
             savedCreditCardList: [],
-            cardsGroupName: 'cards',
             tokenRequiredFields: ['cvv'],
             selectors: {
                 body: '.payment-body',
@@ -37,7 +36,8 @@ define(function(require) {
                 issuedWidgetClassPrefix: 'ingenico-widget-issued__',
             },
             paymentProducts: {
-                sepaId: 770
+                sepaId: 770,
+                cardsGroup: 'cards'
             }
         },
 
@@ -452,22 +452,24 @@ define(function(require) {
             // add extra fields related to tokenization
             if (this.isTokenizationApplicable()) {
                 const creditCardList = this.getSavedCardList();
-                renderedFields.unshift(_.macros('ingenico::token')({
-                    paymentMethod: this.options.paymentMethod,
-                    field: {
-                        id: 'token',
-                        displayHints: {
-                            label: __('ingenico.token.label'),
-                            placeholderLabel: __('ingenico.token.placeholder')
+                if (creditCardList) {
+                    renderedFields.unshift(_.macros('ingenico::token')({
+                        paymentMethod: this.options.paymentMethod,
+                        field: {
+                            id: 'token',
+                            displayHints: {
+                                label: __('ingenico.token.label'),
+                                placeholderLabel: __('ingenico.token.placeholder')
+                            },
+                            dataRestrictions: {
+                                isRequired: false
+                            }
                         },
-                        dataRestrictions: {
-                            isRequired: false
-                        }
-                    },
-                    paymentProductId: paymentProductId,
-                    fieldElementId: this.buildFieldIdentifier('token', 'field', paymentProductId),
-                    values: creditCardList
-                }));
+                        paymentProductId: paymentProductId,
+                        fieldElementId: this.buildFieldIdentifier('token', 'field', paymentProductId),
+                        values: creditCardList
+                    }));
+                }
 
                 renderedFields.push(_.macros('ingenico::saveForLaterUse')({
                     paymentMethod: this.options.paymentMethod,
@@ -494,11 +496,11 @@ define(function(require) {
 
         getSavedCardList: function() {
             if (!this.currentPaymentProduct) {
-                return [];
+                return null;
             }
 
             if (!_.has(this.options.savedCreditCardList, this.currentPaymentProduct.id)) {
-                return [];
+                return null;
             }
 
             return this.options.savedCreditCardList[this.currentPaymentProduct.id];
@@ -517,7 +519,7 @@ define(function(require) {
                 return false;
             }
 
-            return this.currentPaymentProduct.paymentProductGroup === this.options.cardsGroupName &&
+            return this.currentPaymentProduct.paymentProductGroup === this.options.paymentProducts.cardsGroup &&
                 this.options.saveForLaterUseEnabled;
         },
 
