@@ -14,6 +14,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
+use Psr\Log\LoggerInterface;
 
 /**
  * Abstract(generic) class for Ingenico payment products handler
@@ -39,18 +40,26 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
     protected $checkoutInformationProvider;
 
     /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
      * @param Gateway $gateway
      * @param AmountNormalizer $amountNormalizer
      * @param CheckoutInformationProvider $checkoutInformationProvider
+     * @param LoggerInterface $logger
      */
     public function __construct(
         Gateway $gateway,
         AmountNormalizer $amountNormalizer,
-        CheckoutInformationProvider $checkoutInformationProvider
+        CheckoutInformationProvider $checkoutInformationProvider,
+        LoggerInterface $logger
     ) {
         $this->gateway = $gateway;
         $this->amountNormalizer = $amountNormalizer;
         $this->checkoutInformationProvider = $checkoutInformationProvider;
+        $this->logger = $logger;
     }
 
     /**
@@ -94,6 +103,8 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
     }
 
     /**
+     * TODO: This method is used only by credit card handler. Must be extract there.
+     *
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
      * @return array

@@ -8,6 +8,7 @@ use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Ingenico\Connect\OroCommerce\Provider\PaymentTransactionProvider;
 use Oro\Bundle\LocaleBundle\Helper\LocalizationHelper;
 use Oro\Bundle\LocaleBundle\Manager\LocalizationManager;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
  * Factory for creating views of Ingenico payment method
@@ -20,6 +21,9 @@ class IngenicoViewFactory
     /** @var LocalizationManager */
     private $localizationManager;
 
+    /** @var TokenStorageInterface */
+    private $tokenStorage;
+
     /** @var AmountNormalizer */
     private $amountNormalizer;
 
@@ -29,17 +33,20 @@ class IngenicoViewFactory
     /**
      * @param LocalizationHelper $localizationHelper
      * @param LocalizationManager $localizationManager
+     * @param TokenStorageInterface $tokenStorage
      * @param AmountNormalizer $amountNormalizer
      * @param PaymentTransactionProvider $paymentTransactionProvider
      */
     public function __construct(
         LocalizationHelper $localizationHelper,
         LocalizationManager $localizationManager,
+        TokenStorageInterface $tokenStorage,
         AmountNormalizer $amountNormalizer,
         PaymentTransactionProvider $paymentTransactionProvider
     ) {
         $this->localizationHelper = $localizationHelper;
         $this->localizationManager = $localizationManager;
+        $this->tokenStorage = $tokenStorage;
         $this->amountNormalizer = $amountNormalizer;
         $this->paymentTransactionProvider = $paymentTransactionProvider;
     }
@@ -53,6 +60,7 @@ class IngenicoViewFactory
         return new IngenicoView(
             $config,
             $this->getLocalizationCode(),
+            $this->tokenStorage,
             $this->amountNormalizer,
             $this->paymentTransactionProvider
         );

@@ -9,27 +9,31 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\RequiresApp
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\Token;
 use Ingenico\Connect\OroCommerce\Ingenico\Provider\CheckoutInformationProvider;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\PaymentResponse;
-use Ingenico\Connect\OroCommerce\Ingenico\Response\Response;
+use Ingenico\Connect\OroCommerce\Ingenico\Response\TokenResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
-use Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod;
 use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Ingenico\Connect\OroCommerce\Provider\PaymentTransactionProvider;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\PaymentActionDataProvider;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * 'Credit card' payment products handler
  */
 class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
 {
+    /**
+     * Constants of the data in tokenized payment transaction
+     */
+    public const TOKEN_KEY = PaymentTransactionProvider::TOKEN_KEY;
+    public const CREDIT_CARD_KEY = 'cardNumber';
+    public const PAYMENT_PRODUCT_KEY = 'paymentProduct';
+
     private const TOKEN_OPTION_KEY = 'ingenicoToken';
     private const SAVE_FOR_LATER_USE_OPTION_KEY = 'ingenicoSaveForLaterUse';
-    private const TOKEN_KEY = 'token';
-    private const CREDIT_CARD_KEY = 'cardNumber';
-    private const PAYMENT_PRODUCT_KEY = 'paymentProduct';
 
     /** @var PaymentTransactionProvider */
     protected $paymentTransactionProvider;
@@ -41,9 +45,10 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
         Gateway $gateway,
         AmountNormalizer $amountNormalizer,
         CheckoutInformationProvider $checkoutInformationProvider,
+        LoggerInterface $logger,
         PaymentTransactionProvider $paymentTransactionProvider
     ) {
-        parent::__construct($gateway, $amountNormalizer, $checkoutInformationProvider);
+        parent::__construct($gateway, $amountNormalizer, $checkoutInformationProvider, $logger);
         $this->paymentTransactionProvider = $paymentTransactionProvider;
     }
 
@@ -78,18 +83,24 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
         ) {
             $tokenResponse = $this->requestTokenize($config, $response->getReference());
             if ($tokenResponse->isSuccessful()) {
-                $tokenizePaymentTransaction = $this->paymentTransactionProvider->createTokenizePaymentTransaction(
-                    $paymentTransaction,
-                    IngenicoPaymentMethod::TOKENIZE,
-                    [
-                        self::TOKEN_KEY => $tokenResponse->offsetGetOr(self::TOKEN_KEY),
-                        self::CREDIT_CARD_KEY => $response->getCardNumber(),
-                        self::PAYMENT_PRODUCT_KEY => $response->getPaymentProduct(),
-                    ]
-                );
+                $tokenizePaymentTransaction = $this->paymentTransactionProvider
+                    ->createTokenizePaymentTransaction(
+                        $paymentTransaction,
+                        [
+                            self::TOKEN_KEY => $tokenResponse->getToken(),
+                            self::CREDIT_CARD_KEY => $response->getCardNumber(),
+                            self::PAYMENT_PRODUCT_KEY => $response->getPaymentProduct(),
+                        ]
+                    );
                 $tokenizePaymentTransaction->setResponse($tokenResponse->toArray());
 
                 $this->paymentTransactionProvider->savePaymentTransaction($tokenizePaymentTransaction);
+            } else {
+                $this->logger->error('Can not create token for payment transaction', [
+                    'paymentTransactionEntityClass' => $paymentTransaction->getEntityClass(),
+                    'paymentTransactionEntityIdentifier' => $paymentTransaction->getEntityIdentifier(),
+                    'errors' => $tokenResponse->getErrors(),
+                ]);
             }
         }
 
@@ -114,11 +125,16 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
         ];
 
         if ($config->isTokenizationEnabled()) {
-            $tokenId = $this->getAdditionalDataFieldByKey($paymentTransaction, self::TOKEN_OPTION_KEY, false);
-            if ($tokenId) {
+            $tokenizedPaymentTransactionId = $this->getAdditionalDataFieldByKey(
+                $paymentTransaction,
+                self::TOKEN_OPTION_KEY,
+                false
+            );
+
+            if ($tokenizedPaymentTransactionId) {
                 $token = $this->paymentTransactionProvider->getTokenFromTokenizePaymentTransactionById(
                     $config->getPaymentMethodIdentifier(),
-                    $tokenId
+                    $tokenizedPaymentTransactionId
                 );
                 $options[Token::NAME] = $token;
             }
@@ -205,15 +221,17 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
      * @param IngenicoConfig $config
      * @param string $paymentId
      *
-     * @return Response
+     * @return TokenResponse
      */
-    private function requestTokenize(IngenicoConfig $config, string $paymentId): Response
+    private function requestTokenize(IngenicoConfig $config, string $paymentId): TokenResponse
     {
-        return $this->gateway->request(
+        $response = $this->gateway->request(
             $config,
             Transaction::CREATE_TOKEN,
             [],
             [PaymentId::NAME => $paymentId]
         );
+
+        return TokenResponse::create($response->toArray());
     }
 }

@@ -15,7 +15,6 @@ use Ingenico\Connect\OroCommerce\Ingenico\Response\TokenResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
-use Oro\Bundle\AddressBundle\Entity\AbstractAddress;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
 
@@ -111,7 +110,6 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
 
         $currentDateTime = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
 
-        /** @var TokenResponse $response */
         $response = $this->gateway->request(
             $config,
             Transaction::CREATE_SEPA_DIRECT_DEBIT_PAYMENT_TOKEN,

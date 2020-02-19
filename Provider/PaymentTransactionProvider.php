@@ -13,34 +13,33 @@ use Oro\Bundle\PaymentBundle\Provider\PaymentTransactionProvider as BasePaymentT
  */
 class PaymentTransactionProvider extends BasePaymentTransactionProvider
 {
+    /**
+     * Number of tokens to return from getActiveTokenizePaymentTransactions method
+     */
     private const LAST_TOKEN_LIMIT = 10;
-    private const TOKEN_KEY = 'token';
+    public const TOKEN_KEY = 'token';
 
     /**
      * @param PaymentTransaction $paymentTransaction
-     * @param string $type
      * @param array $transactionOptions
      *
      * @return PaymentTransaction
      */
     public function createTokenizePaymentTransaction(
         PaymentTransaction $paymentTransaction,
-        string $type,
         array $transactionOptions
     ): PaymentTransaction {
-        // as entityIdentifier field couldn't be null we should set dummy value in case there is no CustomerUser
-        $entityIdentifier = 0;
 
-        $customerUser = $this->customerUserProvider->getLoggedUser(true);
-        if ($customerUser) {
-            $entityIdentifier = $customerUser->getId();
+        $customerUser = $this->customerUserProvider->getLoggedUser();
+        if (!$customerUser) {
+            throw new \LogicException('Cannot create tokenize payment transaction without customer user ');
         }
 
         return $this->createEmptyPaymentTransaction()
             ->setPaymentMethod($paymentTransaction->getPaymentMethod())
-            ->setAction($type)
+            ->setAction(IngenicoPaymentMethod::TOKENIZE)
             ->setEntityClass(CustomerUser::class)
-            ->setEntityIdentifier($entityIdentifier)
+            ->setEntityIdentifier($customerUser->getId())
             ->setFrontendOwner($customerUser)
             ->setTransactionOptions($transactionOptions)
             ->setActive(true)
@@ -56,7 +55,7 @@ class PaymentTransactionProvider extends BasePaymentTransactionProvider
      */
     public function getActiveTokenizePaymentTransactions(string $paymentMethod): array
     {
-        $customerUser = $this->customerUserProvider->getLoggedUser(true);
+        $customerUser = $this->customerUserProvider->getLoggedUser();
         if (!$customerUser) {
             return [];
         }
@@ -82,7 +81,7 @@ class PaymentTransactionProvider extends BasePaymentTransactionProvider
      */
     public function getTokenFromTokenizePaymentTransactionById(string $paymentMethod, int $id): ?string
     {
-        $customerUser = $this->customerUserProvider->getLoggedUser(true);
+        $customerUser = $this->customerUserProvider->getLoggedUser();
         if (!$customerUser) {
             return null;
         }
