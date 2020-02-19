@@ -34,6 +34,7 @@ define(function(require) {
                 paymentProductFormFieldsHolder: '.payment-product__form-fields',
                 genericInput: '.input--full',
                 genericInputContainer: '.form-row',
+                issuedWidgetClassPrefix: 'ingenico-widget-issued__',
             },
             paymentProducts: {
                 sepaId: 770
@@ -42,7 +43,6 @@ define(function(require) {
 
         listen: {
             'checkout:payment:method:changed mediator': 'onPaymentMethodChanged',
-            'checkout:payment:before-transit mediator': 'beforeTransit',
             'checkout:payment:before-hide-filled-form mediator': 'beforeHideFilledForm',
             'checkout:payment:before-restore-filled-form mediator': 'beforeRestoreFilledForm',
             'checkout:payment:remove-filled-form mediator': 'removeFilledForm',
@@ -71,11 +71,6 @@ define(function(require) {
          * @property {Object}
          */
         _requiredFields: {},
-
-        /**
-         * @property {Boolean}
-         */
-        rendered: false,
 
         /**
          * @inheritDoc
@@ -147,26 +142,39 @@ define(function(require) {
                 return;
             }
 
-            this._deferredInit();
+            const ingenicoWidgetIssuedClass = this.options.selectors.issuedWidgetClassPrefix +
+                this.options.paymentMethod;
 
-            this.getSession()
-                .then(() => this.getPaymentProducts(), () => this._resolveDeferredInit())
-                .then(() => {
-                    if (!this.paymentProductItems.length) {
-                        return;
-                    }
+            // ommitting initilization in case if payment form is restored
+            if (!$('.' + ingenicoWidgetIssuedClass).length) {
+                // assigning listener here since it's impossible to dispose properly new(unnecessary) page component
+                // for form container received via AJAX after existing form and its already initialized page component
+                // are restored
+                mediator.on('checkout:payment:before-transit', this.beforeTransit.bind(this));
 
-                    this.renderPaymentProductsList();
-                    const paymentProductId = parseInt(this.getPaymentProductState());
-                    const paymentProductInList = paymentProductId
-                        ? _.find(this.paymentProductItems, item => item.id === paymentProductId) : false;
-                    if (paymentProductInList) {
-                        this.showSelectedPaymentProductFields(paymentProductId)
-                            .then(() => this._resolveDeferredInit());
-                    } else {
-                        this._resolveDeferredInit();
-                    }
-                });
+                this._deferredInit();
+
+                this.getSession()
+                    .then(() => this.getPaymentProducts(), () => this._resolveDeferredInit())
+                    .then(() => {
+                        if (!this.paymentProductItems.length) {
+                            return;
+                        }
+
+                        this.renderPaymentProductsList();
+                        const paymentProductId = parseInt(this.getPaymentProductState());
+                        const paymentProductInList = paymentProductId
+                            ? _.find(this.paymentProductItems, item => item.id === paymentProductId) : false;
+                        if (paymentProductInList) {
+                            this.showSelectedPaymentProductFields(paymentProductId)
+                                .then(() => this._resolveDeferredInit());
+                        } else {
+                            this._resolveDeferredInit();
+                        }
+                    });
+
+                this.$el.addClass(ingenicoWidgetIssuedClass);
+            }
         },
 
         onPaymentMethodChanged: function(eventData) {
@@ -323,11 +331,6 @@ define(function(require) {
          * Renders payment products list retrieved with Ingenico SDK
          */
         renderPaymentProductsList: function() {
-            // don't allow the same content to be displayed a couple of times
-            if (this.rendered) {
-                return;
-            }
-
             const items = _.map(this.paymentProductItems, function(item) {
                 return {
                     id: item.id,
@@ -342,7 +345,6 @@ define(function(require) {
             };
 
             this.$el.find(this.options.selectors.body).html(this.paymentProductListTemplate(templateVars));
-            this.rendered = true;
         },
 
         /**
@@ -379,6 +381,7 @@ define(function(require) {
 
             if (paymentProductFieldsHolder.data('paymentProduct')) {
                 this.currentPaymentProduct = paymentProductFieldsHolder.data('paymentProduct');
+
                 paymentProductFieldsHolder.removeClass('hidden');
                 choiceElement.attr('area-expanded', true)
                     .attr('aria-disabled', true);
@@ -966,6 +969,8 @@ define(function(require) {
             }
 
             this.$el.off('.' + this.cid);
+
+            mediator.off('checkout:payment:before-transit', this.beforeTransit.bind(this));
 
             IngenicoCreditCardComponent.__super__.dispose.call(this);
         }
