@@ -75,6 +75,7 @@ class IngenicoSettingsType extends AbstractType
             ])
             ->add('tokenizationEnabled', CheckboxType::class, [
                 'tooltip' => 'ingenico.settings.tokenizationEnabled.tooltip',
+                'required' => false,
             ])
             ->add('directDebitText', TextType::class, [
                 'tooltip' => 'ingenico.settings.directDebitText.tooltip',
