@@ -38,6 +38,7 @@ services:
     Ingenico\Connect\OroCommerce\Method\Config\Factory\IngenicoConfigFactory:
         arguments:
             - '@ingenico.method.generator.identifier.ingenico'
+            - '@oro_locale.helper.localization'
 
     Ingenico\Connect\OroCommerce\Method\Config\Provider\IngenicoConfigProvider:
         arguments:

@@ -7,11 +7,13 @@ use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvid
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\PaymentActionDataProvider;
 use Oro\Bundle\FormBundle\Form\Type\CheckboxType;
 use Oro\Bundle\FormBundle\Form\Type\OroPlaceholderPasswordType;
+use Oro\Bundle\LocaleBundle\Form\Type\LocalizedFallbackValueCollectionType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -51,6 +53,14 @@ class IngenicoSettingsType extends AbstractType
         $paymentActionTooltip = nl2br($this->translator->trans('ingenico.settings.paymentAction.tooltip'));
 
         $builder
+            ->add('labels', LocalizedFallbackValueCollectionType::class, [
+                'required' => true,
+                'entry_options' => ['constraints' => [new NotBlank()]],
+            ])
+            ->add('shortLabels', LocalizedFallbackValueCollectionType::class, [
+                'required' => true,
+                'entry_options' => ['constraints' => [new NotBlank()]],
+            ])
             ->add('apiKeyId', TextType::class)
             ->add('apiSecret', OroPlaceholderPasswordType::class)
             ->add('apiEndpoint', TextType::class)

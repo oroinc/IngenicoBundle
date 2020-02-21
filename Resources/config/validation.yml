@@ -1,5 +1,9 @@
 Ingenico\Connect\OroCommerce\Entity\IngenicoSettings:
     properties:
+        labels:
+            - NotBlank: ~
+        shortLabels:
+            - NotBlank: ~
         apiKeyId:
             - NotBlank: ~
             - Length:

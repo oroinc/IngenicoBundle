@@ -2,6 +2,8 @@ ingenico:
     channel_type.label: 'Ingenico ePayments Connect platform'
     settings:
         label: 'Ingenico Transport Settings'
+        labels.label: 'Label'
+        shortLabels.label: 'Short Label'
         apiKeyId.label: 'API Key ID'
         apiSecret.label: 'Secret API Key'
         apiEndpoint.label: 'API Endpoint'

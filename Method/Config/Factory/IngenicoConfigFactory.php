@@ -2,9 +2,11 @@
 
 namespace Ingenico\Connect\OroCommerce\Method\Config\Factory;
 
+use Doctrine\Common\Collections\Collection;
 use Ingenico\Connect\OroCommerce\Entity\IngenicoSettings;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Oro\Bundle\IntegrationBundle\Generator\IntegrationIdentifierGeneratorInterface;
+use Oro\Bundle\LocaleBundle\Helper\LocalizationHelper;
 
 /**
  * Creates instances of configurations for Ingenico payment method
@@ -14,15 +16,23 @@ class IngenicoConfigFactory
     /**
      * @var IntegrationIdentifierGeneratorInterface
      */
-    protected $identifierGenerator;
+    private $identifierGenerator;
+
+    /**
+     * @var LocalizationHelper
+     */
+    private $localizationHelper;
 
     /**
      * @param IntegrationIdentifierGeneratorInterface $identifierGenerator
+     * @param LocalizationHelper $localizationHelper
      */
     public function __construct(
-        IntegrationIdentifierGeneratorInterface $identifierGenerator
+        IntegrationIdentifierGeneratorInterface $identifierGenerator,
+        LocalizationHelper $localizationHelper
     ) {
         $this->identifierGenerator = $identifierGenerator;
+        $this->localizationHelper = $localizationHelper;
     }
 
     /**
@@ -34,8 +44,8 @@ class IngenicoConfigFactory
         $params = [];
         $channel = $settings->getChannel();
 
-        $params[IngenicoConfig::FIELD_LABEL] = $channel->getName();
-        $params[IngenicoConfig::FIELD_SHORT_LABEL] = $channel->getName();
+        $params[IngenicoConfig::FIELD_LABEL] = $this->getLocalizedValue($settings->getLabels());
+        $params[IngenicoConfig::FIELD_SHORT_LABEL] = $this->getLocalizedValue($settings->getShortLabels());
         $params[IngenicoConfig::FIELD_ADMIN_LABEL] = $channel->getName();
         $params[IngenicoConfig::FIELD_API_ENDPOINT_KEY] = (string)$settings->getApiEndpoint();
         $params[IngenicoConfig::FIELD_API_KEY_ID_KEY] = (string)$settings->getApiKeyId();
@@ -50,5 +60,14 @@ class IngenicoConfigFactory
         $params[IngenicoConfig::FIELD_DIRECT_DEBIT_TEXT_KEY] = (string)$settings->getDirectDebitText();
 
         return new IngenicoConfig($params);
+    }
+
+    /**
+     * @param Collection $values
+     * @return string
+     */
+    protected function getLocalizedValue(Collection $values)
+    {
+        return (string)$this->localizationHelper->getLocalizedValue($values);
     }
 }

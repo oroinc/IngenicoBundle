@@ -2,8 +2,11 @@
 
 namespace Ingenico\Connect\OroCommerce\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Oro\Bundle\IntegrationBundle\Entity\Transport;
+use Oro\Bundle\LocaleBundle\Entity\LocalizedFallbackValue;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
 /**
@@ -13,6 +16,8 @@ use Symfony\Component\HttpFoundation\ParameterBag;
  */
 class IngenicoSettings extends Transport
 {
+    public const LABELS_KEY = 'labels';
+    public const SHORT_LABELS_KEY = 'short_labels';
     public const API_KEY_ID = 'api_key_id';
     public const API_SECRET = 'api_secret';
     public const API_ENDPOINT = 'api_endpoint';
@@ -26,6 +31,47 @@ class IngenicoSettings extends Transport
      * @var ParameterBag
      */
     private $settings;
+
+
+    /**
+     * @var Collection|LocalizedFallbackValue[]
+     *
+     * @ORM\ManyToMany(
+     *      targetEntity="Oro\Bundle\LocaleBundle\Entity\LocalizedFallbackValue",
+     *      cascade={"ALL"},
+     *      orphanRemoval=true
+     * )
+     * @ORM\JoinTable(
+     *      name="ingenico_label",
+     *      joinColumns={
+     *          @ORM\JoinColumn(name="transport_id", referencedColumnName="id", onDelete="CASCADE")
+     *      },
+     *      inverseJoinColumns={
+     *          @ORM\JoinColumn(name="localized_value_id", referencedColumnName="id", onDelete="CASCADE", unique=true)
+     *      }
+     * )
+     */
+    private $labels;
+
+    /**
+     * @var Collection|LocalizedFallbackValue[]
+     *
+     * @ORM\ManyToMany(
+     *      targetEntity="Oro\Bundle\LocaleBundle\Entity\LocalizedFallbackValue",
+     *      cascade={"ALL"},
+     *      orphanRemoval=true
+     * )
+     * @ORM\JoinTable(
+     *      name="ingenico_short_label",
+     *      joinColumns={
+     *          @ORM\JoinColumn(name="transport_id", referencedColumnName="id", onDelete="CASCADE")
+     *      },
+     *      inverseJoinColumns={
+     *          @ORM\JoinColumn(name="localized_value_id", referencedColumnName="id", onDelete="CASCADE", unique=true)
+     *      }
+     * )
+     */
+    private $shortLabels;
 
     /**
      * @var string
@@ -83,6 +129,12 @@ class IngenicoSettings extends Transport
      */
     private $directDebitText;
 
+    public function __construct()
+    {
+        $this->labels = new ArrayCollection();
+        $this->shortLabels = new ArrayCollection();
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -90,6 +142,8 @@ class IngenicoSettings extends Transport
     {
         if (null === $this->settings) {
             $this->settings = new ParameterBag([
+                self::LABELS_KEY => $this->getLabels(),
+                self::SHORT_LABELS_KEY => $this->getShortLabels(),
                 self::API_KEY_ID => $this->getApiKeyId(),
                 self::API_SECRET => $this->getApiSecret(),
                 self::API_ENDPOINT => $this->getApiEndpoint(),
@@ -102,6 +156,81 @@ class IngenicoSettings extends Transport
         }
 
         return $this->settings;
+    }
+
+
+    /**
+     * @param LocalizedFallbackValue $label
+     *
+     * @return IngenicoSettings
+     */
+    public function addLabel(LocalizedFallbackValue $label): IngenicoSettings
+    {
+        if (!$this->labels->contains($label)) {
+            $this->labels->add($label);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param LocalizedFallbackValue $label
+     *
+     * @return IngenicoSettings
+     */
+    public function removeLabel(LocalizedFallbackValue $label): IngenicoSettings
+    {
+        if ($this->labels->contains($label)) {
+            $this->labels->removeElement($label);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get labels
+     *
+     * @return Collection|LocalizedFallbackValue[]
+     */
+    public function getLabels(): Collection
+    {
+        return $this->labels;
+    }
+
+    /**
+     * @param LocalizedFallbackValue $shortLabel
+     *
+     * @return IngenicoSettings
+     */
+    public function addShortLabel(LocalizedFallbackValue $shortLabel): IngenicoSettings
+    {
+        if (!$this->shortLabels->contains($shortLabel)) {
+            $this->shortLabels->add($shortLabel);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param LocalizedFallbackValue $shortLabel
+     *
+     * @return IngenicoSettings
+     */
+    public function removeShortLabel(LocalizedFallbackValue $shortLabel): IngenicoSettings
+    {
+        if ($this->shortLabels->contains($shortLabel)) {
+            $this->shortLabels->removeElement($shortLabel);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|LocalizedFallbackValue[]
+     */
+    public function getShortLabels(): Collection
+    {
+        return $this->shortLabels;
     }
 
     /**
