@@ -33,7 +33,7 @@ define(function(require) {
                 paymentProductFormFieldsHolder: '.payment-product__form-fields',
                 genericInput: '.input--full',
                 genericInputContainer: '.form-row',
-                issuedWidgetClassPrefix: 'ingenico-widget-issued__',
+                issuedWidgetClassPrefix: 'ingenico-widget-issued__'
             },
             paymentProducts: {
                 sepaId: 770,
@@ -673,6 +673,14 @@ define(function(require) {
 
             const paymentRequest = this.session.getPaymentRequest();
             paymentRequest.setPaymentProduct(this.currentPaymentProduct);
+
+            // cleaning up payment request values since single instance is in use
+            const paymentRequestValues = paymentRequest.getValues();
+            for (const fieldId in paymentRequestValues) {
+                if ({}.hasOwnProperty.call(paymentRequestValues, fieldId)) {
+                    delete paymentRequestValues[fieldId];
+                }
+            }
 
             // field payment request with data
             _.each(fields, function(item) {
