@@ -1,8 +1,6 @@
-# IngenicoBundle
+# Ingenico Extension for OroCommerce
 
-IngenicoBundle provides integration with [Ingenico](https://www.ingenico.com/epayments) Payment Gateway.
-
-The bundle helps admin users to enable and configure **Ingenico ePayments Connect** [payment method](https://github.com/oroinc/orocommerce/tree/master/src/Oro/Bundle/PaymentBundle) in order for customers to pay for orders with SEPA direct debit, ACH payments, Credit and Debit cards.
+Ingenico’s payment extension for OroCommerce enables sellers to accept online payments from customers in the OroCommerce storefront and manage all payment transactions in the OroCommerce back-office.
 
 ## Installation
 
@@ -16,16 +14,6 @@ composer require "ingenico-epayments/connect-extension-orocommerce"
 ```
 In casе the package is added to an already installed application, then [platform update](https://doc.oroinc.com/backend/setup/upgrade-to-new-version/) is required.
 
-## Setting Up the Integration
+## Configuration
 
-Navigate to the "System -> Integrations" and click "Create Integration".
-
-Select the "Ingenico ePayments Connect platform" integration type and fill in the fields below:
-
- - *Api Key ID*: must be set to your Ingenico API Key ID
- - *Secret API Key*: must be set to your Ingenico Secret API Key
- - *API Endpoint*: must be set to corresponding Ingenico API Endpoint
- - *Merchant ID*: must be set to your Ingenico Merchant ID
- - *Enabled Products*: must be set and point to the payment products to be available
- - *Payment Action*: must be set and point to the payment action type performed for Credit Cards payments
- - *Direct Debit Text*: must be filled with short merchant info to be used with Direct Debit payment options (required for ACH and SEPA payment products) 
+For the detailed instructions on the integration configuration, see the [OroCommerce Integration with Ingenico](Resources/doc/integration.md) guide.
