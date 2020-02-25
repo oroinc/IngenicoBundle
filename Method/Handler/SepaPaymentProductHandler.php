@@ -14,6 +14,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\SepaPayment\Token\Manda
 use Ingenico\Connect\OroCommerce\Ingenico\Response\TokenResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
+use Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod;
 use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
 use Oro\Bundle\PaymentBundle\Entity\PaymentTransaction;
 use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
@@ -32,7 +33,7 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
      * @param IngenicoConfig $config
      * @return array
      */
-    public function purchase(
+    protected function purchase(
         PaymentTransaction $paymentTransaction,
         IngenicoConfig $config
     ): array {
@@ -49,7 +50,7 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
             $paymentTransaction
                 ->setSuccessful($paymentResponse->isSuccessful())
                 ->setActive($paymentResponse->isSuccessful())
-                ->setAction(PaymentMethodInterface::PENDING)
+                ->setAction(IngenicoPaymentMethod::SEPA_PENDING)
                 ->setReference($paymentResponse->getReference())
                 ->setResponse($paymentResponse->toArray());
         } else {
@@ -60,19 +61,6 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
 
         return [
             'purchaseSuccessful' => $paymentTransaction->isSuccessful(),
-        ];
-    }
-
-    /**
-     * @param IngenicoConfig $config
-     * @param TokenResponse $tokenResponse
-     * @return array
-     */
-    private function getCreatePaymentAdditionalOptions(IngenicoConfig $config, TokenResponse $tokenResponse): array
-    {
-        return [
-            Token::NAME => $tokenResponse->getToken(),
-            DirectDebitText::NAME => $config->getDirectDebitText(),
         ];
     }
 
@@ -90,6 +78,27 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
     protected function getType(): string
     {
         return EnabledProductsDataProvider::SEPA_ID;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function isActionSupported(string $actionName): bool
+    {
+        return $actionName === PaymentMethodInterface::PURCHASE;
+    }
+
+    /**
+     * @param IngenicoConfig $config
+     * @param TokenResponse $tokenResponse
+     * @return array
+     */
+    private function getCreatePaymentAdditionalOptions(IngenicoConfig $config, TokenResponse $tokenResponse): array
+    {
+        return [
+            Token::NAME => $tokenResponse->getToken(),
+            DirectDebitText::NAME => $config->getDirectDebitText(),
+        ];
     }
 
     /**
@@ -128,16 +137,8 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
                 PaymentProductId::NAME => EnabledProductsDataProvider::SEPA_ID,
                 MandateApproval\MandateSignatureDate::NAME => $currentDateTime->format('Ymd'),
             ],
-        );
+            );
 
         return TokenResponse::create($response->toArray());
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function isActionSupported(string $actionName): bool
-    {
-        return $actionName === PaymentMethodInterface::PURCHASE;
     }
 }

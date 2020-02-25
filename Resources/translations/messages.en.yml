@@ -57,4 +57,6 @@ oro:
     payment:
         paymenttransaction:
             types:
-                tokenize.label: 'Tokenize'
+                ingenico_tokenize.label: 'Tokenize'
+                ingenico_sepa_pending.label: 'SEPA Pending'
+                ingenico_ach_pending.label: 'ACH Pending'

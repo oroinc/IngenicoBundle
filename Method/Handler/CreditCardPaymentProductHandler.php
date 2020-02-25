@@ -8,7 +8,6 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\Authorizati
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\RequiresApproval;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\CardPayment\Token;
 use Ingenico\Connect\OroCommerce\Ingenico\Provider\CheckoutInformationProvider;
-use Ingenico\Connect\OroCommerce\Ingenico\Response\PaymentResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\TokenResponse;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
 use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
@@ -73,7 +72,7 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
             ->setSuccessful($response->isSuccessful())
             ->setActive($response->isSuccessful())
             ->setReference($response->getReference())
-            ->setAction($this->getPurchaseActionByPaymentResponse($response))
+            ->setAction($this->getPaymentAction($config))
             ->setResponse($response->toArray());
 
         // save token to another transaction for future use
@@ -106,6 +105,40 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
 
         return [
             'purchaseSuccessful' => $response->isSuccessful(),
+        ];
+    }
+
+    /**
+     *
+     * @param PaymentTransaction $paymentTransaction
+     * @param IngenicoConfig $config
+     * @return array
+     */
+    protected function capture(
+        PaymentTransaction $paymentTransaction,
+        IngenicoConfig $config
+    ) {
+        $sourcePaymentTransaction = $paymentTransaction->getSourcePaymentTransaction();
+        if (!$sourcePaymentTransaction) {
+            $paymentTransaction
+                ->setSuccessful(false)
+                ->setActive(false);
+
+            return ['successful' => false];
+        }
+
+        $response = $this->requestApprovePayment($sourcePaymentTransaction, $config);
+
+        $sourcePaymentTransaction->setActive(!$paymentTransaction->isSuccessful());
+        $paymentTransaction
+            ->setReference($response->getReference())
+            ->setSuccessful($response->isSuccessful())
+            ->setResponse($response->toArray())
+            ->setActive($response->isSuccessful());
+
+        return [
+            'message' => $response->getErrors() ? implode("\n", $response->getErrors()) : null,
+            'successful' => $response->isSuccessful(),
         ];
     }
 
@@ -168,25 +201,22 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
     }
 
     /**
-     * Return new payment action based on the response from the Ingenico API
-     * In case we are requesting AUTHORIZE but Ingenico does CHARGE/SALE
-     *
-     * @param PaymentResponse $response
+     * @param IngenicoConfig $config
      * @return string
      */
-    protected function getPurchaseActionByPaymentResponse(PaymentResponse $response): string
+    private function getPaymentAction(IngenicoConfig $config)
     {
-        $paymentStatus = $response->getPaymentStatus();
-
-        if ($paymentStatus === PaymentResponse::PENDING_APPROVAL_PAYMENT_STATUS) {
-            return PaymentMethodInterface::AUTHORIZE;
+        switch ($config->getPaymentAction()) {
+            case PaymentActionDataProvider::SALE:
+                return PaymentMethodInterface::CHARGE;
+            case PaymentActionDataProvider::PRE_AUTHORIZATION:
+            case PaymentActionDataProvider::FINAL_AUTHORIZATION:
+                return PaymentMethodInterface::AUTHORIZE;
         }
 
-        if ($paymentStatus === PaymentResponse::CAPTURE_REQUESTED_PAYMENT_STATUS) {
-            return PaymentMethodInterface::CAPTURE;
-        }
-
-        return PaymentMethodInterface::CHARGE;
+        throw new \LogicException(
+            sprintf('Not expected payment action from the config received: "%s"', $config->getPaymentAction())
+        );
     }
 
     /**
@@ -194,7 +224,7 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
      *
      * @return bool
      */
-    protected function isRequiresApproval(IngenicoConfig $config): bool
+    private function isRequiresApproval(IngenicoConfig $config): bool
     {
         return $config->getPaymentAction() !== PaymentActionDataProvider::SALE;
     }
@@ -204,7 +234,7 @@ class CreditCardPaymentProductHandler extends AbstractPaymentProductHandler
      *
      * @return bool
      */
-    protected function isSaveForLaterUseApplicable(PaymentTransaction $paymentTransaction): bool
+    private function isSaveForLaterUseApplicable(PaymentTransaction $paymentTransaction): bool
     {
         $saveForLaterUseChecked = $this->getAdditionalDataFieldByKey(
             $paymentTransaction,

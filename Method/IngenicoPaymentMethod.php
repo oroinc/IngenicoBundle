@@ -23,7 +23,19 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
      * Internal payment action which is used only in payment transaction to mark it
      * as transaction with tokenized credit card data
      */
-    public const TOKENIZE = 'tokenize';
+    public const TOKENIZE = 'ingenico_tokenize';
+
+    /**
+     * Payment action for pending ACH transaction
+     * It used instead of generic pending to indicate that ACH payment product is used
+     */
+    public const ACH_PENDING = 'ingenico_ach_pending';
+
+    /**
+     * Payment action for pending SEPA transaction
+     * It used instead of generic pending to indicate that SEPA payment product is used
+     */
+    public const SEPA_PENDING = 'ingenico_sepa_pending';
 
     /** @var IngenicoConfig */
     private $config;
@@ -100,11 +112,14 @@ class IngenicoPaymentMethod implements PaymentMethodInterface, CaptureActionInte
     }
 
     /**
+     * This method is not used in OroCommerce for now
+     * Execute capture to have compatibility in case it will be used
+     *
      * {@inheritdoc}
      */
     public function capture(PaymentTransaction $paymentTransaction): array
     {
-        return [];
+        return $this->execute(self::CAPTURE, $paymentTransaction);
     }
 
     /**

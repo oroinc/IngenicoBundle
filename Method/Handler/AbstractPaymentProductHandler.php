@@ -103,41 +103,6 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
     }
 
     /**
-     * TODO: This method is used only by credit card handler. Must be extract there.
-     *
-     * @param PaymentTransaction $paymentTransaction
-     * @param IngenicoConfig $config
-     * @return array
-     */
-    public function capture(
-        PaymentTransaction $paymentTransaction,
-        IngenicoConfig $config
-    ) {
-        $sourcePaymentTransaction = $paymentTransaction->getSourcePaymentTransaction();
-        if (!$sourcePaymentTransaction) {
-            $paymentTransaction
-                ->setSuccessful(false)
-                ->setActive(false);
-
-            return ['successful' => false];
-        }
-
-        $response = $this->requestApprovePayment($sourcePaymentTransaction, $config);
-
-        $sourcePaymentTransaction->setActive(!$paymentTransaction->isSuccessful());
-        $paymentTransaction
-            ->setReference($response->getReference())
-            ->setSuccessful($response->isSuccessful())
-            ->setResponse($response->toArray())
-            ->setActive($response->isSuccessful());
-
-        return [
-            'message' => $response->getErrors() ? implode("\n", $response->getErrors()) : null,
-            'successful' => $response->isSuccessful(),
-        ];
-    }
-
-    /**
      * @param PaymentTransaction $paymentTransaction
      * @param string $key
      * @param bool $throwException
@@ -197,11 +162,6 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
     }
 
     /**
-     * @return string
-     */
-    abstract protected function getCreatePaymentTransactionType(): string;
-
-    /**
      * @param PaymentTransaction $paymentTransaction
      * @param IngenicoConfig $config
      * @param array $additionalRequestOptions
@@ -218,20 +178,12 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
 
         $response = $this->gateway->request(
             $config,
-            $this->getApprovePaymentTransactionType(),
+            Transaction::APPROVE_PAYMENT,
             array_merge($requestOptions, $additionalRequestOptions),
             [PaymentId::NAME => $paymentTransaction->getReference()]
         );
 
         return PaymentResponse::create($response->toArray());
-    }
-
-    /**
-     * @return string
-     */
-    protected function getApprovePaymentTransactionType(): string
-    {
-        return Transaction::APPROVE_PAYMENT;
     }
 
     /**
@@ -255,6 +207,11 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
     {
         return sprintf('o:%d:n:%s', $paymentTransaction->getEntityIdentifier(), uniqid());
     }
+
+    /**
+     * @return string
+     */
+    abstract protected function getCreatePaymentTransactionType(): string;
 
     /**
      * @return string

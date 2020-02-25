@@ -3,8 +3,11 @@ operations:
         label: 'Label'
         preactions:
             - '@assign_constant_value':
-                attribute: $.paymentMethodAction
-                value: Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface::PENDING
+                attribute: $.achPendingPaymentAction
+                value: Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod::ACH_PENDING
+            - '@assign_constant_value':
+                attribute: $.sepaPendingPaymentAction
+                value: Ingenico\Connect\OroCommerce\Method\IngenicoPaymentMethod::SEPA_PENDING
             - '@call_service_method':
                 service: oro_payment.payment_method.composite_provider
                 method: getPaymentMethod
@@ -19,7 +22,9 @@ operations:
             '@and':
                 - '@acl_granted':  ['CHARGE_AUTHORIZED_PAYMENTS',  $.order]
                 - '@equal': [$.data.entity_class,  'Oro\Bundle\OrderBundle\Entity\Order']
-                - '@equal': [$.data.action,  $.paymentMethodAction]
+                - '@or':
+                    - '@equal': [$.data.action,  $.achPendingPaymentAction]
+                    - '@equal': [$.data.action,  $.sepaPendingPaymentAction]
                 - '@equal': [$.data.active,  true]
                 - '@equal': [$.data.successful,  true]
                 - '@not_empty': $.paymentMethod

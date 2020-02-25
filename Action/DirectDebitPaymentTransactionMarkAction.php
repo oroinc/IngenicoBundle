@@ -12,7 +12,7 @@ use Symfony\Component\PropertyAccess\PropertyPathInterface;
  * Action to mark Ingenico related pending payment transaction as paid or declined.
  * It's a direct debit payment products related flow.
  */
-class DirectDebitPaymentTransactionMark extends AbstractPaymentMethodAction
+class DirectDebitPaymentTransactionMarkAction extends AbstractPaymentMethodAction
 {
     public const OPTION_PAYMENT_TRANSACTION = 'paymentTransaction';
     public const OPTION_MARK_AS = 'markAs';
