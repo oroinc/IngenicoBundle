@@ -103,6 +103,12 @@ define(function(require) {
                 this.validateField.bind(this)
             );
 
+            this.$el.on(
+                'keyup.' + this.cid,
+                this.options.selectors.genericInput,
+                this.formatField.bind(this)
+            );
+
             this._initializeIngenicoPayment();
         },
 
@@ -529,6 +535,7 @@ define(function(require) {
         beforeTransit: function(eventData) {
             if (eventData.data.paymentMethod === this.options.paymentMethod) {
                 eventData.stopped = true;
+
                 const fields = this.collectFormData();
                 if (this.validate(fields)) {
                     mediator.execute('showLoading');
@@ -709,8 +716,29 @@ define(function(require) {
                 }
 
                 const fieldValue = paymentRequest.getValue(paymentField.id);
-                if (!field.isValid(fieldValue) || (field.dataRestrictions.isRequired && fieldValue === '')) {
-                    this.addError(paymentField.id);
+                const fieldErrorCodes = field.getErrorCodes(fieldValue);
+
+                // The field is required, but it's value is empty
+                // Catch this manually as connectsdk doesn't cover this case
+                const isEmptyButRequired = field.dataRestrictions.isRequired && fieldValue === '';
+
+                if (fieldErrorCodes.length || isEmptyButRequired) {
+
+                    // Use "not blank" error message if applicable
+                    // otherwise show first error message from the validation error list
+                    const errorMapperName = 'ingenico::' +
+                        (isEmptyButRequired ? 'notBlank' : fieldErrorCodes[0]) +
+                        '_error';
+
+                    let errorMessage;
+                    try {
+                        errorMessage = _.macros(errorMapperName)(field, fieldValue);
+                    } catch (e) {
+                        console.error(e);
+                        errorMessage = '';
+                    }
+
+                    this.addError(paymentField.id, errorMessage);
                 } else {
                     this.removeError(paymentField.id);
                 }
@@ -733,23 +761,45 @@ define(function(require) {
         },
 
         /**
+         * Formats edited field value with ingenico SDK formatter on keyup event
+         */
+        formatField: function(event) {
+            if (!this.currentPaymentProduct) {
+                // Do nothing in case we cannot format the field
+                return;
+            }
+
+            const paymentProductFields = this.currentPaymentProduct.paymentProductFieldById;
+            const fieldElement = $(event.currentTarget);
+            const fieldElementId = fieldElement.data('field-id');
+
+            if ({}.hasOwnProperty.call(paymentProductFields, fieldElementId)) {
+                const field = paymentProductFields[fieldElementId];
+                const maskedValue = field.applyMask(fieldElement.val());
+
+                fieldElement.val(maskedValue.formattedValue);
+            }
+        },
+
+        /**
          * Add error hint below field with validation message
          */
         addError: function(fieldId, message) {
             const fieldElementId = this.buildFieldIdentifier(fieldId, 'field');
             const fieldErrorElementId = this.buildFieldIdentifier(fieldId, 'error');
-            const fieldErrorElement = $('#' + fieldErrorElementId);
-            if (!$(fieldErrorElement).length) {
-                const errorMessage = message ? message : __('ingenico.general_error');
-                const fieldErrorElementClass = this.buildFieldIdentifier(fieldId, 'error');
-                const templateOptions = {
-                    fieldErrorElementId: fieldErrorElementId,
-                    fieldErrorElementClass: fieldErrorElementClass,
-                    errorMessage: errorMessage
-                };
-                // notice: error container should be <p> not <span> as it conflicts with jquery.validation
-                $('#' + fieldElementId).after(this.errorHintTemplate(templateOptions));
-            }
+
+            this.removeError(fieldId);
+
+            const errorMessage = message ? message : __('ingenico.general_error');
+            const fieldErrorElementClass = this.buildFieldIdentifier(fieldId, 'error');
+            const templateOptions = {
+                fieldErrorElementId: fieldErrorElementId,
+                fieldErrorElementClass: fieldErrorElementClass,
+                errorMessage: errorMessage
+            };
+
+            // notice: error container should be <p> not <span> as it conflicts with jquery.validation
+            $('#' + fieldElementId).after(this.errorHintTemplate(templateOptions));
         },
 
         /**
@@ -979,7 +1029,6 @@ define(function(require) {
             }
 
             this.$el.off('.' + this.cid);
-
             mediator.off('checkout:payment:before-transit', this.beforeTransit.bind(this));
 
             IngenicoCreditCardComponent.__super__.dispose.call(this);

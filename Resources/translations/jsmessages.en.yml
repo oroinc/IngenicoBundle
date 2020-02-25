@@ -1,9 +1,9 @@
 ingenico:
     api:
         error:
-            no_available_payment_products: 'No available payment products'
+            no_available_payment_products: 'No available payment products.'
             get_payment_product_details: 'Cannot get payment details. Please refresh the page and try again or contact us for assistance.'
-    no_selected_payment_product: 'Please select payment product'
+    no_selected_payment_product: 'Please select payment product.'
     crypt_error: 'Cannot prepare data for the payment. Please refresh the page and try again or contact us for assistance.'
     general_error: 'Invalid value.'
     saveForLaterUse.label: 'Save card for later use'
@@ -41,3 +41,12 @@ ingenico:
 
         validation:
             iban: "Please enter a valid IBAN number."
+
+    errors_map:
+        regular_expression:
+            cardNumber: 'Invalid card number.'
+            bankCode: 'Please specify a valid bank code number.'
+            accountNumber: 'Please specify a valid bank account number.'
+        luhn:
+            cardNumber: 'Invalid card number.'
+        expiration_date: 'Invalid expiration date.'

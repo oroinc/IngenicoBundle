@@ -12,3 +12,8 @@ dynamic-imports:
         - ingenico/js/app/components/ingenico-credit-card-component
         - ingenico/js/app/components/ingenico-payment-method-component
         - ingenico/js/validator/sepa-iban
+        - ingenico/js/validator/ingenico-error-mapping/not-blank
+        - ingenico/js/validator/ingenico-error-mapping/length
+        - ingenico/js/validator/ingenico-error-mapping/expiration-date
+        - ingenico/js/validator/ingenico-error-mapping/luhn
+        - ingenico/js/validator/ingenico-error-mapping/regular-expression

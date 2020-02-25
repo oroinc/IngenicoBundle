@@ -27,6 +27,13 @@ define(function(require) {
         debtorSurname: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         mandateDisclaimer: require('tpl-loader!ingenico/templates/macros/disclaimer-text.html'),
 
-        hidden: require('tpl-loader!ingenico/templates/macros/input-hidden.html')
+        hidden: require('tpl-loader!ingenico/templates/macros/input-hidden.html'),
+
+        // Ingenico fields error messages mapping
+        length_error: require('ingenico/js/validator/ingenico-error-mapping/length'),
+        expirationDate_error: require('ingenico/js/validator/ingenico-error-mapping/expiration-date'),
+        luhn_error: require('ingenico/js/validator/ingenico-error-mapping/luhn'),
+        notBlank_error: require('ingenico/js/validator/ingenico-error-mapping/not-blank'),
+        regularExpression_error: require('ingenico/js/validator/ingenico-error-mapping/regular-expression')
     });
 });
