@@ -1,0 +1,7 @@
+services:
+    Ingenico\Connect\OroCommerce\Tests\Behat\Mock\Method\View\Factory\IngenicoViewFactoryMock:
+        decorates: Ingenico\Connect\OroCommerce\Method\View\Factory\IngenicoViewFactory
+        parent: Ingenico\Connect\OroCommerce\Method\View\Factory\IngenicoViewFactory
+
+    Ingenico\Connect\OroCommerce\Tests\Behat\Mock\Ingenico\Client\ClientMock:
+        decorates: Ingenico\Connect\OroCommerce\Ingenico\Client\Client

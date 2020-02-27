@@ -1,0 +1,40 @@
+{
+  "creationOutput" : {
+    "additionalReference" : "AcmeOrder0001",
+    "externalReference" : "AcmeOrder0001"
+  },
+  "payment" : {
+    "id" : "000000850010000188130000200001",
+    "paymentOutput" : {
+      "amountOfMoney" : {
+        "amount" : 2980,
+        "currencyCode" : "EUR"
+      },
+      "references" : {
+        "merchantReference" : "AcmeOrder0001",
+        "paymentReference" : "0"
+      },
+      "paymentMethod" : "card",
+      "cardPaymentMethodSpecificOutput" : {
+        "paymentProductId" : 1,
+        "authorisationCode" : "726747",
+        "card" : {
+          "cardNumber" : "************3335",
+          "expiryDate" : "1220"
+        },
+        "fraudResults" : {
+          "avsResult" : "0",
+          "cvvResult" : "0",
+          "fraudServiceResult" : "no-advice"
+        }
+      }
+    },
+    "status" : "CAPTURE_REQUESTED",
+    "statusOutput" : {
+      "isCancellable" : true,
+      "statusCode" : 600,
+      "statusCodeChangeDateTime" : "20140630154830",
+      "isAuthorized" : true
+    }
+  }
+}

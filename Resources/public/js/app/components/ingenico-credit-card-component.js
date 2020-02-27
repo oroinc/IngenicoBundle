@@ -8,6 +8,7 @@ define(function(require) {
     const $ = require('jquery');
     const BaseComponent = require('oroui/js/app/components/base/component');
     const ConnectSdk = require('connect-sdk-client-js');
+    const ConnectSdkMock = require('ingenico/js/app/stub/connect-sdk-client-mock');
     const mediator = require('oroui/js/mediator');
     const routing = require('routing');
     const paymentProductListTemplate = require('tpl-loader!ingenico/templates/payment-products-list.html');
@@ -35,10 +36,8 @@ define(function(require) {
                 genericInputContainer: '.form-row',
                 issuedWidgetClassPrefix: 'ingenico-widget-issued__'
             },
-            paymentProducts: {
-                sepaId: 770,
-                cardsGroup: 'cards'
-            }
+            paymentProducts: {},
+            testMode: false
         },
 
         listen: {
@@ -66,6 +65,11 @@ define(function(require) {
          * @property {Boolean}
          */
         disposable: true,
+
+        /**
+         * @property {Object}
+         */
+        connectSdk: null,
 
         /**
          * @property {Object}
@@ -148,6 +152,8 @@ define(function(require) {
                 return;
             }
 
+            this.connectSdk = this.options.testMode ? ConnectSdkMock.default : ConnectSdk;
+
             const ingenicoWidgetIssuedClass = this.options.selectors.issuedWidgetClassPrefix +
                 this.options.paymentMethod;
 
@@ -210,7 +216,7 @@ define(function(require) {
                         mediator.execute('hideLoading');
                         if (data.success) {
                             try {
-                                this.session = new ConnectSdk(data.sessionInfo);
+                                this.session = new this.connectSdk(data.sessionInfo);
                             } catch (e) {
                                 this.$el
                                     .find(this.options.selectors.body)

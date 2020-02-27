@@ -6,6 +6,7 @@ use Ingenico\Connect\OroCommerce\Method\Config\IngenicoConfig;
 use Ingenico\Connect\OroCommerce\Method\Handler\CreditCardPaymentProductHandler;
 use Ingenico\Connect\OroCommerce\Normalizer\AmountNormalizer;
 use Ingenico\Connect\OroCommerce\Provider\PaymentTransactionProvider;
+use Ingenico\Connect\OroCommerce\Settings\DataProvider\EnabledProductsDataProvider;
 use Oro\Bundle\CustomerBundle\Security\Token\AnonymousCustomerUserToken;
 use Oro\Bundle\PaymentBundle\Context\PaymentContextInterface;
 use Oro\Bundle\PaymentBundle\Method\View\PaymentMethodViewInterface;
@@ -69,6 +70,10 @@ class IngenicoView implements PaymentMethodViewInterface
                 'locale' => $this->currentLocalizationCode,
                 'debtorSurname' => $context->getBillingAddress()->getLastName(),
             ],
+            'paymentProducts' => [
+                'sepaId' => EnabledProductsDataProvider::SEPA_ID,
+                'cardsGroup' => EnabledProductsDataProvider::CREDIT_CARDS,
+            ]
         ];
     }
 

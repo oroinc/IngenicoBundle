@@ -1,0 +1,88 @@
+oro_behat_extension:
+  elements:
+    Ingenico Integration Form:
+      selector: 'form[name="oro_integration_channel_form"]'
+      class: Oro\Bundle\TestFrameworkBundle\Behat\Element\Form
+      options:
+        mapping:
+          Name: 'oro_integration_channel_form[name]'
+          Label: 'oro_integration_channel_form[transport][labels][values][default]'
+          Short Label: 'oro_integration_channel_form[transport][shortLabels][values][default]'
+          Api Key ID: 'oro_integration_channel_form[transport][apiKeyId]'
+          Secret API Key: 'oro_integration_channel_form[transport][apiSecret]'
+          API Endpoint: 'oro_integration_channel_form[transport][apiEndpoint]'
+          Merchant ID: 'oro_integration_channel_form[transport][merchantId]'
+          Enabled Products: 'oro_integration_channel_form[transport][enabledProducts][]'
+          Payment Action: 'oro_integration_channel_form[transport][paymentAction]'
+          Derect Debit Text: 'oro_integration_channel_form[transport][directDebitText]'
+          Allow Tokenization: 'oro_integration_channel_form[transport][tokenizationEnabled]'
+    Ingenico Credit Card Form:
+      selector:
+        type: 'xpath'
+        locator: '//input[@id[starts-with(.,"cardNumber")]]/ancestor::div[contains(@class,"payment-product__form-fields")]'
+      class: Oro\Bundle\TestFrameworkBundle\Behat\Element\Form
+      options:
+        mapping:
+          Card number:
+            type: 'xpath'
+            locator: '//*[starts-with(@id,"cardNumber")]'
+          Expiry date:
+            type: 'xpath'
+            locator: '//*[starts-with(@id,"expiryDate")]'
+          CVV:
+            type: 'xpath'
+            locator: '//*[starts-with(@id,"cvv")]'
+          Save for later use:
+            type: 'xpath'
+            locator: '//*[starts-with(@id,"saveForLaterUse")]'
+          Saved card:
+            type: 'xpath'
+            locator: '//*[starts-with(@id,"token")]'
+    Ingenico ACH Form:
+      selector:
+        type: 'xpath'
+        locator: '//input[@id[starts-with(.,"accountHolderName")]]/ancestor::div[contains(@class,"payment-product__form-fields")]'
+      class: Oro\Bundle\TestFrameworkBundle\Behat\Element\Form
+      options:
+        mapping:
+          Account Holder Name:
+            type: 'xpath'
+            locator: '//*[starts-with(@id,"accountHolderName")]'
+          Bank Code:
+            type: 'xpath'
+            locator: '//*[starts-with(@id,"bankCode")]'
+          Account Number:
+            type: 'xpath'
+            locator: '//*[starts-with(@id,"accountNumber")]'
+    Ingenico SEPA Form:
+      selector:
+        type: 'xpath'
+        locator: '//input[@id[starts-with(.,"iban")]]/ancestor::div[contains(@class,"payment-product__form-fields")]'
+      class: Oro\Bundle\TestFrameworkBundle\Behat\Element\Form
+      options:
+        mapping:
+          IBAN:
+            type: 'xpath'
+            locator: '//*[starts-with(@id,"iban")]'
+          Account Holder Name:
+            type: 'xpath'
+            locator: '//*[starts-with(@id,"accountHolderName")]'
+  suites:
+    IngenicoBundle:
+      contexts:
+        - Oro\Bundle\TestFrameworkBundle\Tests\Behat\Context\OroMainContext
+        - OroApplicationBundle::CommerceMainContext
+        - OroFormBundle::FeatureContext
+        - OroFormBundle::FormContext
+        - OroConfigBundle::FeatureContext
+        - OroProductBundle::FeatureContext
+        - OroCheckoutBundle::FeatureContext
+        - OroShoppingListBundle::ShoppingListContext
+        - OroShoppingListBundle::FeatureContext
+        - OroDataGridBundle::GridContext
+        - OroLocaleBundle::LocalizationContext
+        - OroFrontendLocalizationBundle::LocalizationSwitcherContext
+        - OroPaymentBundle::FeatureContext
+        - OroWorkflowBundle::FeatureContext
+      paths:
+        - '@IngenicoBundle/Tests/Behat/Features'

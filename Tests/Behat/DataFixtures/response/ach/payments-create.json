@@ -1,0 +1,32 @@
+{
+  "creationOutput" : {
+    "additionalReference" : "AcmeOrder0001",
+    "externalReference" : "AcmeOrder0001"
+  },
+  "payment" : {
+    "id" : "000001148310000002650000100001",
+    "paymentOutput" : {
+      "amountOfMoney" : {
+        "amount" : 22999,
+        "currencyCode" : "USD"
+      },
+      "references" : {
+        "merchantReference" : "AcmeOrder0001",
+        "paymentReference" : "0"
+      },
+      "directDebitPaymentMethodSpecificOutput":{
+        "paymentProductId" : 730
+      },
+      "paymentMethod" : "directDebit"
+    },
+    "status" : "PENDING_APPROVAL",
+    "statusOutput" : {
+      "isCancellable" : true,
+      "statusCategory" : "PENDING_MERCHANT",
+      "statusCode" : 600,
+      "statusCodeChangeDateTime" : "20200214152429",
+      "isAuthorized" : false,
+      "isRefundable" : false
+    }
+  }
+}

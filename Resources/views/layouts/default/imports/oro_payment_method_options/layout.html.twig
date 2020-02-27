@@ -1,10 +1,5 @@
 {% block _payment_methods_ingenico_widget %}
-    {% set componentOptions = {
-        paymentMethod: name,
-        paymentDetails: view.options.paymentDetails,
-        saveForLaterUseEnabled: view.options.saveForLaterUseEnabled,
-        savedCreditCardList: view.options.savedCreditCardList
-    } %}
+    {% set componentOptions = view.options|merge({paymentMethod: name}) %}
     <div class="{{ class_prefix }}-form__payment-methods ingenico-payment-form"
          data-page-component-module="ingenico/js/app/components/ingenico-credit-card-component"
          data-page-component-options="{{ componentOptions|json_encode }}"

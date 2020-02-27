@@ -1,0 +1,33 @@
+{
+  "creationOutput" : {
+    "additionalReference" : "AcmeOrder0001",
+    "externalReference" : "AcmeOrder0001"
+  },
+  "payment" : {
+    "id" : "000001148310000002670000100001",
+    "paymentOutput" : {
+      "amountOfMoney" : {
+        "amount" : 22999,
+        "currencyCode" : "EUR"
+      },
+      "references" : {
+        "merchantReference" : "AcmeOrder0001",
+        "paymentReference" : "0"
+      },
+      "paymentMethod" : "directDebit",
+      "sepaDirectDebitPaymentMethodSpecificOutput" : {
+        "paymentProductId" : 770,
+        "token" : "af468662-0630-478a-0000-5464139da595"
+      }
+    },
+    "status" : "PENDING_APPROVAL",
+    "statusOutput" : {
+      "isCancellable" : true,
+      "statusCategory" : "PENDING_MERCHANT",
+      "statusCode" : 600,
+      "statusCodeChangeDateTime" : "20200214153715",
+      "isAuthorized" :false,
+      "isRefundable" :false
+    }
+  }
+}
