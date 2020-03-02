@@ -24,9 +24,9 @@ use Oro\Bundle\PaymentBundle\Method\PaymentMethodInterface;
  */
 class SepaPaymentProductHandler extends AbstractPaymentProductHandler
 {
-    private const IBAN_OPTION_KEY = 'ingenicoSepaDetails:iban';
-    private const ACCOUNT_HOLDER_NAME_OPTION_KEY = 'ingenicoSepaDetails:accountHolderName';
-    private const DEBTOR_SURNAME_OPTION_KEY = 'ingenicoSepaDetails:debtorSurname';
+    private const IBAN_OPTION_KEY = 'ingenicoSEPADetails:iban';
+    private const ACCOUNT_HOLDER_NAME_OPTION_KEY = 'ingenicoSEPADetails:accountHolderName';
+    private const DEBTOR_SURNAME_OPTION_KEY = 'ingenicoSEPADetails:debtorSurname';
 
     /**
      * @param PaymentTransaction $paymentTransaction
@@ -137,7 +137,7 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
                 PaymentProductId::NAME => EnabledProductsDataProvider::SEPA_ID,
                 MandateApproval\MandateSignatureDate::NAME => $currentDateTime->format('Ymd'),
             ],
-            );
+        );
 
         return TokenResponse::create($response->toArray());
     }

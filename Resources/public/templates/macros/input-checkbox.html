@@ -3,6 +3,7 @@
            class="custom-checkbox input-widget <% if (field.dataRestrictions.isRequired) { %> required<% } %>">
         <input type="checkbox"
                id="<%= fieldElementId %>"
+               <% if (checked) { %> checked="checked" <% } %>
                name="<%= field.id %>-<%= paymentProductId %>-<%= paymentMethod %>"
                class="custom-checkbox__input <%= field.id %>-field input input--full">
         <span class="custom-checkbox__icon"></span>

@@ -4,30 +4,22 @@ define(function(require) {
     const _ = require('underscore');
 
     _.macros('ingenico', {
+        // This list contains specific fields and their templates
+        // If the field is not mentioned here default-input template will be used as fallback
+
         // CreditCard fields
-        cardNumber: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        expiryDate: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         cvv: require('tpl-loader!ingenico/templates/macros/input-password.html'),
         saveForLaterUse: require('tpl-loader!ingenico/templates/macros/input-checkbox.html'),
         token: require('tpl-loader!ingenico/templates/macros/input-select.html'),
 
-        // DirectDebit fields
-        city: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        firstName: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        accountHolderName: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        bankCode: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        accountNumber: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        surname: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        street: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        houseNumber: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        zip: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-
         // SEPA fields
-        iban: require('tpl-loader!ingenico/templates/macros/input-default.html'),
-        debtorSurname: require('tpl-loader!ingenico/templates/macros/input-default.html'),
         mandateDisclaimer: require('tpl-loader!ingenico/templates/macros/disclaimer-text.html'),
 
+        // Special fields
         hidden: require('tpl-loader!ingenico/templates/macros/input-hidden.html'),
+
+        // Default field which will be used in case there are no any specific fields by name
+        default: require('tpl-loader!ingenico/templates/macros/input-default.html'),
 
         // Ingenico fields error messages mapping
         length_error: require('ingenico/js/validator/ingenico-error-mapping/length'),

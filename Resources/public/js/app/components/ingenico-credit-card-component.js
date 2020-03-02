@@ -413,8 +413,9 @@ define(function(require) {
             this.getSession()
                 .then(() => this.getPaymentProductDetails(paymentProductId))
                 .then(() => {
-                    const fields = paymentProductId === this.options.paymentProducts.sepaId
-                        ? this.getSepaFieldsInfo() : this.currentPaymentProduct.paymentProductFields;
+                    const fields = this.isCurrentProductSEPA()
+                        ? this.getSEPAFieldsInfo() : this.currentPaymentProduct.paymentProductFields;
+
                     const renderedFields = this.renderPaymentProductFields(fields, paymentProductId);
 
                     paymentProductFieldsHolder.html(renderedFields.join(''))
@@ -451,14 +452,16 @@ define(function(require) {
                 const rendererFieldName = 'ingenico::' +
                     (!field._passThroughValue ? field.id : this.hiddenFieldTemplateMacro);
 
-                renderedFields.push(_.macros(rendererFieldName)({
+                const options = {
                     paymentMethod: this.options.paymentMethod,
                     paymentProductId: paymentProductId,
                     field: field,
                     value: value,
                     fieldElementId: this.buildFieldIdentifier(field.id, 'field', paymentProductId),
                     fieldErrorElementId: this.buildFieldIdentifier(field.id, 'error', paymentProductId)
-                }));
+                };
+
+                renderedFields.push(this.getRenderedField(rendererFieldName, options));
             });
 
             // add extra fields related to tokenization
@@ -483,6 +486,8 @@ define(function(require) {
                     }));
                 }
 
+                const checkedItem = _.find(fieldsState, item => item.field === 'saveForLaterUse');
+                const checked = checkedItem ? checkedItem.value : false;
                 renderedFields.push(_.macros('ingenico::saveForLaterUse')({
                     paymentMethod: this.options.paymentMethod,
                     field: {
@@ -494,12 +499,25 @@ define(function(require) {
                             isRequired: false
                         }
                     },
+                    checked: checked,
                     paymentProductId: paymentProductId,
                     fieldElementId: this.buildFieldIdentifier('saveForLaterUse', 'field', paymentProductId)
                 }));
             }
 
             return renderedFields;
+        },
+
+        getRenderedField: function(rendererFieldName, options) {
+            let renderedField;
+
+            try {
+                renderedField = _.macros(rendererFieldName)(options);
+            } catch (e) {
+                renderedField = _.macros('ingenico::default')(options);
+            }
+
+            return renderedField;
         },
 
         isPaymentProductChanged: function(paymentProductId) {
@@ -550,8 +568,8 @@ define(function(require) {
                         ingenicoPaymentProduct: this.getPaymentProductAlias(this.currentPaymentProduct)
                     });
 
-                    if (this.currentPaymentProduct.id === this.options.paymentProducts.sepaId) {
-                        this.storeCollectedFields(fields, 'ingenicoSepaDetails');
+                    if (this.isCurrentProductSEPA()) {
+                        this.storeCollectedFields(fields, 'ingenicoSEPADetails');
 
                         eventData.resume();
                     } else {
@@ -583,8 +601,8 @@ define(function(require) {
                 return collectedFields;
             }
 
-            const fields = this.currentPaymentProduct.id === this.options.paymentProducts.sepaId
-                ? this.getSepaFieldsInfo() : this.currentPaymentProduct.paymentProductFields;
+            const fields = this.isCurrentProductSEPA()
+                ? this.getSEPAFieldsInfo() : this.currentPaymentProduct.paymentProductFields;
 
             _.each(fields, field => {
                 const fieldName = '#' + this.buildFieldIdentifier(field.id, 'field');
@@ -597,6 +615,17 @@ define(function(require) {
                     });
                 }
             });
+
+            if (this.isTokenizationApplicable()) {
+                // Save state of "Save for Later"
+                const $saveForLater = $(this.getSaveForLaterSelector());
+                if ($saveForLater.length) {
+                    collectedFields.push({
+                        field: 'saveForLaterUse',
+                        value: $saveForLater.prop('checked')
+                    });
+                }
+            }
 
             return collectedFields;
         },
@@ -680,8 +709,8 @@ define(function(require) {
             }
 
             // SEPA payment product form data is validated with internal tools.
-            if (this.currentPaymentProduct.id === this.options.paymentProducts.sepaId) {
-                return this.validateSepaFields(fields);
+            if (this.isCurrentProductSEPA()) {
+                return this.validateSEPAFields(fields);
             }
 
             const paymentRequest = this.session.getPaymentRequest();
@@ -877,7 +906,7 @@ define(function(require) {
          * Ingenico SDK doesn't return any fields for SEPA DD. Render them manually.
          * This data structure copycats one that is received for other payment products from Ingenico SDK.
          */
-        getSepaFieldsInfo: function() {
+        getSEPAFieldsInfo: function() {
             return [
                 {
                     id: 'iban',
@@ -963,7 +992,7 @@ define(function(require) {
         /**
          * Validates SEPA form fields because Ingenico SDK doesn't provide any validators for SEPA
          */
-        validateSepaFields: function(fields) {
+        validateSEPAFields: function(fields) {
             const virtualForm = $('<form>');
             _.each(fields, item => {
                 this.removeError(item.field);
@@ -1009,6 +1038,10 @@ define(function(require) {
             }
 
             mediator.trigger('checkout:payment:additional-data:set', JSON.stringify(additionalData));
+        },
+
+        isCurrentProductSEPA: function() {
+            return this.currentPaymentProduct.id === this.options.paymentProducts.sepaId;
         },
 
         beforeHideFilledForm: function() {
