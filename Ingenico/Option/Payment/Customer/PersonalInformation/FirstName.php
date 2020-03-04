@@ -22,7 +22,7 @@ class FirstName implements OptionInterface
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setRequired(self::NAME)
+            ->setDefined(self::NAME)
             ->setAllowedTypes(self::NAME, 'string')
             ->setNormalizer(self::NAME, $this->getLengthNormalizer(self::MAX_LENGTH));
     }

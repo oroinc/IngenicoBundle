@@ -7,14 +7,12 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\OptionsResolver;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 /**
- * Option for merchant reference field of order
+ * Option for merchant order id field
  */
-class MerchantReference implements OptionInterface
+class MerchantOrderId implements OptionInterface
 {
-    public const NAME = '[order][references][merchantReference]';
-
-    // Max length for GlobalCollect platform is 30
-    private const MAX_LENGTH = 30;
+    public const NAME = '[order][references][merchantOrderId]';
+    private const MAX_LENGTH = 10;
 
     /**
      * {@inheritdoc}
@@ -23,11 +21,11 @@ class MerchantReference implements OptionInterface
     {
         $resolver
             ->setRequired(self::NAME)
-            ->setAllowedTypes(self::NAME, 'string')
+            ->setAllowedTypes(self::NAME, 'int')
             ->setNormalizer(self::NAME, function (OptionsResolver $resolver, $value) {
                 if (strlen($value) > self::MAX_LENGTH) {
                     throw new InvalidOptionsException(sprintf(
-                        'Incorrect merchant reference. Max length %d, but value "%s" exceeded it',
+                        'Incorrect merchant order id. Max length %d, but value "%s" exceeded it',
                         self::MAX_LENGTH,
                         $value
                     ));

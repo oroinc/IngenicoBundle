@@ -22,8 +22,8 @@ class MerchantCustomerId implements OptionInterface
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
-            ->setRequired(self::NAME)
-            ->setAllowedTypes(self::NAME, 'string')
+            ->setDefined(self::NAME)
+            ->setAllowedTypes(self::NAME, ['string', 'int'])
             ->setNormalizer(self::NAME, $this->getLengthNormalizer(self::MAX_LENGTH));
     }
 }

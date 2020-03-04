@@ -19,6 +19,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\PersonalInform
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Customer\PersonalInformation\Surname;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\EncryptedCustomerInput;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\AmountOfMoney;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\References\MerchantOrderId;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\References\MerchantReference;
 use Ingenico\Connect\OroCommerce\Ingenico\Request\RequestInterface;
 use Ingenico\Connect\OroCommerce\Ingenico\Transaction;
@@ -52,7 +53,8 @@ class CreatePaymentRequest implements RequestInterface
             ->addOption(new PhoneNumber())
             ->addOption(new FirstName())
             ->addOption(new Surname())
-            ->addOption(new MerchantReference());
+            ->addOption(new MerchantReference())
+            ->addOption(new MerchantOrderId());
     }
 
     /**

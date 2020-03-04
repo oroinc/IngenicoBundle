@@ -7,6 +7,7 @@ use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\ActionParams\PaymentId;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Capture;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\EncryptedCustomerInput;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\AmountOfMoney;
+use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\References\MerchantOrderId;
 use Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\References\MerchantReference;
 use Ingenico\Connect\OroCommerce\Ingenico\Provider\CheckoutInformationProvider;
 use Ingenico\Connect\OroCommerce\Ingenico\Response\PaymentResponse;
@@ -148,6 +149,7 @@ abstract class AbstractPaymentProductHandler implements PaymentProductHandlerInt
             AmountOfMoney\Amount::NAME => $this->normalizeAmount($paymentTransaction),
             AmountOfMoney\CurrencyCode::NAME => $paymentTransaction->getCurrency(),
             MerchantReference::NAME => $this->generateMerchantReference($paymentTransaction),
+            MerchantOrderId::NAME => $paymentTransaction->getEntityIdentifier(),
         ];
 
         $checkoutOptions = $this->checkoutInformationProvider->getCheckoutOptions($paymentTransaction);

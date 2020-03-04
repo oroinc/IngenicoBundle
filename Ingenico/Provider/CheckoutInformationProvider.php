@@ -110,10 +110,18 @@ class CheckoutInformationProvider
 
         $customerUserOptions = [
             EmailAddress::NAME => $customerUser->getEmail(),
-            FirstName::NAME => $customerUser->getFirstName(),
-            Surname::NAME => $customerUser->getLastName(),
-            MerchantCustomerId::NAME => (string)$customerUser->getId(),
+            MerchantCustomerId::NAME => $customerUser->getId(),
         ];
+
+        $firstName = $customerUser->getFirstName();
+        if ($firstName) {
+            $customerUserOptions[FirstName::NAME] = $firstName;
+        }
+
+        $lastName = $customerUser->getLastName();
+        if ($lastName) {
+            $customerUserOptions[Surname::NAME] = $lastName;
+        }
 
         $customer = $customerUser->getCustomer();
         if ($customer) {
