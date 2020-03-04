@@ -167,7 +167,7 @@ define(function(require) {
                 this._deferredInit();
 
                 this.getSession()
-                    .then(() => this.getPaymentProducts(), () => this._resolveDeferredInit())
+                    .then(() => this.getPaymentProducts())
                     .then(() => {
                         if (!this.paymentProductItems.length) {
                             return;
@@ -178,12 +178,10 @@ define(function(require) {
                         const paymentProductInList = paymentProductId
                             ? _.find(this.paymentProductItems, item => item.id === paymentProductId) : false;
                         if (paymentProductInList) {
-                            this.showSelectedPaymentProductFields(paymentProductId)
-                                .then(() => this._resolveDeferredInit());
-                        } else {
-                            this._resolveDeferredInit();
+                            return this.showSelectedPaymentProductFields(paymentProductId);
                         }
-                    });
+                    })
+                    .always(() => this._resolveDeferredInit());
 
                 this.$el.addClass(ingenicoWidgetIssuedClass);
             }
