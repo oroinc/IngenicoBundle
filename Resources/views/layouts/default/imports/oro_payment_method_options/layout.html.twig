@@ -1,7 +1,7 @@
 {% block _payment_methods_ingenico_widget %}
     {% set componentOptions = view.options|merge({paymentMethod: name}) %}
     <div class="{{ class_prefix }}-form__payment-methods ingenico-payment-form"
-         data-page-component-module="ingenico/js/app/components/ingenico-credit-card-component"
+         data-page-component-module="ingenico/js/app/components/ingenico-payment-component"
          data-page-component-options="{{ componentOptions|json_encode }}"
     >
         <input type="hidden" class="current-payment-product" name="{{ name ~ '-current-payment-product' }}">

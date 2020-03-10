@@ -26,6 +26,7 @@ class IngenicoSettings extends Transport
     public const PAYMENT_ACTION = 'payment_action';
     public const TOKENIZATION_ENABLED = 'tokenization_enabled';
     public const DIRECT_DEBIT_TEXT = 'direct_debit_text';
+    public const SOFT_DESCRIPTOR = 'soft_descriptor';
 
     /**
      * @var ParameterBag
@@ -129,6 +130,13 @@ class IngenicoSettings extends Transport
      */
     private $directDebitText;
 
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="ingenico_soft_descriptor", type="string", length=255, nullable=true)
+     */
+    private $softDescriptor;
+
     public function __construct()
     {
         $this->labels = new ArrayCollection();
@@ -152,6 +160,7 @@ class IngenicoSettings extends Transport
                 self::PAYMENT_ACTION => $this->getPaymentAction(),
                 self::TOKENIZATION_ENABLED => $this->isTokenizationEnabled(),
                 self::DIRECT_DEBIT_TEXT => $this->getDirectDebitText(),
+                self::SOFT_DESCRIPTOR => $this->getSoftDescriptor(),
             ]);
         }
 
@@ -382,6 +391,26 @@ class IngenicoSettings extends Transport
     public function setDirectDebitText(?string $directDebitText): IngenicoSettings
     {
         $this->directDebitText = $directDebitText;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getSoftDescriptor()
+    {
+        return $this->softDescriptor;
+    }
+
+
+    /**
+     * @param string|null $softDescriptor
+     * @return IngenicoSettings
+     */
+    public function setSoftDescriptor(?string $softDescriptor): IngenicoSettings
+    {
+        $this->softDescriptor = $softDescriptor;
 
         return $this;
     }

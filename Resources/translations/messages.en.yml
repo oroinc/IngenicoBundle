@@ -36,6 +36,10 @@ ingenico:
             label: 'Direct Debit Text'
             tooltip: 'Description of the transaction that will appear on the customer bank statement to aid the customer in recognizing the transaction.'
 
+        softDescriptor:
+            label: 'Soft Descriptor'
+            tooltip: 'Descriptive text that is used towards to customer, either during an online checkout at a third party and/or on the statement of the customer.'
+
     payment:
         direct_debit:
             mark_paid: 'Mark as Paid'

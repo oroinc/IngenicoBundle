@@ -15,7 +15,7 @@ define(function(require) {
     const errorHintTemplate = require('tpl-loader!ingenico/templates/error-hint.html');
     require('jquery.validate');
 
-    const IngenicoCreditCardComponent = BaseComponent.extend({
+    const IngenicoPaymentComponent = BaseComponent.extend({
         options: {
             paymentMethod: null,
             paymentDetails: {},
@@ -1068,9 +1068,9 @@ define(function(require) {
             this.$el.off('.' + this.cid);
             mediator.off('checkout:payment:before-transit', this.beforeTransit.bind(this));
 
-            IngenicoCreditCardComponent.__super__.dispose.call(this);
+            IngenicoPaymentComponent.__super__.dispose.call(this);
         }
     });
 
-    return IngenicoCreditCardComponent;
+    return IngenicoPaymentComponent;
 });

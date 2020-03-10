@@ -13,7 +13,7 @@ class IngenicoBundleInstaller implements Installation
      */
     public function getMigrationVersion()
     {
-        return 'v1_3';
+        return 'v1_4';
     }
 
     /**
@@ -52,6 +52,7 @@ class IngenicoBundleInstaller implements Installation
         $table->addColumn('ingenico_enabled_products', 'array', ['notnull' => false, 'comment' => '(DC2Type:array)']);
         $table->addColumn('ingenico_payment_action', 'string', ['notnull' => false, 'length' => 255]);
         $table->addColumn('ingenico_direct_debit_text', 'string', ['length' => 255, 'notnull' => false]);
+        $table->addColumn('ingenico_soft_descriptor', 'string', ['length' => 255, 'notnull' => false]);
         $table->addColumn('ingenico_tokenization_enabled', 'boolean', ['notnull' => false, 'default' => '0',]);
     }
 

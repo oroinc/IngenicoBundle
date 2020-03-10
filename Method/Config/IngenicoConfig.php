@@ -10,14 +10,15 @@ use Oro\Bundle\PaymentBundle\Method\Config\ParameterBag\AbstractParameterBagPaym
  */
 class IngenicoConfig extends AbstractParameterBagPaymentConfig
 {
-    const FIELD_API_ENDPOINT_KEY = 'api_endpoint';
-    const FIELD_API_KEY_ID_KEY = 'api_key_id';
-    const FIELD_API_SECRET_KEY = 'api_secret';
-    const FIELD_MERCHANT_ID_KEY = 'merchant_id';
-    const FIELD_ENABLED_PRODUCTS_KEY = 'enabled_products';
-    const FIELD_PAYMENT_ACTION_KEY = 'payment_action';
-    const FIELD_TOKENIZAION_ENABLED_KEY = 'tokenization_enabled';
-    const FIELD_DIRECT_DEBIT_TEXT_KEY = 'direct_debit_text';
+    public const FIELD_API_ENDPOINT_KEY = 'api_endpoint';
+    public const FIELD_API_KEY_ID_KEY = 'api_key_id';
+    public const FIELD_API_SECRET_KEY = 'api_secret';
+    public const FIELD_MERCHANT_ID_KEY = 'merchant_id';
+    public const FIELD_ENABLED_PRODUCTS_KEY = 'enabled_products';
+    public const FIELD_PAYMENT_ACTION_KEY = 'payment_action';
+    public const FIELD_TOKENIZAION_ENABLED_KEY = 'tokenization_enabled';
+    public const FIELD_DIRECT_DEBIT_TEXT_KEY = 'direct_debit_text';
+    public const FIELD_SOFT_DESCRIPTOR_KEY = 'soft_descriptor';
 
     /**
      * {@inheritdoc}
@@ -89,5 +90,12 @@ class IngenicoConfig extends AbstractParameterBagPaymentConfig
     public function getDirectDebitText(): ?string
     {
         return $this->get(self::FIELD_DIRECT_DEBIT_TEXT_KEY);
+    }
+    /**
+     * @return string|null
+     */
+    public function getSoftDescriptor(): ?string
+    {
+        return $this->get(self::FIELD_SOFT_DESCRIPTOR_KEY);
     }
 }

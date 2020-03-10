@@ -27,6 +27,11 @@ Ingenico\Connect\OroCommerce\Entity\IngenicoSettings:
                   # Max length according to the API
                   # See Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\DirectDebitPayment\DirectDebitText
                   max: 50
+        softDescriptor:
+            - Length:
+                  # Recommended length according to the API
+                  # See Ingenico\Connect\OroCommerce\Ingenico\Option\Payment\Order\References\Descriptor
+                  max: 22
 
 Oro\Bundle\IntegrationBundle\Entity\Channel:
     constraints:

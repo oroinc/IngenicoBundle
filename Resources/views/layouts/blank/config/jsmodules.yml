@@ -10,7 +10,7 @@ aliases:
 dynamic-imports:
     ingenico:
         - ingenico/js/app/stub/connect-sdk-client-mock
-        - ingenico/js/app/components/ingenico-credit-card-component
+        - ingenico/js/app/components/ingenico-payment-component
         - ingenico/js/app/components/ingenico-payment-method-component
         - ingenico/js/validator/sepa-iban
         - ingenico/js/validator/ingenico-error-mapping/not-blank

@@ -90,6 +90,10 @@ class IngenicoSettingsType extends AbstractType
             ->add('directDebitText', TextType::class, [
                 'tooltip' => 'ingenico.settings.directDebitText.tooltip',
                 'required' => false,
+            ])
+            ->add('softDescriptor', TextType::class, [
+                'tooltip' => 'ingenico.settings.softDescriptor.tooltip',
+                'required' => false,
             ]);
     }
 
