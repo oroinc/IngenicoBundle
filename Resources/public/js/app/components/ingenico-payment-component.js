@@ -72,6 +72,9 @@ define(function(require) {
         connectSdk: null,
 
         /**
+         * Contains saved original validation rules from the SDK in case of using tokenization
+         * This validation rules will be restored to SDK in case customer doesn't want to use saved (tokenized) card
+         *
          * @property {Object}
          */
         _requiredFields: {},
@@ -423,6 +426,8 @@ define(function(require) {
                     paymentProductFieldsHolder.find('select').inputWidget('create', 'select2');
 
                     if (this.isTokenizationApplicable()) {
+                        // Clean up saved required fields validation rules on initialization
+                        delete this._requiredFields[this.currentPaymentProduct.id];
                         this.$el.on('change.' + this.cid, this.getTokenFieldSelector(), this.onTokenChange.bind(this));
                     }
 
@@ -638,6 +643,9 @@ define(function(require) {
         },
 
         _saveRequiredFieldsList: function() {
+            // Skip if current payment product is not defined
+            // or we already saved original validation rules from the SDK
+            // (in case customer changed from one tokenized card to another)
             if (!this.currentPaymentProduct || this._requiredFields[this.currentPaymentProduct.id]) {
                 return;
             }

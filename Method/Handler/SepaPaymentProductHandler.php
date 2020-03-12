@@ -136,7 +136,7 @@ class SepaPaymentProductHandler extends AbstractPaymentProductHandler
                 Iban::NAME => $this->getAdditionalDataFieldByKey($paymentTransaction, self::IBAN_OPTION_KEY),
                 PaymentProductId::NAME => EnabledProductsDataProvider::SEPA_ID,
                 MandateApproval\MandateSignatureDate::NAME => $currentDateTime->format('Ymd'),
-            ],
+            ]
         );
 
         return TokenResponse::create($response->toArray());
